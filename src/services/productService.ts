@@ -1,5 +1,6 @@
-import axios, { AxiosResponse } from 'axios';
+import { AxiosResponse } from 'axios';
 import { ApiResponse } from '../types/auth';
+import apiClient, { handleApiError } from './apiClient';
 
 export interface Product {
   id: string;
@@ -91,72 +92,7 @@ export interface UpdateProductRequest {
   sellingPrice: number;
 }
 
-// Create axios instance for product API
-const productApi = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Request interceptor to add auth token
-productApi.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Response interceptor to handle token refresh
-productApi.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (refreshToken) {
-          const response = await axios.post(
-            `${import.meta.env.VITE_API_BASE_URL}/Users/RefreshToken`,
-            { refreshToken }
-          );
-
-          if (response.data.succeeded && response.data.data) {
-            const { accessToken } = response.data.data;
-
-            localStorage.setItem('accessToken', accessToken);
-
-            // Retry the original request with new token
-            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-            return productApi(originalRequest);
-          }
-        }
-
-        // If refresh fails, logout user
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-      } catch (refreshError) {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-      }
-    }
-
-    return Promise.reject(error);
-  }
-);
+// Use the global API client that already has refresh token handling
 
 export const productService = {
   // Get products with pagination and filtering
@@ -180,32 +116,32 @@ export const productService = {
     const queryString = queryParams.toString();
     const url = `/Products/GetProductWithPaging/${pageSize}/${pageNumber}${queryString ? '?' + queryString : ''}`;
 
-    return productApi.get(url);
+    return apiClient.get(url);
   },
 
   // Get product by ID
   async getProductById(id: string): Promise<AxiosResponse<ApiResponse<Product>>> {
-    return productApi.get(`/Products/GetById/${id}`);
+    return apiClient.get(`/Products/GetById/${id}`);
   },
 
   // Create new product
   async createProduct(productData: CreateProductRequest): Promise<AxiosResponse<ApiResponse<string>>> {
-    return productApi.post('/Products', productData);
+    return apiClient.post('/Products', productData);
   },
 
   // Update existing product
   async updateProduct(productData: UpdateProductRequest): Promise<AxiosResponse<ApiResponse<string>>> {
-    return productApi.put('/Products', productData);
+    return apiClient.put('/Products', productData);
   },
 
   // Delete product
   async deleteProduct(id: string): Promise<AxiosResponse<ApiResponse<string>>> {
-    return productApi.delete(`/Products/${id}`);
+    return apiClient.delete(`/Products/${id}`);
   },
 
   // Get product select list (for dropdowns)
   async getProductSelectList(): Promise<AxiosResponse<ApiResponse<Array<{ id: string; title: string }>>>> {
-    return productApi.get('/Products/select-list');
+    return apiClient.get('/Products/select-list');
   },
 
   // Get profitability analysis
@@ -218,7 +154,7 @@ export const productService = {
     stockQuantity: number;
     totalValue: number;
   }>>>> {
-    return productApi.get('/Products/profitability');
+    return apiClient.get('/Products/profitability');
   },
 
   // Get low profit products
@@ -230,22 +166,22 @@ export const productService = {
     costPrice: number;
   }>>>> {
     const params = threshold ? `?threshold=${threshold}` : '';
-    return productApi.get(`/Products/low-profit${params}`);
+    return apiClient.get(`/Products/low-profit${params}`);
   },
 
   // Get categories for dropdown
   async getCategories(): Promise<AxiosResponse<ApiResponse<Array<Category>>>> {
-    return productApi.get('/Categories');
+    return apiClient.get('/Categories');
   },
 
   // Get tags for dropdown
   async getTags(): Promise<AxiosResponse<ApiResponse<Array<Tag>>>> {
-    return productApi.get('/Tags');
+    return apiClient.get('/Tags');
   },
 
   // Create new category
   async createCategory(title: string): Promise<AxiosResponse<ApiResponse<string>>> {
-    return productApi.post('/Categories', { title });
+    return apiClient.post('/Categories', { title });
   },
 
   // Upload product photo
@@ -260,7 +196,7 @@ export const productService = {
     formData.append('isPrimary', isPrimary.toString());
     formData.append('displayOrder', displayOrder.toString());
 
-    return productApi.post(`/Products/${productId}/photos`, formData, {
+    return apiClient.post(`/Products/${productId}/photos`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -269,12 +205,12 @@ export const productService = {
 
   // Delete product photo
   async deleteProductPhoto(productId: string, photoId: string): Promise<AxiosResponse<ApiResponse<string>>> {
-    return productApi.delete(`/Products/photos/${photoId}`);
+    return apiClient.delete(`/Products/photos/${photoId}`);
   },
 
   // Set primary product photo
   async setPrimaryPhoto(productId: string, photoId: string): Promise<AxiosResponse<ApiResponse<string>>> {
-    return productApi.put(`/Products/${productId}/photos/${photoId}/set-primary`);
+    return apiClient.put(`/Products/${productId}/photos/${photoId}/set-primary`);
   },
 };
 
