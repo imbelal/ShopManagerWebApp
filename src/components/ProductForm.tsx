@@ -33,6 +33,7 @@ import {
   Image as ImageIcon
 } from '@mui/icons-material';
 import { productService, Product, Category, Tag, CreateProductRequest, UpdateProductRequest } from '../services/productService';
+import CategoryDialog from './CategoryDialog';
 
 interface ProductFormProps {
   open: boolean;
@@ -50,9 +51,11 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [existingPhotos, setExistingPhotos] = useState<ProductPhoto[]>([]);
+  const [photosToDelete, setPhotosToDelete] = useState<string[]>([]);
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -81,35 +84,33 @@ const ProductForm: React.FC<ProductFormProps> = ({
       sellingPrice: '',
       tagIds: []
     });
-    setSelectedTags([]);
     setPreviewImages([]);
+    setImageFiles([]);
+    setExistingPhotos([]);
+    setPhotosToDelete([]);
     setFormErrors({});
     setError(null);
   };
 
-  // Load categories and tags
+  // Load categories
   useEffect(() => {
-    const loadData = async () => {
+    const loadCategories = async () => {
       try {
-        const [categoriesResponse, tagsResponse] = await Promise.all([
-          productService.getCategories(),
-          productService.getTags()
-        ]);
+        const categoriesResponse = await productService.getCategories();
 
         if (categoriesResponse.data.succeeded && categoriesResponse.data.data) {
           setCategories(categoriesResponse.data.data);
-        }
-
-        if (tagsResponse.data.succeeded && tagsResponse.data.data) {
-          setTags(tagsResponse.data.data);
+          console.log('Categories loaded:', categoriesResponse.data.data);
+        } else {
+          console.error('Failed to load categories:', categoriesResponse.data.message);
         }
       } catch (err) {
-        console.error('Failed to load data:', err);
+        console.error('Failed to load categories:', err);
       }
     };
 
     if (open) {
-      loadData();
+      loadCategories();
     }
   }, [open]);
 
@@ -126,11 +127,15 @@ const ProductForm: React.FC<ProductFormProps> = ({
         sellingPrice: editProduct.sellingPrice.toString(),
         tagIds: editProduct.productTags || []
       });
-      setSelectedTags(editProduct.productTags || []);
 
-      // Load product photos for preview
+      // Load existing product photos
       if (editProduct.productPhotos && editProduct.productPhotos.length > 0) {
-        setPreviewImages(editProduct.productPhotos.map(photo => photo.blobUrl));
+        setExistingPhotos(editProduct.productPhotos);
+        // Don't add existing photos to previewImages - only show them in existingPhotos section
+        setPreviewImages([]); // Only new uploads should go here
+      } else {
+        setExistingPhotos([]);
+        setPreviewImages([]);
       }
     } else {
       resetForm();
@@ -141,26 +146,34 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
 
+    console.log('Validating form data:', formData);
+
     if (!formData.title.trim()) {
       errors.title = 'Product title is required';
+      console.log('Title validation failed');
     }
 
     if (!formData.description.trim()) {
       errors.description = 'Description is required';
+      console.log('Description validation failed');
     }
 
     if (!formData.categoryId) {
       errors.categoryId = 'Category is required';
+      console.log('Category validation failed');
     }
 
-    if (!formData.unit.trim()) {
+    if (!formData.unit || formData.unit.toString().trim() === '') {
       errors.unit = 'Unit is required';
+      console.log('Unit validation failed');
     }
 
     if (!formData.sellingPrice || parseFloat(formData.sellingPrice) <= 0) {
       errors.sellingPrice = 'Selling price must be greater than 0';
+      console.log('Selling price validation failed');
     }
 
+    console.log('Form errors:', errors);
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -181,31 +194,25 @@ const ProductForm: React.FC<ProductFormProps> = ({
     }
   };
 
-  // Handle tag selection
-  const handleTagToggle = (tagId: string) => {
-    const newSelectedTags = selectedTags.includes(tagId)
-      ? selectedTags.filter(id => id !== tagId)
-      : [...selectedTags, tagId];
-
-    setSelectedTags(newSelectedTags);
-    setFormData(prev => ({
-      ...prev,
-      tagIds: newSelectedTags
-    }));
-  };
-
+  
   // Handle image upload
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files) return;
 
+    const fileArray = Array.from(files);
     const newImages: string[] = [];
-    Array.from(files).forEach(file => {
+
+    // Store the actual files
+    setImageFiles(prev => [...prev, ...fileArray]);
+
+    // Create preview images
+    fileArray.forEach(file => {
       const reader = new FileReader();
       reader.onload = (e) => {
         if (e.target?.result) {
           newImages.push(e.target.result as string);
-          if (newImages.length === files.length) {
+          if (newImages.length === fileArray.length) {
             setPreviewImages(prev => [...prev, ...newImages]);
           }
         }
@@ -217,13 +224,37 @@ const ProductForm: React.FC<ProductFormProps> = ({
   // Remove preview image
   const removePreviewImage = (index: number) => {
     setPreviewImages(prev => prev.filter((_, i) => i !== index));
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Remove existing photo
+  const removeExistingPhoto = (photoId: string) => {
+    setExistingPhotos(prev => prev.filter(photo => photo.id !== photoId));
+    setPhotosToDelete(prev => [...prev, photoId]);
+  };
+
+  // Handle category creation
+  const handleCategoryCreated = async (categoryId: string, categoryName: string) => {
+    // Add the new category to the categories list
+    const newCategory: Category = {
+      id: categoryId,
+      title: categoryName
+    };
+    setCategories(prev => [...prev, newCategory]);
+
+    // Set the newly created category as selected
+    setFormData(prev => ({ ...prev, categoryId: categoryId }));
+
+    setCategoryDialogOpen(false);
   };
 
   // Handle form submission
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    console.log('Form submission started');
 
     if (!validateForm()) {
+      console.log('Form validation failed');
       return;
     }
 
@@ -246,6 +277,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
           sellingPrice: parseFloat(formData.sellingPrice)
         };
 
+        console.log('Updating product:', updateData);
         response = await productService.updateProduct(updateData);
       } else {
         // Create new product
@@ -257,14 +289,45 @@ const ProductForm: React.FC<ProductFormProps> = ({
           categoryId: formData.categoryId,
           unit: formData.unit,
           sellingPrice: parseFloat(formData.sellingPrice),
-          tagIds: selectedTags
+          tagIds: formData.tagIds
         };
 
+        console.log('Creating product:', createData);
         response = await productService.createProduct(createData);
       }
 
       if (response.data.succeeded) {
-        onSave(editProduct || { ...response.data.data, id: response.data.data } as Product);
+        const productId = editProduct?.id || response.data.data;
+
+        // Delete marked photos first
+        if (photosToDelete.length > 0) {
+          try {
+            for (const photoId of photosToDelete) {
+              await productService.deleteProductPhoto(productId, photoId);
+            }
+          } catch (deleteError: any) {
+            console.error('Photo deletion failed:', deleteError);
+            // Continue with upload even if deletion fails
+          }
+        }
+
+        // Upload images if any
+        if (imageFiles.length > 0) {
+          try {
+            for (let i = 0; i < imageFiles.length; i++) {
+              const file = imageFiles[i];
+              // First image (index 0) should be primary, others should be secondary
+              const isPrimary = i === 0;
+              await productService.uploadProductPhoto(productId, file, isPrimary, i);
+            }
+          } catch (uploadError: any) {
+            console.error('Image upload failed:', uploadError);
+            // Don't fail the entire operation if image upload fails, just log the error
+            setError('Product saved but image upload failed: ' + (uploadError.message || 'Unknown error'));
+          }
+        }
+
+        onSave(editProduct || { ...response.data.data, id: productId } as Product);
         onClose();
         resetForm();
       } else {
@@ -342,19 +405,20 @@ const ProductForm: React.FC<ProductFormProps> = ({
   ];
 
   return (
+    <>
     <Dialog
       open={open}
       onClose={onClose}
       maxWidth="lg"
       fullWidth
       PaperProps={{
-        sx: { borderRadius: 3, maxHeight: '90vh' }
+        sx: { maxHeight: '90vh' }
       }}
     >
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6">
+        <span>
           {editProduct ? 'Edit Product' : 'Add New Product'}
-        </Typography>
+        </span>
         <IconButton onClick={onClose}>
           <CloseIcon />
         </IconButton>
@@ -368,15 +432,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
             </Alert>
           )}
 
-          <Grid container spacing={3}>
-            {/* Basic Information */}
-            <Grid item xs={12}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                Basic Information
-              </Typography>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
+          <Grid container spacing={3} direction="column" sx={{ width: '100%' }}>
+            {/* Product Title - Single Field Row */}
+            <Grid item xs={12} sx={{ width: '100%', marginBottom: 2 }}>
               <TextField
                 fullWidth
                 label="Product Title"
@@ -385,29 +443,11 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 error={!!formErrors.title}
                 helperText={formErrors.title}
                 required
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth required error={!!formErrors.categoryId}>
-                <InputLabel>Category</InputLabel>
-                <Select
-                  value={formData.categoryId}
-                  label="Category"
-                  onChange={(e) => handleInputChange('categoryId', e.target.value)}
-                  sx={{ borderRadius: 2 }}
-                >
-                  {categories.map((category) => (
-                    <MenuItem key={category.id} value={category.id}>
-                      {category.title}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12}>
+            {/* Description - Single Field Row */}
+            <Grid item xs={12} sx={{ width: '100%', marginBottom: 2 }}>
               <TextField
                 fullWidth
                 multiline
@@ -418,92 +458,102 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 error={!!formErrors.description}
                 helperText={formErrors.description}
                 required
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
             </Grid>
 
-            {/* Product Attributes */}
-            <Grid item xs={12}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, mt: 1 }}>
-                Product Attributes
-              </Typography>
+            {/* Category, Unit and Selling Price - Three Fields in One Row */}
+            <Grid container item spacing={2} sx={{ marginBottom: 2 }}>
+              <Grid item xs={4}>
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                  <FormControl fullWidth required error={!!formErrors.categoryId} sx={{ minWidth: 250 }}>
+                    <InputLabel>Category</InputLabel>
+                    <Select
+                      value={formData.categoryId}
+                      label="Category"
+                      onChange={(e) => handleInputChange('categoryId', e.target.value)}
+                    >
+                      <MenuItem value="">
+                        <em>Select a category</em>
+                      </MenuItem>
+                      {categories.map((category) => (
+                        <MenuItem key={category.id} value={category.id}>
+                          {category.title}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <Tooltip title="Add new category">
+                    <IconButton
+                      onClick={() => setCategoryDialogOpen(true)}
+                      sx={{
+                        mt: 1,
+                        backgroundColor: '#667eea',
+                        color: 'white',
+                        '&:hover': {
+                          backgroundColor: '#5a6fd8',
+                        },
+                        borderRadius: 1
+                      }}
+                      size="small"
+                    >
+                      <AddIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </Grid>
+              <Grid item xs={4}>
+                <FormControl fullWidth required error={!!formErrors.unit} sx={{ minWidth: 150 }}>
+                  <InputLabel>Unit</InputLabel>
+                  <Select
+                    value={formData.unit}
+                    label="Unit"
+                    onChange={(e) => handleInputChange('unit', e.target.value)}
+                  >
+                    {commonUnits.map((unit) => (
+                      <MenuItem key={unit.value} value={unit.value}>
+                        {unit.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={4}>
+                <TextField
+                  fullWidth
+                  label="Selling Price"
+                  type="number"
+                  value={formData.sellingPrice}
+                  onChange={(e) => handleInputChange('sellingPrice', e.target.value)}
+                  error={!!formErrors.sellingPrice}
+                  helperText={formErrors.sellingPrice}
+                  required
+                  InputProps={{
+                    startAdornment: <Typography variant="body2">$</Typography>
+                  }}
+                />
+              </Grid>
             </Grid>
 
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                label="Size"
-                value={formData.size}
-                onChange={(e) => handleInputChange('size', e.target.value)}
-                placeholder="e.g., M, L, XL"
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
-              />
-            </Grid>
-
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                label="Color"
-                value={formData.color}
-                onChange={(e) => handleInputChange('color', e.target.value)}
-                placeholder="e.g., Red, Blue"
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
-              />
-            </Grid>
-
-            <Grid item xs={12} md={3}>
-              <FormControl fullWidth required error={!!formErrors.unit}>
-                <InputLabel>Unit</InputLabel>
-                <Select
-                  value={formData.unit}
-                  label="Unit"
-                  onChange={(e) => handleInputChange('unit', e.target.value)}
-                  sx={{ borderRadius: 2 }}
-                >
-                  {commonUnits.map((unit) => (
-                    <MenuItem key={unit.value} value={unit.value}>
-                      {unit.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                label="Selling Price"
-                type="number"
-                value={formData.sellingPrice}
-                onChange={(e) => handleInputChange('sellingPrice', e.target.value)}
-                error={!!formErrors.sellingPrice}
-                helperText={formErrors.sellingPrice}
-                required
-                InputProps={{
-                  startAdornment: <Typography variant="body2">$</Typography>
-                }}
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
-              />
-            </Grid>
-
-            {/* Tags */}
-            <Grid item xs={12}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, mt: 1 }}>
-                Tags
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {tags.map((tag) => (
-                  <Chip
-                    key={tag.id}
-                    label={tag.title}
-                    clickable
-                    color={selectedTags.includes(tag.id) ? 'primary' : 'default'}
-                    onClick={() => handleTagToggle(tag.id)}
-                    variant={selectedTags.includes(tag.id) ? 'filled' : 'outlined'}
-                    sx={{ borderRadius: 2 }}
-                  />
-                ))}
-              </Box>
+            {/* Size and Color - Two Fields in One Row */}
+            <Grid container item spacing={2} sx={{ marginBottom: 2 }}>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Size"
+                  value={formData.size}
+                  onChange={(e) => handleInputChange('size', e.target.value)}
+                  placeholder="e.g., M, L, XL"
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Color"
+                  value={formData.color}
+                  onChange={(e) => handleInputChange('color', e.target.value)}
+                  placeholder="e.g., Red, Blue"
+                />
+              </Grid>
             </Grid>
 
             {/* Product Images */}
@@ -526,42 +576,81 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     variant="outlined"
                     component="span"
                     startIcon={<CloudUploadIcon />}
-                    sx={{ borderRadius: 2 }}
                   >
                     Upload Images
                   </Button>
                 </label>
               </Box>
 
+              {/* Show existing photos in edit mode */}
+              {editProduct && existingPhotos.length > 0 && (
+                <Grid container spacing={2} sx={{ marginBottom: 2 }}>
+                  {existingPhotos.map((photo) => (
+                    <Grid item xs={12} sm={6} md={4} key={photo.id}>
+                      <Card sx={{ position: 'relative' }}>
+                        <CardMedia
+                          component="img"
+                          height="140"
+                          image={photo.blobUrl}
+                          alt={photo.originalFileName}
+                        />
+                        <IconButton
+                          size="small"
+                          onClick={() => removeExistingPhoto(photo.id)}
+                          sx={{
+                            position: 'absolute',
+                            top: 8,
+                            right: 8,
+                            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                            '&:hover': {
+                              backgroundColor: 'rgba(255, 255, 255, 1)',
+                            }
+                          }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                        {photo.isPrimary && (
+                          <Chip
+                            label="Primary"
+                            size="small"
+                            color="primary"
+                            sx={{
+                              position: 'absolute',
+                              bottom: 8,
+                              left: 8,
+                              backgroundColor: 'rgba(25, 118, 210, 0.9)',
+                              color: 'white',
+                              fontSize: '0.7rem'
+                            }}
+                          />
+                        )}
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              )}
+
+              {/* Show new image previews */}
               {previewImages.length > 0 && (
                 <Grid container spacing={2}>
                   {previewImages.map((image, index) => (
-                    <Grid item xs={12} sm={6} md={4} key={index}>
-                      <Card sx={{ position: 'relative', borderRadius: 2 }}>
-                        {editProduct ? (
-                          <CardMedia
-                            component="img"
-                            height="140"
-                            image={image}
-                            alt={`Product image ${index + 1}`}
+                    <Grid item xs={12} sm={6} md={4} key={`new-${index}`}>
+                      <Card sx={{ position: 'relative' }}>
+                        <Box
+                          sx={{
+                            height: 140,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: 'grey.100'
+                          }}
+                        >
+                          <img
+                            src={image}
+                            alt={`New image ${index + 1}`}
+                            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
                           />
-                        ) : (
-                          <Box
-                            sx={{
-                              height: 140,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              backgroundColor: 'grey.100'
-                            }}
-                          >
-                            <img
-                              src={image}
-                              alt={`Preview ${index + 1}`}
-                              style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
-                            />
-                          </Box>
-                        )}
+                        </Box>
                         <IconButton
                           size="small"
                           onClick={() => removePreviewImage(index)}
@@ -577,6 +666,21 @@ const ProductForm: React.FC<ProductFormProps> = ({
                         >
                           <DeleteIcon fontSize="small" />
                         </IconButton>
+                        {(!editProduct || existingPhotos.length === 0) && index === 0 && (
+                          <Chip
+                            label="Primary"
+                            size="small"
+                            color="primary"
+                            sx={{
+                              position: 'absolute',
+                              bottom: 8,
+                              left: 8,
+                              backgroundColor: 'rgba(25, 118, 210, 0.9)',
+                              color: 'white',
+                              fontSize: '0.7rem'
+                            }}
+                          />
+                        )}
                       </Card>
                     </Grid>
                   ))}
@@ -590,7 +694,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
           <Button
             onClick={onClose}
             disabled={loading}
-            sx={{ borderRadius: 2 }}
           >
             Cancel
           </Button>
@@ -599,10 +702,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
             variant="contained"
             disabled={loading}
             startIcon={loading ? <CircularProgress size={16} /> : null}
+            onClick={() => console.log('Submit button clicked')}
             sx={{
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               textTransform: 'none',
-              borderRadius: 2,
               boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
               '&:hover': {
                 boxShadow: '0 6px 20px rgba(102, 126, 234, 0.6)',
@@ -614,6 +717,14 @@ const ProductForm: React.FC<ProductFormProps> = ({
         </DialogActions>
       </form>
     </Dialog>
+
+    {/* Category Dialog */}
+    <CategoryDialog
+      open={categoryDialogOpen}
+      onClose={() => setCategoryDialogOpen(false)}
+      onCategoryCreated={handleCategoryCreated}
+    />
+    </>
   );
 };
 

@@ -243,6 +243,11 @@ export const productService = {
     return productApi.get('/Tags');
   },
 
+  // Create new category
+  async createCategory(title: string): Promise<AxiosResponse<ApiResponse<string>>> {
+    return productApi.post('/Categories', { title });
+  },
+
   // Upload product photo
   async uploadProductPhoto(
     productId: string,
@@ -264,7 +269,7 @@ export const productService = {
 
   // Delete product photo
   async deleteProductPhoto(productId: string, photoId: string): Promise<AxiosResponse<ApiResponse<string>>> {
-    return productApi.delete(`/Products/${productId}/photos/${photoId}`);
+    return productApi.delete(`/Products/photos/${photoId}`);
   },
 
   // Set primary product photo

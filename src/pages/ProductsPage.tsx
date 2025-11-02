@@ -82,6 +82,11 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+
+  // Debug view dialog state changes
+  useEffect(() => {
+    console.log('viewDialogOpen changed to:', viewDialogOpen, 'selectedProduct:', selectedProduct);
+  }, [viewDialogOpen, selectedProduct]);
   const [productFormOpen, setProductFormOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
@@ -300,6 +305,34 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
     }
   };
 
+  // Get status text for display
+  const getStatusText = (status: number | string) => {
+    const statusValue = typeof status === 'number' ? status : parseInt(status);
+
+    switch (statusValue) {
+      case 1:
+        return 'Active';
+      case 2:
+        return 'Inactive';
+      default:
+        return 'Unknown';
+    }
+  };
+
+  // Get status color for chips
+  const getStatusColor = (status: number | string) => {
+    const statusValue = typeof status === 'number' ? status : parseInt(status);
+
+    switch (statusValue) {
+      case 1:
+        return 'success';
+      case 2:
+        return 'warning';
+      default:
+        return 'default';
+    }
+  };
+
   useEffect(() => {
     loadProducts();
     loadCategories();
@@ -318,7 +351,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
           sx={{
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             textTransform: 'none',
-            borderRadius: 2,
+            borderRadius: 1,
             px: 3,
             py: 1,
             boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
@@ -333,7 +366,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
       </Box>
 
       {/* Search and Filters */}
-      <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+      <Card sx={{ mb: 3, borderRadius: 1, boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
         <CardContent sx={{ p: 3 }}>
           {/* Basic Search Bar */}
           <Box sx={{ mb: 2 }}>
@@ -351,7 +384,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                       </InputAdornment>
                     ),
                   }}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 } }}
                 />
               </Grid>
               <Grid item xs={12} md={3}>
@@ -364,7 +397,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                       setSortBy(e.target.value as any);
                       handleFilterChange();
                     }}
-                    sx={{ borderRadius: 2 }}
+                    sx={{ borderRadius: 1 }}
                   >
                     <MenuItem value="title">Name</MenuItem>
                     <MenuItem value="price">Price</MenuItem>
@@ -383,7 +416,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                       setSortOrder(e.target.value as any);
                       handleFilterChange();
                     }}
-                    sx={{ borderRadius: 2 }}
+                    sx={{ borderRadius: 1 }}
                   >
                     <MenuItem value="asc">Ascending</MenuItem>
                     <MenuItem value="desc">Descending</MenuItem>
@@ -401,7 +434,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                 minHeight: 48,
                 '& .MuiAccordionSummary-content': { my: 1 },
                 backgroundColor: '#f8f9fa',
-                borderRadius: 2
+                borderRadius: 1
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -431,7 +464,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                         setSelectedCategory(e.target.value);
                         handleFilterChange();
                       }}
-                      sx={{ borderRadius: 2 }}
+                      sx={{ borderRadius: 1 }}
                     >
                       <MenuItem value="">All Categories</MenuItem>
                       {categories.map((category) => (
@@ -452,7 +485,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                         setSelectedUnit(e.target.value);
                         handleFilterChange();
                       }}
-                      sx={{ borderRadius: 2 }}
+                      sx={{ borderRadius: 1 }}
                     >
                       <MenuItem value="">All Units</MenuItem>
                       <MenuItem value="0">Box</MenuItem>
@@ -497,7 +530,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                     InputProps={{
                       startAdornment: <InputAdornment position="start">$</InputAdornment>,
                     }}
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 } }}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -513,7 +546,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                     InputProps={{
                       startAdornment: <InputAdornment position="start">$</InputAdornment>,
                     }}
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 } }}
                   />
                 </Grid>
                 <Grid item xs={12} md={1}>
@@ -538,7 +571,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                         size="small"
                         startIcon={<ClearAllIcon />}
                         onClick={clearAllFilters}
-                        sx={{ borderRadius: 2 }}
+                        sx={{ borderRadius: 1 }}
                       >
                         Clear
                       </Button>
@@ -552,7 +585,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
       </Card>
 
       {/* Products Table */}
-      <Card sx={{ borderRadius: 3, boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+      <Card sx={{ borderRadius: 1, boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
         <CardContent sx={{ p: 0 }}>
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
@@ -708,16 +741,19 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
         PaperProps={{
-          sx: { borderRadius: 2, boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }
+          sx: { borderRadius: 1, boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }
         }}
       >
-        <MenuItem onClick={() => { setViewDialogOpen(true); handleMenuClose(); }}>
+        <MenuItem onClick={() => {
+          setViewDialogOpen(true);
+          setAnchorEl(null); // Only close the menu, don't reset selectedProduct
+        }}>
           <ViewIcon sx={{ mr: 1 }} /> View
         </MenuItem>
         <MenuItem onClick={() => { handleOpenEditProduct(selectedProduct!); }}>
           <EditIcon sx={{ mr: 1 }} /> Edit
         </MenuItem>
-        <MenuItem onClick={() => { setDeleteDialogOpen(true); handleMenuClose(); }} sx={{ color: 'error.main' }}>
+        <MenuItem onClick={() => { setDeleteDialogOpen(true); setAnchorEl(null); }} sx={{ color: 'error.main' }}>
           <DeleteIcon sx={{ mr: 1 }} /> Delete
         </MenuItem>
       </Menu>
@@ -725,77 +761,240 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
       {/* View Product Dialog */}
       <Dialog
         open={viewDialogOpen}
-        onClose={() => setViewDialogOpen(false)}
+        onClose={() => {
+          setViewDialogOpen(false);
+          setSelectedProduct(null);
+        }}
         maxWidth="md"
         fullWidth
-        PaperProps={{ sx: { borderRadius: 3 } }}
+        PaperProps={{ sx: { borderRadius: 1 } }}
       >
         {selectedProduct && (
           <>
             <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="h6">Product Details</Typography>
-              <IconButton onClick={() => setViewDialogOpen(false)}>
+              <Typography variant="h6" component="div">Product Details</Typography>
+              <IconButton onClick={() => {
+          setViewDialogOpen(false);
+          setSelectedProduct(null);
+        }}>
                 <CloseIcon />
               </IconButton>
             </DialogTitle>
-            <DialogContent>
+            <DialogContent sx={{ padding: 3 }}>
               <Grid container spacing={3}>
+                {/* Product Photos */}
                 <Grid item xs={12} md={6}>
-                  {selectedProduct.productPhotos && selectedProduct.productPhotos.length > 0 && (
-                    <Box sx={{ textAlign: 'center' }}>
-                      <img
-                        src={selectedProduct.productPhotos.find(p => p.isPrimary)?.blobUrl || selectedProduct.productPhotos[0].blobUrl}
-                        alt={selectedProduct.title}
-                        style={{ maxWidth: '100%', borderRadius: 8, maxHeight: 300 }}
-                      />
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, marginBottom: 2, color: '#1a1a1a' }}>
+                    Product Photos
+                  </Typography>
+                  {selectedProduct.productPhotos && selectedProduct.productPhotos.length > 0 ? (
+                    <Box>
+                      {/* Primary Photo */}
+                      {selectedProduct.productPhotos.find(photo => photo.isPrimary) && (
+                        <Box sx={{ marginBottom: 2 }}>
+                          <Typography variant="body2" sx={{ marginBottom: 1, color: '#666' }}>
+                            Primary Photo:
+                          </Typography>
+                          <img
+                            src={selectedProduct.productPhotos.find(photo => photo.isPrimary)?.blobUrl}
+                            alt={selectedProduct.title}
+                            style={{
+                              width: '100%',
+                              height: '200px',
+                              objectFit: 'cover',
+                              borderRadius: 1,
+                              border: '1px solid #e0e0e0'
+                            }}
+                          />
+                        </Box>
+                      )}
+
+                      {/* Other Photos */}
+                      {selectedProduct.productPhotos.filter(photo => !photo.isPrimary).length > 0 && (
+                        <Box>
+                          <Typography variant="body2" sx={{ marginBottom: 1, color: '#666' }}>
+                            Other Photos:
+                          </Typography>
+                          <Grid container spacing={1}>
+                            {selectedProduct.productPhotos
+                              .filter(photo => !photo.isPrimary)
+                              .sort((a, b) => a.displayOrder - b.displayOrder)
+                              .map((photo) => (
+                                <Grid item xs={6} sm={4} key={photo.id}>
+                                  <img
+                                    src={photo.blobUrl}
+                                    alt={selectedProduct.title}
+                                    style={{
+                                      width: '100%',
+                                      height: '80px',
+                                      objectFit: 'cover',
+                                      borderRadius: 1,
+                                      border: '1px solid #e0e0e0'
+                                    }}
+                                  />
+                                </Grid>
+                              ))}
+                          </Grid>
+                        </Box>
+                      )}
+                    </Box>
+                  ) : (
+                    <Box
+                      sx={{
+                        width: '100%',
+                        height: '200px',
+                        border: '1px dashed #ccc',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: 1,
+                        backgroundColor: '#f9f9f9'
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        No photos available
+                      </Typography>
                     </Box>
                   )}
                 </Grid>
+
+                {/* Product Information */}
                 <Grid item xs={12} md={6}>
-                  <Typography variant="h6" gutterBottom>{selectedProduct.title}</Typography>
-                  <Typography variant="body2" color="text.secondary" paragraph>
-                    {selectedProduct.description}
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, marginBottom: 2, color: '#1a1a1a' }}>
+                    Product Information
                   </Typography>
+
+                  <Box sx={{ marginBottom: 3 }}>
+                    <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
+                      Product Name
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                      {selectedProduct.title}
+                    </Typography>
+                  </Box>
+
+                  <Box sx={{ marginBottom: 3 }}>
+                    <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
+                      Description
+                    </Typography>
+                    <Typography variant="body1">
+                      {selectedProduct.description || 'No description available'}
+                    </Typography>
+                  </Box>
+
                   <Grid container spacing={2}>
                     <Grid item xs={6}>
-                      <Typography variant="subtitle2" color="text.secondary">Category</Typography>
-                      <Typography>{selectedProduct.categoryName}</Typography>
+                      <Box sx={{ marginBottom: 2 }}>
+                        <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
+                          Category
+                        </Typography>
+                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                          {selectedProduct.categoryName}
+                        </Typography>
+                      </Box>
                     </Grid>
                     <Grid item xs={6}>
-                      <Typography variant="subtitle2" color="text.secondary">Size</Typography>
-                      <Typography>{selectedProduct.size || 'N/A'}</Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="subtitle2" color="text.secondary">Color</Typography>
-                      <Typography>{selectedProduct.color || 'N/A'}</Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="subtitle2" color="text.secondary">Unit</Typography>
-                      <Typography>{selectedProduct.unit}</Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="subtitle2" color="text.secondary">Selling Price</Typography>
-                      <Typography sx={{ fontWeight: 600, color: 'primary.main' }}>
-                        {formatCurrency(selectedProduct.sellingPrice)}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="subtitle2" color="text.secondary">Cost Price</Typography>
-                      <Typography>{formatCurrency(selectedProduct.costPrice)}</Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="subtitle2" color="text.secondary">Stock Quantity</Typography>
-                      <Typography>{selectedProduct.stockQuantity} {getUnitName(selectedProduct.unit)}</Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="subtitle2" color="text.secondary">Profit Margin</Typography>
-                      <Chip
-                        label={`${selectedProduct.profitMargin.toFixed(1)}%`}
-                        color={getProfitMarginColor(selectedProduct.profitMargin)}
-                        size="small"
-                      />
+                      <Box sx={{ marginBottom: 2 }}>
+                        <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
+                          Unit
+                        </Typography>
+                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                          {selectedProduct.unit}
+                        </Typography>
+                      </Box>
                     </Grid>
                   </Grid>
+
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <Box sx={{ marginBottom: 2 }}>
+                        <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
+                          Size
+                        </Typography>
+                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                          {selectedProduct.size || 'N/A'}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Box sx={{ marginBottom: 2 }}>
+                        <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
+                          Color
+                        </Typography>
+                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                          {selectedProduct.color || 'N/A'}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
+
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <Box sx={{ marginBottom: 2 }}>
+                        <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
+                          Selling Price
+                        </Typography>
+                        <Typography variant="body1" sx={{ fontWeight: 500, color: '#2e7d32' }}>
+                          ${selectedProduct.sellingPrice?.toFixed(2)}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Box sx={{ marginBottom: 2 }}>
+                        <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
+                          Cost Price
+                        </Typography>
+                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                          ${selectedProduct.costPrice?.toFixed(2)}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
+
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <Box sx={{ marginBottom: 2 }}>
+                        <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
+                          Stock Quantity
+                        </Typography>
+                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                          {selectedProduct.stockQuantity} {selectedProduct.unit}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Box sx={{ marginBottom: 2 }}>
+                        <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
+                          Status
+                        </Typography>
+                        <Chip
+                          label={getStatusText(selectedProduct.status)}
+                          color={getStatusColor(selectedProduct.status) as any}
+                          size="small"
+                        />
+                      </Box>
+                    </Grid>
+                  </Grid>
+
+                  {/* Tags */}
+                  {selectedProduct.productTags && selectedProduct.productTags.length > 0 && (
+                    <Box sx={{ marginTop: 2 }}>
+                      <Typography variant="body2" sx={{ color: '#666', marginBottom: 1 }}>
+                        Tags
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {selectedProduct.productTags.map((tag, index) => (
+                          <Chip
+                            key={index}
+                            label={tag}
+                            variant="outlined"
+                            size="small"
+                            sx={{ fontSize: '0.75rem' }}
+                          />
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
                 </Grid>
               </Grid>
             </DialogContent>
@@ -806,8 +1005,8 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-        PaperProps={{ sx: { borderRadius: 3 } }}
+        onClose={() => { setDeleteDialogOpen(false); setSelectedProduct(null); }}
+        PaperProps={{ sx: { borderRadius: 1 } }}
       >
         <DialogTitle>Delete Product</DialogTitle>
         <DialogContent>
@@ -816,7 +1015,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => { setDeleteDialogOpen(false); setSelectedProduct(null); }}>Cancel</Button>
           <Button onClick={handleDeleteProduct} color="error" variant="contained">
             Delete
           </Button>
