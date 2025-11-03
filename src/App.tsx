@@ -7,6 +7,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import ProductsPage from './pages/ProductsPage';
 import SalesPage from './pages/SalesPage';
+import PurchasesPage from './pages/PurchasesPage';
 import DashboardLayout from './components/DashboardLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -149,6 +150,16 @@ function App() {
                   <ProtectedRoute>
                     <DashboardLayout>
                       <SalesPage />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/purchases"
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <PurchasesPage />
                     </DashboardLayout>
                   </ProtectedRoute>
                 }

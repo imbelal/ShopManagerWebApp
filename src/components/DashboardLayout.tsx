@@ -32,6 +32,7 @@ import {
   Logout,
   Store,
   Notifications,
+  ShoppingBasket as PurchaseIcon,
 } from '@mui/icons-material';
 import { styled, useTheme as useStyledTheme } from '@mui/material/styles';
 import { useAuth } from '../context/AuthContext';
@@ -132,6 +133,7 @@ const navigationItems: NavigationItem[] = [
   { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
   { text: 'Products', icon: <Inventory />, path: '/products' },
   { text: 'Sales', icon: <ShoppingCart />, path: '/sales' },
+  { text: 'Purchases', icon: <PurchaseIcon />, path: '/purchases' },
   { text: 'Categories', icon: <Category />, path: '/categories' },
   { text: 'Customers', icon: <People />, path: '/customers' },
   { text: 'Reports', icon: <Assessment />, path: '/reports' },
