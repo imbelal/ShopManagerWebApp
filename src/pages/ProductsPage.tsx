@@ -367,7 +367,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
           {/* Basic Search Bar */}
           <Box sx={{ mb: 2 }}>
             <Grid container spacing={2} alignItems="center">
-              <Grid item xs={12} md={6}>
+              <Grid sx={{ xs: 12, md: 6 }}>
                 <TextField
                   fullWidth
                   placeholder="Search products by name, description, size, or color..."
@@ -383,7 +383,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 } }}
                 />
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid sx={{ xs: 12, md: 3 }}>
                 <FormControl fullWidth>
                   <InputLabel>Sort By</InputLabel>
                   <Select
@@ -402,7 +402,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid sx={{ xs: 12, md: 3 }}>
                 <FormControl fullWidth>
                   <InputLabel>Order</InputLabel>
                   <Select
@@ -450,7 +450,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
             </AccordionSummary>
             <AccordionDetails>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
+                <Grid sx={{ xs: 12, sm: 6 }}>
                   <FormControl fullWidth sx={{ minWidth: 150 }}>
                     <InputLabel>Category</InputLabel>
                     <Select
@@ -471,7 +471,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                     </Select>
                   </FormControl>
                 </Grid>
-                <Grid item xs={12}>
+                <Grid sx={{ xs: 12 }}>
                   <FormControl fullWidth sx={{ minWidth: 150 }}>
                     <InputLabel>Unit</InputLabel>
                     <Select
@@ -513,7 +513,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                     </Select>
                   </FormControl>
                 </Grid>
-                <Grid item xs={12} sm={6} minWidth={120}>
+                <Grid sx={{ xs: 12, sm: 6, minWidth: 120 }}>
                   <TextField
                     fullWidth
                     label="Min Price"
@@ -529,7 +529,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                     sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 } }}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid sx={{ xs: 12, sm: 6 }}>
                   <TextField
                     fullWidth
                     label="Max Price"
@@ -545,7 +545,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                     sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 } }}
                   />
                 </Grid>
-                <Grid item xs={12} md={1}>
+                <Grid sx={{ xs: 12, md: 1 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
                     <FormControlLabel
                       control={
@@ -779,7 +779,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
             <DialogContent sx={{ padding: 3 }}>
               <Grid container spacing={3}>
                 {/* Product Photos */}
-                <Grid item xs={12} md={6}>
+                <Grid sx={{ xs: 12, md: 6 }}>
                   <Typography variant="subtitle1" sx={{ fontWeight: 600, marginBottom: 2, color: '#1a1a1a' }}>
                     Product Photos
                   </Typography>
@@ -816,7 +816,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                               .filter(photo => !photo.isPrimary)
                               .sort((a, b) => a.displayOrder - b.displayOrder)
                               .map((photo) => (
-                                <Grid item xs={6} sm={4} key={photo.id}>
+                                <Grid sx={{ xs: 6, sm: 4 }} key={photo.id}>
                                   <img
                                     src={photo.blobUrl}
                                     alt={selectedProduct.title}
@@ -855,7 +855,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                 </Grid>
 
                 {/* Product Information */}
-                <Grid item xs={12} md={6}>
+                <Grid sx={{ xs: 12, md: 6 }}>
                   <Typography variant="subtitle1" sx={{ fontWeight: 600, marginBottom: 2, color: '#1a1a1a' }}>
                     Product Information
                   </Typography>
@@ -879,7 +879,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                   </Box>
 
                   <Grid container spacing={2}>
-                    <Grid item xs={6}>
+                    <Grid sx={{ xs: 6 }}>
                       <Box sx={{ marginBottom: 2 }}>
                         <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
                           Category
@@ -889,7 +889,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                         </Typography>
                       </Box>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid sx={{ xs: 6 }}>
                       <Box sx={{ marginBottom: 2 }}>
                         <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
                           Unit
@@ -902,7 +902,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                   </Grid>
 
                   <Grid container spacing={2}>
-                    <Grid item xs={6}>
+                    <Grid sx={{ xs: 6 }}>
                       <Box sx={{ marginBottom: 2 }}>
                         <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
                           Size
@@ -912,7 +912,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                         </Typography>
                       </Box>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid sx={{ xs: 6 }}>
                       <Box sx={{ marginBottom: 2 }}>
                         <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
                           Color
@@ -925,7 +925,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                   </Grid>
 
                   <Grid container spacing={2}>
-                    <Grid item xs={6}>
+                    <Grid sx={{ xs: 6 }}>
                       <Box sx={{ marginBottom: 2 }}>
                         <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
                           Selling Price
@@ -935,7 +935,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                         </Typography>
                       </Box>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid sx={{ xs: 6 }}>
                       <Box sx={{ marginBottom: 2 }}>
                         <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
                           Cost Price
@@ -948,7 +948,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                   </Grid>
 
                   <Grid container spacing={2}>
-                    <Grid item xs={6}>
+                    <Grid sx={{ xs: 6 }}>
                       <Box sx={{ marginBottom: 2 }}>
                         <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
                           Stock Quantity
@@ -958,7 +958,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                         </Typography>
                       </Box>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid sx={{ xs: 6 }}>
                       <Box sx={{ marginBottom: 2 }}>
                         <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
                           Status

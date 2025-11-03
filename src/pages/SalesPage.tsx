@@ -448,7 +448,7 @@ const SalesPage: React.FC = () => {
       <Card sx={{ mb: 3, borderRadius: 1, boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
         <CardContent sx={{ p: 3 }}>
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={4}>
+            <Grid sx={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 placeholder="Search by sales number or customer name..."
@@ -460,7 +460,7 @@ const SalesPage: React.FC = () => {
                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 } }}
               />
             </Grid>
-            <Grid item xs={12} md={3} minWidth={250}>
+            <Grid sx={{ xs: 12, md: 3, minWidth: 250 }}>
               <FormControl fullWidth>
                 <InputLabel>Customer</InputLabel>
                 <Select
@@ -478,7 +478,7 @@ const SalesPage: React.FC = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={2}>
+            <Grid sx={{ xs: 12, md: 2 }}>
               <Button
                 variant="outlined"
                 startIcon={<RefreshIcon />}
@@ -742,20 +742,20 @@ const SalesPage: React.FC = () => {
                   ) : (
                     <Grid container spacing={3}>
                       {/* Sale Summary Card */}
-                      <Grid item xs={12} md={6}>
+                      <Grid sx={{ xs: 12, md: 6 }}>
                         <Card sx={{ height: '100%', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
                           <CardContent>
                             <Typography variant="h6" sx={{ mb: 2, color: 'white' }}>
                               Sale Summary
                             </Typography>
                             <Grid container spacing={2}>
-                              <Grid item xs={12}>
+                              <Grid sx={{ xs: 12 }}>
                                 <Typography variant="body2" sx={{ opacity: 0.9 }}>Date</Typography>
                                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
                                   {formatDate(selectedSale.createdDate)}
                                 </Typography>
                               </Grid>
-                              <Grid item xs={12}>
+                              <Grid sx={{ xs: 12 }}>
                                 <Typography variant="body2" sx={{ opacity: 0.9 }}>Remark</Typography>
                                 <Typography variant="body1">
                                   {selectedSale.remark || 'No remarks'}
@@ -767,7 +767,7 @@ const SalesPage: React.FC = () => {
                       </Grid>
 
                       {/* Financial Summary Card */}
-                      <Grid item xs={12} md={6}>
+                      <Grid sx={{ xs: 12, md: 6 }}>
                         <Card sx={{ height: '100%' }}>
                           <CardContent>
                             <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -775,37 +775,37 @@ const SalesPage: React.FC = () => {
                               Financial Summary
                             </Typography>
                             <Grid container spacing={2}>
-                              <Grid item xs={6}>
+                              <Grid sx={{ xs: 6 }}>
                                 <Typography variant="body2" color="text.secondary">Total Price</Typography>
                                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
                                   {formatCurrency(selectedSale.totalPrice)}
                                 </Typography>
                               </Grid>
-                              <Grid item xs={6}>
+                              <Grid sx={{ xs: 6 }}>
                                 <Typography variant="body2" color="text.secondary">Discount</Typography>
                                 <Typography variant="body1" sx={{ fontWeight: 500, color: 'error.main' }}>
                                   -{formatCurrency(selectedSale.discountAmount)}
                                 </Typography>
                               </Grid>
-                              <Grid item xs={6}>
+                              <Grid sx={{ xs: 6 }}>
                                 <Typography variant="body2" color="text.secondary">Tax Amount</Typography>
                                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
                                   {formatCurrency(selectedSale.taxAmount)}
                                 </Typography>
                               </Grid>
-                              <Grid item xs={6}>
+                              <Grid sx={{ xs: 6 }}>
                                 <Typography variant="body2" color="text.secondary">Grand Total</Typography>
                                 <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
                                   {formatCurrency(selectedSale.grandTotal)}
                                 </Typography>
                               </Grid>
-                              <Grid item xs={6}>
+                              <Grid sx={{ xs: 6 }}>
                                 <Typography variant="body2" color="text.secondary">Total Paid</Typography>
                                 <Typography variant="body1" sx={{ fontWeight: 500, color: 'success.main' }}>
                                   {formatCurrency(selectedSale.totalPaid)}
                                 </Typography>
                               </Grid>
-                              <Grid item xs={6}>
+                              <Grid sx={{ xs: 6 }}>
                                 <Typography variant="body2" color="text.secondary">Remaining</Typography>
                                 <Typography variant="h6" sx={{
                                   fontWeight: 600,
@@ -820,7 +820,7 @@ const SalesPage: React.FC = () => {
                       </Grid>
 
                       {/* Profit Analysis Card */}
-                      <Grid item xs={12}>
+                      <Grid sx={{ xs: 12 }}>
                         <Card>
                           <CardContent>
                             <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -828,7 +828,7 @@ const SalesPage: React.FC = () => {
                               Profit Analysis
                             </Typography>
                             <Grid container spacing={3}>
-                              <Grid item xs={12} md={4}>
+                              <Grid sx={{ xs: 12, md: 4 }}>
                                 <Box sx={{ textAlign: 'center', p: 2, borderRadius: 2, bgcolor: 'grey.50' }}>
                                   <Typography variant="body2" color="text.secondary">Total Cost</Typography>
                                   <Typography variant="h5" sx={{ fontWeight: 600, mt: 1 }}>
@@ -836,7 +836,7 @@ const SalesPage: React.FC = () => {
                                   </Typography>
                                 </Box>
                               </Grid>
-                              <Grid item xs={12} md={4}>
+                              <Grid sx={{ xs: 12, md: 4 }}>
                                 <Box sx={{ textAlign: 'center', p: 2, borderRadius: 2, bgcolor: selectedSale.salesProfit >= 0 ? 'success.50' : 'error.50' }}>
                                   <Typography variant="body2" color="text.secondary">Profit</Typography>
                                   <Typography variant="h5" sx={{
@@ -848,7 +848,7 @@ const SalesPage: React.FC = () => {
                                   </Typography>
                                 </Box>
                               </Grid>
-                              <Grid item xs={12} md={4}>
+                              <Grid sx={{ xs: 12, md: 4 }}>
                                 <Box sx={{ textAlign: 'center', p: 2, borderRadius: 2, bgcolor: selectedSale.salesProfitMargin >= 0 ? 'success.50' : 'error.50' }}>
                                   <Typography variant="body2" color="text.secondary">Profit Margin</Typography>
                                   <Typography variant="h5" sx={{
@@ -916,13 +916,13 @@ const SalesPage: React.FC = () => {
                         <Card key={payment.id} sx={{ mb: 2 }}>
                           <CardContent>
                             <Grid container spacing={2} alignItems="center">
-                              <Grid item xs={12} md={3}>
+                              <Grid sx={{ xs: 12, md: 3 }}>
                                 <Typography variant="body2" color="text.secondary">Amount</Typography>
                                 <Typography variant="h6" sx={{ fontWeight: 600, color: 'success.main' }}>
                                   {formatCurrency(payment.amount)}
                                 </Typography>
                               </Grid>
-                              <Grid item xs={12} md={3}>
+                              <Grid sx={{ xs: 12, md: 3 }}>
                                 <Typography variant="body2" color="text.secondary">Method</Typography>
                                 <Chip
                                   label={payment.paymentMethod}
@@ -931,13 +931,13 @@ const SalesPage: React.FC = () => {
                                   sx={{ textTransform: 'capitalize' }}
                                 />
                               </Grid>
-                              <Grid item xs={12} md={3}>
+                              <Grid sx={{ xs: 12, md: 3 }}>
                                 <Typography variant="body2" color="text.secondary">Date</Typography>
                                 <Typography variant="body1">
                                   {new Date(payment.paymentDate).toLocaleDateString()} at {new Date(payment.paymentDate).toLocaleTimeString()}
                                 </Typography>
                               </Grid>
-                              <Grid item xs={12} md={3}>
+                              <Grid sx={{ xs: 12, md: 3 }}>
                                 {payment.remark && (
                                   <>
                                     <Typography variant="body2" color="text.secondary">Remark</Typography>
@@ -970,7 +970,7 @@ const SalesPage: React.FC = () => {
                     <Card>
                       <CardContent>
                         <Grid container spacing={3}>
-                          <Grid item xs={12} md={6}>
+                          <Grid sx={{ xs: 12, md: 6 }}>
                             <List>
                               <ListItem>
                                 <ListItemAvatar>
@@ -1008,7 +1008,7 @@ const SalesPage: React.FC = () => {
                               </ListItem>
                             </List>
                           </Grid>
-                          <Grid item xs={12} md={6}>
+                          <Grid sx={{ xs: 12, md: 6 }}>
                             <List>
                               <ListItem>
                                 <ListItemAvatar>

@@ -446,7 +446,7 @@ const StockTransactionsPage: React.FC = () => {
           </Box>
 
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6} md={2} minWidth={220}>
+            <Grid sx={{ xs: 12, sm: 6, md: 2, minWidth: 220 }}>
               <FormControl fullWidth size="small">
                 <InputLabel>Product</InputLabel>
                 <Select
@@ -464,7 +464,7 @@ const StockTransactionsPage: React.FC = () => {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={2} minWidth={220}>
+            <Grid sx={{ xs: 12, sm: 6, md: 2, minWidth: 220 }}>
               <FormControl fullWidth size="small">
                 <InputLabel>Transaction Type</InputLabel>
                 <Select
@@ -482,7 +482,7 @@ const StockTransactionsPage: React.FC = () => {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={2} minWidth={220}>
+            <Grid sx={{ xs: 12, sm: 6, md: 2, minWidth: 220 }}>
               <FormControl fullWidth size="small">
                 <InputLabel>Reference Type</InputLabel>
                 <Select
@@ -500,7 +500,7 @@ const StockTransactionsPage: React.FC = () => {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={2} minWidth={220}>
+            <Grid sx={{ xs: 12, sm: 6, md: 2, minWidth: 220 }}>
               <TextField
                 fullWidth
                 size="small"
@@ -512,7 +512,7 @@ const StockTransactionsPage: React.FC = () => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6} md={2} minWidth={220}>
+            <Grid sx={{ xs: 12, sm: 6, md: 2, minWidth: 220 }}>
               <TextField
                 fullWidth
                 size="small"
@@ -524,7 +524,7 @@ const StockTransactionsPage: React.FC = () => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6} md={2} minWidth={220}>
+            <Grid sx={{ xs: 12, sm: 6, md: 2, minWidth: 220 }}>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Button
                   variant="contained"
@@ -758,13 +758,13 @@ const StockTransactionsPage: React.FC = () => {
               {detailsTabValue === 0 && (
                 <Box>
                   <Grid container spacing={3}>
-                    <Grid item xs={12} md={6}>
+                    <Grid sx={{ xs: 12, md: 6 }}>
                       <Card elevation={1} sx={{ p: 2, mb: 2 }}>
                         <Typography variant="h6" gutterBottom color="primary" fontWeight={600}>
                           Transaction Information
                         </Typography>
                         <Grid container spacing={2}>
-                          <Grid item xs={12}>
+                          <Grid sx={{ xs: 12 }}>
                             <Typography variant="body2" color="text.secondary">
                               Transaction ID
                             </Typography>
@@ -772,7 +772,7 @@ const StockTransactionsPage: React.FC = () => {
                               {selectedTransaction.id?.substring(0, 8).toUpperCase() || 'N/A'}
                             </Typography>
                           </Grid>
-                          <Grid item xs={12}>
+                          <Grid sx={{ xs: 12 }}>
                             <Typography variant="body2" color="text.secondary">
                               Transaction Date
                             </Typography>
@@ -780,7 +780,7 @@ const StockTransactionsPage: React.FC = () => {
                               {formatDate(selectedTransaction.transactionDate)}
                             </Typography>
                           </Grid>
-                          <Grid item xs={12}>
+                          <Grid sx={{ xs: 12 }}>
                             <Typography variant="body2" color="text.secondary">
                               Transaction Type
                             </Typography>
@@ -795,13 +795,13 @@ const StockTransactionsPage: React.FC = () => {
                       </Card>
                     </Grid>
 
-                    <Grid item xs={12} md={6}>
+                    <Grid sx={{ xs: 12, md: 6 }}>
                       <Card elevation={1} sx={{ p: 2, mb: 2 }}>
                         <Typography variant="h6" gutterBottom color="primary" fontWeight={600}>
                           Financial Information
                         </Typography>
                         <Grid container spacing={2}>
-                          <Grid item xs={12}>
+                          <Grid sx={{ xs: 12 }}>
                             <Typography variant="body2" color="text.secondary">
                               Quantity
                             </Typography>
@@ -809,7 +809,7 @@ const StockTransactionsPage: React.FC = () => {
                               {selectedTransaction.quantity.toLocaleString()} units
                             </Typography>
                           </Grid>
-                          <Grid item xs={12}>
+                          <Grid sx={{ xs: 12 }}>
                             <Typography variant="body2" color="text.secondary">
                               Unit Cost
                             </Typography>
@@ -817,7 +817,7 @@ const StockTransactionsPage: React.FC = () => {
                               {formatCurrency(selectedTransaction.unitCost)}
                             </Typography>
                           </Grid>
-                          <Grid item xs={12}>
+                          <Grid sx={{ xs: 12 }}>
                             <Typography variant="body2" color="text.secondary">
                               Total Cost
                             </Typography>
@@ -829,13 +829,13 @@ const StockTransactionsPage: React.FC = () => {
                       </Card>
                     </Grid>
 
-                    <Grid item xs={12}>
+                    <Grid sx={{ xs: 12 }}>
                       <Card elevation={1} sx={{ p: 2 }}>
                         <Typography variant="h6" gutterBottom color="primary" fontWeight={600}>
                           Reference Information
                         </Typography>
                         <Grid container spacing={2}>
-                          <Grid item xs={12} md={6}>
+                          <Grid sx={{ xs: 12, md: 6 }}>
                             <Typography variant="body2" color="text.secondary">
                               Reference Type
                             </Typography>
@@ -847,7 +847,7 @@ const StockTransactionsPage: React.FC = () => {
                               sx={{ fontWeight: 500 }}
                             />
                           </Grid>
-                          <Grid item xs={12} md={6}>
+                          <Grid sx={{ xs: 12, md: 6 }}>
                             <Typography variant="body2" color="text.secondary">
                               Reference ID
                             </Typography>
@@ -871,7 +871,7 @@ const StockTransactionsPage: React.FC = () => {
                     </Typography>
 
                     <Grid container spacing={3}>
-                      <Grid item xs={12} md={8}>
+                      <Grid sx={{ xs: 12, md: 8 }}>
                         <Box sx={{ mb: 3 }}>
                           <Typography variant="body2" color="text.secondary" gutterBottom>
                             Product Name
@@ -882,7 +882,7 @@ const StockTransactionsPage: React.FC = () => {
                         </Box>
 
                         <Grid container spacing={3}>
-                          <Grid item xs={12} md={6}>
+                          <Grid sx={{ xs: 12, md: 6 }}>
                             <Typography variant="body2" color="text.secondary" gutterBottom>
                               Product ID
                             </Typography>
@@ -890,7 +890,7 @@ const StockTransactionsPage: React.FC = () => {
                               {selectedTransaction.productId?.substring(0, 8).toUpperCase() || 'N/A'}
                             </Typography>
                           </Grid>
-                          <Grid item xs={12} md={6}>
+                          <Grid sx={{ xs: 12, md: 6 }}>
                             <Typography variant="body2" color="text.secondary" gutterBottom>
                               Stock Impact
                             </Typography>
@@ -906,7 +906,7 @@ const StockTransactionsPage: React.FC = () => {
                         </Grid>
                       </Grid>
 
-                      <Grid item xs={12} md={4}>
+                      <Grid sx={{ xs: 12, md: 4 }}>
                         <Box sx={{ textAlign: 'center', py: 2 }}>
                           <ProductIcon sx={{ fontSize: 64, color: 'primary.main', mb: 1 }} />
                           <Typography variant="h6" gutterBottom>
@@ -1012,7 +1012,7 @@ const StockTransactionsPage: React.FC = () => {
                       Technical Details
                     </Typography>
                     <Grid container spacing={2}>
-                      <Grid item xs={12} md={6}>
+                      <Grid sx={{ xs: 12, md: 6 }}>
                         <Typography variant="body2" color="text.secondary">
                           Transaction Type Enum
                         </Typography>
@@ -1020,7 +1020,7 @@ const StockTransactionsPage: React.FC = () => {
                           {selectedTransaction.type}
                         </Typography>
                       </Grid>
-                      <Grid item xs={12} md={6}>
+                      <Grid sx={{ xs: 12, md: 6 }}>
                         <Typography variant="body2" color="text.secondary">
                           Reference Type Enum
                         </Typography>
@@ -1080,7 +1080,7 @@ const StockTransactionsPage: React.FC = () => {
             )}
 
             <Grid container spacing={2}>
-              <Grid item xs={12}>
+              <Grid sx={{ xs: 12 }}>
                 <FormControl fullWidth required>
                   <InputLabel>Product</InputLabel>
                   <Select
@@ -1097,7 +1097,7 @@ const StockTransactionsPage: React.FC = () => {
                 </FormControl>
               </Grid>
 
-              <Grid item xs={12} sm={6}>
+              <Grid sx={{ xs: 12, sm: 6 }}>
                 <FormControl fullWidth required>
                   <InputLabel>Adjustment Type</InputLabel>
                   <Select
@@ -1114,7 +1114,7 @@ const StockTransactionsPage: React.FC = () => {
                 </FormControl>
               </Grid>
 
-              <Grid item xs={12} sm={6}>
+              <Grid sx={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   label="Quantity"
@@ -1126,7 +1126,7 @@ const StockTransactionsPage: React.FC = () => {
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid sx={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label="Reason"

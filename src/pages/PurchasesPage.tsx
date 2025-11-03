@@ -316,7 +316,7 @@ const PurchasesPage: React.FC = () => {
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={4} minWidth={220}>
+            <Grid sx={{ xs: 12, md: 4, minWidth: 220 }}>
               <TextField
                 fullWidth
                 placeholder="Search purchases..."
@@ -327,7 +327,7 @@ const PurchasesPage: React.FC = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12} md={3} minWidth={220}>
+            <Grid sx={{ xs: 12, md: 3, minWidth: 220 }}>
               <FormControl fullWidth>
                 <InputLabel>Supplier</InputLabel>
                 <Select
@@ -344,7 +344,7 @@ const PurchasesPage: React.FC = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={3} minWidth={220}>
+            <Grid sx={{ xs: 12, md: 3, minWidth: 220 }}>
               <FormControl fullWidth>
                 <InputLabel>Status</InputLabel>
                 <Select
@@ -359,7 +359,7 @@ const PurchasesPage: React.FC = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={2} minWidth={220}>
+            <Grid sx={{ xs: 12, md: 2, minWidth: 220 }}>
               <Button
                 variant="outlined"
                 startIcon={<RefreshIcon />}
@@ -583,26 +583,26 @@ const PurchasesPage: React.FC = () => {
                 ) : (
                   <Grid container spacing={3}>
                     {/* Purchase Summary Card */}
-                    <Grid item xs={12} md={6}>
+                    <Grid sx={{ xs: 12, md: 6 }}>
                       <Card sx={{ height: '100%', background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white' }}>
                         <CardContent>
                           <Typography variant="h6" sx={{ mb: 2, color: 'white' }}>
                             Purchase Summary
                           </Typography>
                           <Grid container spacing={2}>
-                            <Grid item xs={12}>
+                            <Grid sx={{ xs: 12 }}>
                               <Typography variant="body2" sx={{ opacity: 0.9 }}>Purchase Date</Typography>
                               <Typography variant="body1" sx={{ fontWeight: 500 }}>
                                 {new Date(purchaseToView.purchaseDate).toLocaleDateString()}
                               </Typography>
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid sx={{ xs: 12 }}>
                               <Typography variant="body2" sx={{ opacity: 0.9 }}>Created By</Typography>
                               <Typography variant="body1" sx={{ fontWeight: 500 }}>
                                 {purchaseToView.createdBy}
                               </Typography>
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid sx={{ xs: 12 }}>
                               <Typography variant="body2" sx={{ opacity: 0.9 }}>Supplier</Typography>
                               <Typography variant="body1" sx={{ fontWeight: 500 }}>
                                 {purchaseToView.supplierName}
@@ -614,7 +614,7 @@ const PurchasesPage: React.FC = () => {
                     </Grid>
 
                     {/* Financial Summary Card */}
-                    <Grid item xs={12} md={6}>
+                    <Grid sx={{ xs: 12, md: 6 }}>
                       <Card sx={{ height: '100%' }}>
                         <CardContent>
                           <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -622,19 +622,19 @@ const PurchasesPage: React.FC = () => {
                             Financial Summary
                           </Typography>
                           <Grid container spacing={2}>
-                            <Grid item xs={12}>
+                            <Grid sx={{ xs: 12 }}>
                               <Typography variant="body2" color="text.secondary">Total Cost</Typography>
                               <Typography variant="h5" sx={{ fontWeight: 600, color: 'primary.main' }}>
                                 {formatCurrency(purchaseToView.totalCost)}
                               </Typography>
                             </Grid>
-                            <Grid item xs={6}>
+                            <Grid sx={{ xs: 6 }}>
                               <Typography variant="body2" color="text.secondary">Items</Typography>
                               <Typography variant="h6" sx={{ fontWeight: 500 }}>
                                 {purchaseToView.purchaseItems.length}
                               </Typography>
                             </Grid>
-                            <Grid item xs={6}>
+                            <Grid sx={{ xs: 6 }}>
                               <Typography variant="body2" color="text.secondary">Status</Typography>
                               <Chip
                                 label={purchasesService.formatPurchaseStatus(purchaseToView.status)}
@@ -649,7 +649,7 @@ const PurchasesPage: React.FC = () => {
 
                     {/* Remarks Card */}
                     {purchaseToView.remark && (
-                      <Grid item xs={12}>
+                      <Grid sx={{ xs: 12 }}>
                         <Card>
                           <CardContent>
                             <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -713,7 +713,7 @@ const PurchasesPage: React.FC = () => {
                   <Card>
                     <CardContent>
                       <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid sx={{ xs: 12, md: 6 }}>
                           <List>
                             <ListItem>
                               <ListItemAvatar>
@@ -751,7 +751,7 @@ const PurchasesPage: React.FC = () => {
                             </ListItem>
                           </List>
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid sx={{ xs: 12, md: 6 }}>
                           <List>
                             <ListItem>
                               <ListItemAvatar>

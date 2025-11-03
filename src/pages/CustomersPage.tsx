@@ -653,7 +653,7 @@ const CustomersPage: React.FC = () => {
       {/* Summary Stats */}
       {!loading && customers.length > 0 && (
         <Grid container spacing={3} sx={{ mt: 2 }}>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" color="primary.main" gutterBottom>
@@ -665,7 +665,7 @@ const CustomersPage: React.FC = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" color="warning.main" gutterBottom>
@@ -677,7 +677,7 @@ const CustomersPage: React.FC = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" color="error.main" gutterBottom>
@@ -691,7 +691,7 @@ const CustomersPage: React.FC = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" color="success.main" gutterBottom>
@@ -748,7 +748,7 @@ const CustomersPage: React.FC = () => {
                     Customer Information
                   </Typography>
                   <Grid container spacing={3}>
-                    <Grid item xs={12} md={6}>
+                    <Grid sx={{ xs: 12, md: 6 }}>
                       <List>
                         <ListItem>
                           <ListItemText
@@ -770,7 +770,7 @@ const CustomersPage: React.FC = () => {
                         </ListItem>
                       </List>
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid sx={{ xs: 12, md: 6 }}>
                       <List>
                         <ListItem>
                           <ListItemText
@@ -800,7 +800,7 @@ const CustomersPage: React.FC = () => {
                     Sales Statistics
                   </Typography>
                   <Grid container spacing={3}>
-                    <Grid item xs={12} md={4}>
+                    <Grid sx={{ xs: 12, md: 4 }}>
                       <Box sx={{ textAlign: 'center', p: 2, border: 1, borderColor: 'divider', borderRadius: 1 }}>
                         <Typography variant="h4" color="primary.main">
                           {viewCustomer.totalSales}
@@ -810,7 +810,7 @@ const CustomersPage: React.FC = () => {
                         </Typography>
                       </Box>
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid sx={{ xs: 12, md: 4 }}>
                       <Box sx={{ textAlign: 'center', p: 2, border: 1, borderColor: 'divider', borderRadius: 1 }}>
                         <Typography variant="h4" color="success.main">
                           {customersService.formatCurrency(viewCustomer.totalSalesAmount)}
@@ -820,7 +820,7 @@ const CustomersPage: React.FC = () => {
                         </Typography>
                       </Box>
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid sx={{ xs: 12, md: 4 }}>
                       <Box sx={{ textAlign: 'center', p: 2, border: 1, borderColor: 'divider', borderRadius: 1 }}>
                         <Typography variant="h4" color={getDueAmountColor(viewCustomer.totalDueAmount)}>
                           {customersService.formatCurrency(viewCustomer.totalDueAmount)}
@@ -842,7 +842,7 @@ const CustomersPage: React.FC = () => {
                     Activity Information
                   </Typography>
                   <Grid container spacing={3}>
-                    <Grid item xs={12} md={6}>
+                    <Grid sx={{ xs: 12, md: 6 }}>
                       <List>
                         <ListItem>
                           <ListItemText
@@ -852,7 +852,7 @@ const CustomersPage: React.FC = () => {
                         </ListItem>
                       </List>
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid sx={{ xs: 12, md: 6 }}>
                       <List>
                         <ListItem>
                           <ListItemText
