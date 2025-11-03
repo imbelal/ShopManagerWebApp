@@ -100,9 +100,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
         if (categoriesResponse.data.succeeded && categoriesResponse.data.data) {
           setCategories(categoriesResponse.data.data);
-          console.log('Categories loaded:', categoriesResponse.data.data);
         } else {
-          console.error('Failed to load categories:', categoriesResponse.data.message);
         }
       } catch (err) {
         console.error('Failed to load categories:', err);
@@ -146,34 +144,26 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
 
-    console.log('Validating form data:', formData);
-
     if (!formData.title.trim()) {
       errors.title = 'Product title is required';
-      console.log('Title validation failed');
     }
 
     if (!formData.description.trim()) {
       errors.description = 'Description is required';
-      console.log('Description validation failed');
     }
 
     if (!formData.categoryId) {
       errors.categoryId = 'Category is required';
-      console.log('Category validation failed');
     }
 
     if (!formData.unit || formData.unit.toString().trim() === '') {
       errors.unit = 'Unit is required';
-      console.log('Unit validation failed');
     }
 
     if (!formData.sellingPrice || parseFloat(formData.sellingPrice) <= 0) {
       errors.sellingPrice = 'Selling price must be greater than 0';
-      console.log('Selling price validation failed');
     }
 
-    console.log('Form errors:', errors);
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -251,10 +241,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
   // Handle form submission
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    console.log('Form submission started');
 
     if (!validateForm()) {
-      console.log('Form validation failed');
       return;
     }
 
@@ -277,7 +265,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
           sellingPrice: parseFloat(formData.sellingPrice)
         };
 
-        console.log('Updating product:', updateData);
         response = await productService.updateProduct(updateData);
       } else {
         // Create new product
@@ -292,7 +279,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
           tagIds: formData.tagIds
         };
 
-        console.log('Creating product:', createData);
         response = await productService.createProduct(createData);
       }
 
@@ -702,7 +688,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
             variant="contained"
             disabled={loading}
             startIcon={loading ? <CircularProgress size={16} /> : null}
-            onClick={() => console.log('Submit button clicked')}
             sx={{
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               textTransform: 'none',

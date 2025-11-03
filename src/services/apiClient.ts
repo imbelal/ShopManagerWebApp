@@ -1,5 +1,6 @@
 import axios, { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { ApiResponse } from '../types/auth';
+import authService from './authService';
 
 // Create global axios instance
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://localhost:7093/api/v1';
@@ -75,32 +76,39 @@ apiClient.interceptors.response.use(
           throw new Error('No refresh token available');
         }
 
-        // Create a new axios instance for token refresh to avoid infinite loop
-        const refreshResponse = await axios.post(
-          `${API_BASE_URL}/Users/RefreshToken`,
-          { refreshToken },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            timeout: 10000, // 10 seconds timeout for refresh
-          }
-        );
+        // Validate refresh token format before sending
+        if (refreshToken.split('.').length !== 3) {
+          throw new Error('Invalid refresh token format - not a JWT');
+        }
+
+        // Use authService for consistent token refresh
+        const refreshResponse = await authService.refreshAccessToken(refreshToken);
 
         if (refreshResponse.data.succeeded && refreshResponse.data.data) {
-          const { accessToken } = refreshResponse.data.data;
+          const { accessToken: newAccessToken, refreshToken: newRefreshToken } = refreshResponse.data.data;
+
+          // Validate we received a proper access token
+          if (!newAccessToken || newAccessToken.length < 10) {
+            throw new Error('Invalid access token received from refresh');
+          }
 
           // Store new access token
-          localStorage.setItem('accessToken', accessToken);
+          localStorage.setItem('accessToken', newAccessToken);
+
+          // Store new refresh token if provided (backend should always return a new one)
+          if (newRefreshToken) {
+            localStorage.setItem('refreshToken', newRefreshToken);
+          }
 
           // Process queue with new token
-          processQueue(null, accessToken);
+          processQueue(null, newAccessToken);
 
           // Retry the original request with new token
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return apiClient(originalRequest);
         } else {
-          throw new Error('Refresh token response was invalid');
+          const errorMsg = refreshResponse.data.message || 'Refresh token response was invalid';
+          throw new Error(errorMsg);
         }
       } catch (refreshError) {
         // Refresh token failed, clear tokens and redirect to login

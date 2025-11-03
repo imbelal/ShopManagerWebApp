@@ -83,10 +83,6 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
 
-  // Debug view dialog state changes
-  useEffect(() => {
-    console.log('viewDialogOpen changed to:', viewDialogOpen, 'selectedProduct:', selectedProduct);
-  }, [viewDialogOpen, selectedProduct]);
   const [productFormOpen, setProductFormOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
