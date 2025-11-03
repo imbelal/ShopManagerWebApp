@@ -33,6 +33,7 @@ import {
   Store,
   Notifications,
   ShoppingBasket as PurchaseIcon,
+  SwapHoriz as StockTransactionsIcon,
 } from '@mui/icons-material';
 import { styled, useTheme as useStyledTheme } from '@mui/material/styles';
 import { useAuth } from '../context/AuthContext';
@@ -134,6 +135,7 @@ const navigationItems: NavigationItem[] = [
   { text: 'Products', icon: <Inventory />, path: '/products' },
   { text: 'Sales', icon: <ShoppingCart />, path: '/sales' },
   { text: 'Purchases', icon: <PurchaseIcon />, path: '/purchases' },
+  { text: 'Stock Transactions', icon: <StockTransactionsIcon />, path: '/stock-transactions' },
   { text: 'Categories', icon: <Category />, path: '/categories' },
   { text: 'Customers', icon: <People />, path: '/customers' },
   { text: 'Reports', icon: <Assessment />, path: '/reports' },
