@@ -29,13 +29,28 @@ import {
   CircularProgress,
   Alert,
   useTheme,
-  alpha
+  alpha,
+  Tabs,
+  Tab,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon
 } from '@mui/material';
 import {
   MoreVert as MoreVertIcon,
   Visibility as VisibilityIcon,
   Add as AddIcon,
-  FilterList as FilterIcon
+  FilterList as FilterIcon,
+  Info as InfoIcon,
+  Inventory as ProductIcon,
+  Receipt as ReceiptIcon,
+  Timeline as TimelineIcon,
+  Event as EventIcon,
+  Person as PersonIcon,
+  AttachMoney as MoneyIcon,
+  Description as DescriptionIcon
 } from '@mui/icons-material';
 import stockTransactionsService, {
   StockTransactionDto,
@@ -85,6 +100,7 @@ const StockTransactionsPage: React.FC = () => {
   const [selectedTransaction, setSelectedTransaction] = useState<StockTransactionDto | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [adjustmentDialogOpen, setAdjustmentDialogOpen] = useState(false);
+  const [detailsTabValue, setDetailsTabValue] = useState(0);
 
   // Adjustment form state
   const [adjustmentForm, setAdjustmentForm] = useState({
@@ -296,13 +312,15 @@ const StockTransactionsPage: React.FC = () => {
   // View details handler
   const handleViewDetails = () => {
     setViewDialogOpen(true);
-    handleMenuClose();
+    // Close menu but preserve selectedTransaction for the dialog
+    setAnchorEl(null);
   };
 
   // Adjustment dialog handlers
   const handleCreateAdjustment = () => {
     setAdjustmentDialogOpen(true);
-    handleMenuClose();
+    // Close menu but preserve selectedTransaction
+    setAnchorEl(null);
   };
 
   const handleAdjustmentFormChange = (field: string, value: any) => {
@@ -686,94 +704,355 @@ const StockTransactionsPage: React.FC = () => {
         </MenuItem>
       </Menu>
 
-      {/* View Details Dialog */}
+      {/* Enhanced View Details Dialog */}
       <Dialog
         open={viewDialogOpen}
-        onClose={() => setViewDialogOpen(false)}
-        maxWidth="md"
+        onClose={() => {
+          setViewDialogOpen(false);
+          setDetailsTabValue(0);
+          setSelectedTransaction(null);
+        }}
+        maxWidth="lg"
         fullWidth
-        PaperProps={{ sx: { borderRadius: 2 } }}
+        PaperProps={{ sx: { borderRadius: 3 } }}
       >
-        <DialogTitle>Transaction Details</DialogTitle>
-        <DialogContent>
-          {selectedTransaction && (
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Transaction Date
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 2 }}>
-                  {formatDate(selectedTransaction.transactionDate)}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Product
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 2 }}>
-                  {selectedTransaction.productName}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Transaction Type
-                </Typography>
-                <Chip
-                  label={selectedTransaction.typeName}
-                  color={getTransactionTypeColor(selectedTransaction.type) as any}
-                  size="small"
-                  sx={{ mb: 2 }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Reference Type
-                </Typography>
-                <Chip
-                  label={selectedTransaction.refTypeName}
-                  color={getReferenceTypeColor(selectedTransaction.refType) as any}
-                  size="small"
-                  variant="outlined"
-                  sx={{ mb: 2 }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Quantity
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 2 }}>
-                  {selectedTransaction.quantity}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Unit Cost
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 2 }}>
-                  {formatCurrency(selectedTransaction.unitCost)}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Total Cost
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 2 }}>
-                  {formatCurrency(selectedTransaction.totalCost)}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Created By
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 2 }}>
-                  {selectedTransaction.createdBy}
-                </Typography>
-              </Grid>
-            </Grid>
+        <DialogTitle sx={{ pb: 1 }}>
+          <Box display="flex" alignItems="center" gap={1}>
+            <ReceiptIcon color="primary" />
+            <Typography variant="h5" fontWeight={600}>
+              Transaction Details
+            </Typography>
+          </Box>
+        </DialogTitle>
+
+        {/* Tabs */}
+        <Tabs
+          value={detailsTabValue}
+          onChange={(e, newValue) => setDetailsTabValue(newValue)}
+          sx={{ px: 3, borderBottom: 1, borderColor: 'divider' }}
+        >
+          <Tab
+            icon={<InfoIcon />}
+            label="Overview"
+            iconPosition="start"
+            sx={{ minHeight: 48 }}
+          />
+          <Tab
+            icon={<ProductIcon />}
+            label="Product Details"
+            iconPosition="start"
+            sx={{ minHeight: 48 }}
+          />
+          <Tab
+            icon={<TimelineIcon />}
+            label="Reference & Origin"
+            iconPosition="start"
+            sx={{ minHeight: 48 }}
+          />
+        </Tabs>
+
+        <DialogContent sx={{ pt: 2 }}>
+          {selectedTransaction ? (
+            <>
+              {/* Overview Tab */}
+              {detailsTabValue === 0 && (
+                <Box>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} md={6}>
+                      <Card elevation={1} sx={{ p: 2, mb: 2 }}>
+                        <Typography variant="h6" gutterBottom color="primary" fontWeight={600}>
+                          Transaction Information
+                        </Typography>
+                        <Grid container spacing={2}>
+                          <Grid item xs={12}>
+                            <Typography variant="body2" color="text.secondary">
+                              Transaction ID
+                            </Typography>
+                            <Typography variant="body1" sx={{ fontFamily: 'monospace', mb: 1 }}>
+                              {selectedTransaction.id?.substring(0, 8).toUpperCase() || 'N/A'}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={12}>
+                            <Typography variant="body2" color="text.secondary">
+                              Transaction Date
+                            </Typography>
+                            <Typography variant="body1" sx={{ mb: 1 }}>
+                              {formatDate(selectedTransaction.transactionDate)}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={12}>
+                            <Typography variant="body2" color="text.secondary">
+                              Transaction Type
+                            </Typography>
+                            <Chip
+                              label={selectedTransaction.typeName}
+                              color={getTransactionTypeColor(selectedTransaction.type) as any}
+                              size="small"
+                              sx={{ fontWeight: 500 }}
+                            />
+                          </Grid>
+                        </Grid>
+                      </Card>
+                    </Grid>
+
+                    <Grid item xs={12} md={6}>
+                      <Card elevation={1} sx={{ p: 2, mb: 2 }}>
+                        <Typography variant="h6" gutterBottom color="primary" fontWeight={600}>
+                          Financial Information
+                        </Typography>
+                        <Grid container spacing={2}>
+                          <Grid item xs={12}>
+                            <Typography variant="body2" color="text.secondary">
+                              Quantity
+                            </Typography>
+                            <Typography variant="h6" color="primary.main">
+                              {selectedTransaction.quantity.toLocaleString()} units
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={12}>
+                            <Typography variant="body2" color="text.secondary">
+                              Unit Cost
+                            </Typography>
+                            <Typography variant="h6" color="primary.main">
+                              {formatCurrency(selectedTransaction.unitCost)}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={12}>
+                            <Typography variant="body2" color="text.secondary">
+                              Total Cost
+                            </Typography>
+                            <Typography variant="h5" color="primary.main" fontWeight={600}>
+                              {formatCurrency(selectedTransaction.totalCost)}
+                            </Typography>
+                          </Grid>
+                        </Grid>
+                      </Card>
+                    </Grid>
+
+                    <Grid item xs={12}>
+                      <Card elevation={1} sx={{ p: 2 }}>
+                        <Typography variant="h6" gutterBottom color="primary" fontWeight={600}>
+                          Reference Information
+                        </Typography>
+                        <Grid container spacing={2}>
+                          <Grid item xs={12} md={6}>
+                            <Typography variant="body2" color="text.secondary">
+                              Reference Type
+                            </Typography>
+                            <Chip
+                              label={selectedTransaction.refTypeName}
+                              color={getReferenceTypeColor(selectedTransaction.refType) as any}
+                              size="small"
+                              variant="outlined"
+                              sx={{ fontWeight: 500 }}
+                            />
+                          </Grid>
+                          <Grid item xs={12} md={6}>
+                            <Typography variant="body2" color="text.secondary">
+                              Reference ID
+                            </Typography>
+                            <Typography variant="body1">
+                              {selectedTransaction.refId || 'N/A'}
+                            </Typography>
+                          </Grid>
+                        </Grid>
+                      </Card>
+                    </Grid>
+                  </Grid>
+                </Box>
+              )}
+
+              {/* Product Details Tab */}
+              {detailsTabValue === 1 && (
+                <Box>
+                  <Card elevation={1} sx={{ p: 3 }}>
+                    <Typography variant="h6" gutterBottom color="primary" fontWeight={600} sx={{ mb: 3 }}>
+                      Product Information
+                    </Typography>
+
+                    <Grid container spacing={3}>
+                      <Grid item xs={12} md={8}>
+                        <Box sx={{ mb: 3 }}>
+                          <Typography variant="body2" color="text.secondary" gutterBottom>
+                            Product Name
+                          </Typography>
+                          <Typography variant="h5" fontWeight={500} sx={{ mb: 2 }}>
+                            {selectedTransaction.productName}
+                          </Typography>
+                        </Box>
+
+                        <Grid container spacing={3}>
+                          <Grid item xs={12} md={6}>
+                            <Typography variant="body2" color="text.secondary" gutterBottom>
+                              Product ID
+                            </Typography>
+                            <Typography variant="body1" sx={{ fontFamily: 'monospace', mb: 2 }}>
+                              {selectedTransaction.productId?.substring(0, 8).toUpperCase() || 'N/A'}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={12} md={6}>
+                            <Typography variant="body2" color="text.secondary" gutterBottom>
+                              Stock Impact
+                            </Typography>
+                            <Typography variant="body1" sx={{ mb: 2 }}>
+                              <Chip
+                                label={`${selectedTransaction.type === StockTransactionType.IN ? '+' : '-'}${selectedTransaction.quantity} units`}
+                                color={selectedTransaction.type === StockTransactionType.IN ? 'success' : 'error'}
+                                size="small"
+                                sx={{ fontWeight: 500 }}
+                              />
+                            </Typography>
+                          </Grid>
+                        </Grid>
+                      </Grid>
+
+                      <Grid item xs={12} md={4}>
+                        <Box sx={{ textAlign: 'center', py: 2 }}>
+                          <ProductIcon sx={{ fontSize: 64, color: 'primary.main', mb: 1 }} />
+                          <Typography variant="h6" gutterBottom>
+                            Product Transaction
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            This transaction affects product inventory levels
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </Card>
+                </Box>
+              )}
+
+              {/* Reference & Origin Tab */}
+              {detailsTabValue === 2 && (
+                <Box>
+                  <Card elevation={1} sx={{ p: 3 }}>
+                    <Typography variant="h6" gutterBottom color="primary" fontWeight={600} sx={{ mb: 3 }}>
+                      Transaction Origin & Audit Trail
+                    </Typography>
+
+                    <List>
+                      <ListItem sx={{ borderLeft: 3, borderColor: 'primary.main', pl: 2, mb: 2 }}>
+                        <ListItemIcon>
+                          <EventIcon color="primary" />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={
+                            <Typography variant="h6" fontWeight={600}>
+                              Transaction Created
+                            </Typography>
+                          }
+                          secondary={
+                            <Box>
+                              <Typography variant="body2" color="text.secondary">
+                                {formatDate(selectedTransaction.createdDate)}
+                              </Typography>
+                              <Typography variant="body1">
+                                Stock transaction recorded in the system
+                              </Typography>
+                            </Box>
+                          }
+                        />
+                      </ListItem>
+
+                      <ListItem sx={{ borderLeft: 3, borderColor: 'secondary.main', pl: 2, mb: 2 }}>
+                        <ListItemIcon>
+                          <PersonIcon color="secondary" />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={
+                            <Typography variant="h6" fontWeight={600}>
+                              Created By
+                            </Typography>
+                          }
+                          secondary={
+                            <Box>
+                              <Typography variant="body1">
+                                {selectedTransaction.createdBy}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                System user who initiated this transaction
+                              </Typography>
+                            </Box>
+                          }
+                        />
+                      </ListItem>
+
+                      <ListItem sx={{ borderLeft: 3, borderColor: 'success.main', pl: 2 }}>
+                        <ListItemIcon>
+                          <ReceiptIcon color="success" />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={
+                            <Typography variant="h6" fontWeight={600}>
+                              Reference Information
+                            </Typography>
+                          }
+                          secondary={
+                            <Box>
+                              <Typography variant="body1">
+                                Type: {selectedTransaction.refTypeName}
+                              </Typography>
+                              {selectedTransaction.refId && (
+                                <Typography variant="body1">
+                                  ID: {selectedTransaction.refId}
+                                </Typography>
+                              )}
+                              <Typography variant="body2" color="text.secondary">
+                                Related document or transaction reference
+                              </Typography>
+                            </Box>
+                          }
+                        />
+                      </ListItem>
+                    </List>
+                  </Card>
+
+                  <Card elevation={1} sx={{ p: 3, mt: 2 }}>
+                    <Typography variant="h6" gutterBottom color="primary" fontWeight={600}>
+                      Technical Details
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} md={6}>
+                        <Typography variant="body2" color="text.secondary">
+                          Transaction Type Enum
+                        </Typography>
+                        <Typography variant="body1" sx={{ fontFamily: 'monospace', mb: 1 }}>
+                          {selectedTransaction.type}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <Typography variant="body2" color="text.secondary">
+                          Reference Type Enum
+                        </Typography>
+                        <Typography variant="body1" sx={{ fontFamily: 'monospace', mb: 1 }}>
+                          {selectedTransaction.refType}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </Card>
+                </Box>
+              )}
+            </>
+          ) : (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="body1" color="text.secondary">
+                No transaction details available.
+              </Typography>
+            </Box>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setViewDialogOpen(false)}>Close</Button>
+
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => {
+              setViewDialogOpen(false);
+              setDetailsTabValue(0);
+              setSelectedTransaction(null);
+            }}
+            variant="outlined"
+          >
+            Close
+          </Button>
         </DialogActions>
       </Dialog>
 
