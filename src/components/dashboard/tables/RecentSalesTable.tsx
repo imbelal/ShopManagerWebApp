@@ -62,12 +62,16 @@ const RecentSalesTable: React.FC<RecentSalesTableProps> = ({
     switch (status?.toLowerCase()) {
       case 'paid':
         return 'success';
-      case 'pending':
+      case 'partially paid':
         return 'warning';
+      case 'cancelled':
+        return 'error';
+      case 'pending':
+        return 'info';
       case 'failed':
         return 'error';
       case 'partial':
-        return 'info';
+        return 'warning';
       default:
         return 'default';
     }
@@ -129,7 +133,7 @@ const RecentSalesTable: React.FC<RecentSalesTableProps> = ({
                     Amount
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600, color: 'text.primary', borderBottom: `2px solid ${theme.palette.divider}` }}>
-                    Status
+                    Payment Status
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600, color: 'text.primary', borderBottom: `2px solid ${theme.palette.divider}` }}>
                     Date
@@ -184,22 +188,13 @@ const RecentSalesTable: React.FC<RecentSalesTableProps> = ({
                       </Box>
                     </TableCell>
                     <TableCell>
-                      <Box display="flex" flexDirection="column" gap={0.5}>
-                        <Chip
-                          label={sale.status}
-                          size="small"
-                          color={getStatusColor(sale.status)}
-                          variant="outlined"
-                          sx={{ fontSize: '0.7rem', height: 22 }}
-                        />
-                        <Chip
-                          label={sale.paymentStatus}
-                          size="small"
-                          color={getPaymentStatusColor(sale.paymentStatus)}
-                          variant="filled"
-                          sx={{ fontSize: '0.65rem', height: 18 }}
-                        />
-                      </Box>
+                      <Chip
+                        label={sale.paymentStatus}
+                        size="small"
+                        color={getPaymentStatusColor(sale.paymentStatus)}
+                        variant="filled"
+                        sx={{ fontSize: '0.7rem', height: 22 }}
+                      />
                     </TableCell>
                     <TableCell>
                       <Box>
