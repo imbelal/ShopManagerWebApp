@@ -153,19 +153,6 @@ export interface MonthlySale {
   formattedProfit: string;
 }
 
-export interface InventorySummary {
-  totalProducts: number;
-  activeProducts: number;
-  inactiveProducts: number;
-  totalStockQuantity: number;
-  totalStockValue: number;
-  lowStockProducts: number;
-  outOfStockProducts: number;
-  averageStockValue: number;
-  categoryBreakdown: CategoryStock[];
-  stockTurnoverRate: number;
-}
-
 export interface CategoryStock {
   categoryId: string;
   categoryName: string;
@@ -261,18 +248,6 @@ class DashboardService {
       const response: AxiosResponse<ApiResponse<SalesTrend>> = await apiClient.get(
         `${this.baseUrl}/sales-trends`,
         { params: { days } }
-      );
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  }
-
-  // Get inventory summary (placeholder for future implementation)
-  async getInventorySummary(): Promise<ApiResponse<InventorySummary>> {
-    try {
-      const response: AxiosResponse<ApiResponse<InventorySummary>> = await apiClient.get(
-        `${this.baseUrl}/inventory-summary`
       );
       return response.data;
     } catch (error) {

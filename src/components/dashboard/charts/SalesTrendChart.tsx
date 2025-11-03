@@ -69,6 +69,7 @@ const SalesTrendChart: React.FC<SalesTrendChartProps> = ({
               key={index}
               variant="body2"
               color={entry.color}
+              component="div"
               sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
             >
               <Box

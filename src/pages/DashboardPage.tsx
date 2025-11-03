@@ -26,6 +26,7 @@ import dashboardService, {
   RecentSale,
   TopProduct,
   LowStockProduct,
+  SalesTrend,
 } from '../services/dashboardService';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -40,11 +41,13 @@ const DashboardPage: React.FC = () => {
   const [recentSales, setRecentSales] = useState<RecentSale[]>([]);
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
   const [lowStockProducts, setLowStockProducts] = useState<LowStockProduct[]>([]);
+  const [salesTrends, setSalesTrends] = useState<SalesTrend | null>(null);
   const [loading, setLoading] = useState({
     metrics: true,
     sales: true,
     products: true,
     stock: true,
+    trends: true,
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -57,11 +60,12 @@ const DashboardPage: React.FC = () => {
     setError(null);
     try {
       // Load all data in parallel
-      const [metricsResponse, salesResponse, productsResponse, stockResponse] = await Promise.allSettled([
+      const [metricsResponse, salesResponse, productsResponse, stockResponse, trendsResponse] = await Promise.allSettled([
         dashboardService.getDashboardMetrics(),
         dashboardService.getRecentSales(10),
         dashboardService.getTopProducts(10, 30),
         dashboardService.getLowStockProducts(15),
+        dashboardService.getSalesTrends(30),
       ]);
 
       // Handle metrics
@@ -91,6 +95,13 @@ const DashboardPage: React.FC = () => {
       } else {
         console.error('Failed to load low stock products:', stockResponse);
       }
+
+      // Handle sales trends
+      if (trendsResponse.status === 'fulfilled' && trendsResponse.value.succeeded) {
+        setSalesTrends(trendsResponse.value.data);
+      } else {
+        console.error('Failed to load sales trends:', trendsResponse);
+      }
     } catch (err) {
       console.error('Dashboard data loading error:', err);
       setError('Failed to load dashboard data. Please try again.');
@@ -100,6 +111,7 @@ const DashboardPage: React.FC = () => {
         sales: false,
         products: false,
         stock: false,
+        trends: false,
       });
     }
   };
@@ -194,16 +206,13 @@ const DashboardPage: React.FC = () => {
         <Grid size={{ xs: 12, lg: 8 }}>
           <SalesTrendChart
             height={400}
-            loading={loading.sales}
+            loading={loading.trends}
             title="Sales Trend - Last 30 Days"
-            // Pass mock data for now - will be connected to API in Phase 2
-            data={[
-              { date: '2024-01-01', revenue: 5000, sales: 25 },
-              { date: '2024-01-02', revenue: 6500, sales: 32 },
-              { date: '2024-01-03', revenue: 4800, sales: 22 },
-              { date: '2024-01-04', revenue: 7200, sales: 38 },
-              { date: '2024-01-05', revenue: 8100, sales: 42 },
-            ]}
+            data={salesTrends?.dailySales?.map(day => ({
+              date: new Date(day.date).toISOString().split('T')[0], // Format date to YYYY-MM-DD
+              revenue: day.totalRevenue,
+              sales: day.totalSales,
+            })) || []}
           />
         </Grid>
         <Grid size={{ xs: 12, lg: 4 }}>
