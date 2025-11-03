@@ -26,6 +26,8 @@ export interface CustomerListRequest {
   pageNumber?: number;
   pageSize?: number;
   searchTerm?: string;
+  sortBy?: 'totalDueAmount' | 'lastSaleDate' | 'createdDate';
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface CustomerListResponse {
@@ -65,6 +67,8 @@ export const customersService = {
     if (params.pageNumber) queryParams.append('pageNumber', params.pageNumber.toString());
     if (params.pageSize) queryParams.append('pageSize', params.pageSize.toString());
     if (params.searchTerm) queryParams.append('searchTerm', params.searchTerm);
+    if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+    if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
 
     const queryString = queryParams.toString();
     const url = `/Customer/paginated${queryString ? '?' + queryString : ''}`;

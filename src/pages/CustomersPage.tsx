@@ -65,6 +65,10 @@ const CustomersPage: React.FC = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
+  // Sorting states
+  const [sortBy, setSortBy] = useState<'totalDueAmount' | 'lastSaleDate' | 'createdDate'>('lastSaleDate');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
   // Dialog and Menu states
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [viewCustomer, setViewCustomer] = useState<Customer | null>(null);
@@ -112,6 +116,8 @@ const CustomersPage: React.FC = () => {
         pageNumber: currentPage,
         pageSize,
         searchTerm: searchTerm.trim() || undefined,
+        sortBy,
+        sortOrder
       };
 
       const response = await customersService.getCustomers(params);
@@ -310,7 +316,7 @@ const CustomersPage: React.FC = () => {
   // Load data on component mount and when dependencies change
   useEffect(() => {
     loadCustomers();
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, sortBy, sortOrder]);
 
   // Handle Enter key in search
   const handleSearchKeyPress = (event: React.KeyboardEvent) => {
@@ -347,7 +353,7 @@ const CustomersPage: React.FC = () => {
       <Card sx={{ mb: 3 }}>
         <CardContent sx={{ py: 2 }}>
           <Grid container spacing={2} alignItems="center">
-            <Grid size={{ xs: 12, md: 6 }}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 placeholder="Search customers by name, email, phone, or address..."
@@ -360,7 +366,44 @@ const CustomersPage: React.FC = () => {
                 size="small"
               />
             </Grid>
-            <Grid size={{ xs: 12, md: 3 }}>
+            <Grid size={{ xs: 6, md: 2 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Sort By</InputLabel>
+                <Select
+                  value={sortBy}
+                  label="Sort By"
+                  onChange={(e) => {
+                    setSortBy(e.target.value as any);
+                    setCurrentPage(1);
+                    loadCustomers();
+                  }}
+                  sx={{ borderRadius: 1 }}
+                >
+                  <MenuItem value="totalDueAmount">Due Amount</MenuItem>
+                  <MenuItem value="lastSaleDate">Last Sale Date</MenuItem>
+                  <MenuItem value="createdDate">Created Date</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid size={{ xs: 6, md: 2 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Order</InputLabel>
+                <Select
+                  value={sortOrder}
+                  label="Order"
+                  onChange={(e) => {
+                    setSortOrder(e.target.value as any);
+                    setCurrentPage(1);
+                    loadCustomers();
+                  }}
+                  sx={{ borderRadius: 1 }}
+                >
+                  <MenuItem value="asc">Ascending</MenuItem>
+                  <MenuItem value="desc">Descending</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid size={{ xs: 6, md: 2 }}>
               <Button
                 variant="outlined"
                 onClick={handleSearch}
@@ -370,7 +413,7 @@ const CustomersPage: React.FC = () => {
                 Search
               </Button>
             </Grid>
-            <Grid size={{ xs: 12, md: 3 }}>
+            <Grid size={{ xs: 6, md: 2 }}>
               <Button
                 variant="text"
                 onClick={() => {
