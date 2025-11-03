@@ -131,9 +131,20 @@ export const handleApiError = (error: any): string => {
     return error.response.data.message;
   }
 
+  // Handle backend Errors array (capital E) - this is the primary format
+  if (error.response?.data?.Errors && Array.isArray(error.response.data.Errors)) {
+    return error.response.data.Errors.join(', ');
+  }
+
+  // Handle validation errors object (lowercase) - for ModelState errors
   if (error.response?.data?.errors) {
     const errors = Object.values(error.response.data.errors).flat();
     return errors.join(', ');
+  }
+
+  // Handle single error string
+  if (error.response?.data?.error) {
+    return error.response.data.error;
   }
 
   if (error.message) {
