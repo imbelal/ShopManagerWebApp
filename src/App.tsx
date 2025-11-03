@@ -8,6 +8,7 @@ import DashboardPage from './pages/DashboardPage';
 import ProductsPage from './pages/ProductsPage';
 import SalesPage from './pages/SalesPage';
 import PurchasesPage from './pages/PurchasesPage';
+import CustomersPage from './pages/CustomersPage';
 import StockTransactionsPage from './pages/StockTransactionsPage';
 import DashboardLayout from './components/DashboardLayout';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -195,12 +196,7 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <DashboardLayout>
-                      <Box p={3}>
-                        <Typography variant="h4">Customers Page</Typography>
-                        <Typography variant="body1" color="text.secondary">
-                          Customer management will be implemented here.
-                        </Typography>
-                      </Box>
+                      <CustomersPage />
                     </DashboardLayout>
                   </ProtectedRoute>
                 }
