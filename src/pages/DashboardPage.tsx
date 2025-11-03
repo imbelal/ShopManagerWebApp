@@ -1,414 +1,339 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Grid,
+  Box,
+  Typography,
   Card,
   CardContent,
-  Typography,
-  Box,
-  Avatar,
-  LinearProgress,
-  Chip,
+  Alert,
+  CircularProgress,
   useTheme,
+  Container,
   alpha,
 } from '@mui/material';
 import {
-  TrendingUp,
-  TrendingDown,
-  ShoppingCart,
-  Inventory,
-  AttachMoney,
-  People,
-  Category,
-  Warning,
-} from '@mui/icons-material';
-import { styled } from '@mui/material/styles';
+  RevenueKpiCard,
+  SalesKpiCard,
+  InventoryKpiCard,
+  CustomerKpiCard,
+} from '../components/dashboard';
+import SalesTrendChart from '../components/dashboard/charts/SalesTrendChart';
+import TopProductsChart from '../components/dashboard/charts/TopProductsChart';
+import RecentSalesTable from '../components/dashboard/tables/RecentSalesTable';
+import LowStockTable from '../components/dashboard/tables/LowStockTable';
+import dashboardService, {
+  DashboardMetrics,
+  RecentSale,
+  TopProduct,
+  LowStockProduct,
+} from '../services/dashboardService';
 import { useAuth } from '../context/AuthContext';
-
-const StyledCard = styled(Card)(({ theme }) => ({
-  height: '100%',
-  borderRadius: theme.spacing(2),
-  transition: 'all 0.3s ease-in-out',
-  cursor: 'pointer',
-  '&:hover': {
-    transform: 'translateY(-4px)',
-    boxShadow: `0 12px 40px ${alpha(theme.palette.common.black, 0.15)}`,
-  },
-}));
-
-const StatCard: React.FC<{
-  title: string;
-  value: string | number;
-  subtitle?: string;
-  icon: React.ReactElement;
-  color: string;
-  trend?: {
-    value: number;
-    isPositive: boolean;
-  };
-}> = ({ title, value, subtitle, icon, color, trend }) => {
-  const theme = useTheme();
-
-  return (
-    <StyledCard elevation={2}>
-      <CardContent>
-        <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Box flex={1}>
-            <Typography variant="h4" component="div" fontWeight="bold">
-              {value}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              {title}
-            </Typography>
-            {subtitle && (
-              <Typography variant="caption" color="text.secondary">
-                {subtitle}
-              </Typography>
-            )}
-            {trend && (
-              <Box display="flex" alignItems="center" mt={1}>
-                {trend.isPositive ? (
-                  <TrendingUp sx={{ color: theme.palette.success.main, mr: 0.5 }} />
-                ) : (
-                  <TrendingDown sx={{ color: theme.palette.error.main, mr: 0.5 }} />
-                )}
-                <Typography
-                  variant="body2"
-                  color={trend.isPositive ? 'success.main' : 'error.main'}
-                >
-                  {trend.isPositive ? '+' : ''}{trend.value}%
-                </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>
-                  vs last month
-                </Typography>
-              </Box>
-            )}
-          </Box>
-          <Avatar
-            sx={{
-              bgcolor: color,
-              width: 56,
-              height: 56,
-              boxShadow: `0 4px 15px ${alpha(color, 0.3)}`,
-            }}
-          >
-            {icon}
-          </Avatar>
-        </Box>
-      </CardContent>
-    </StyledCard>
-  );
-};
-
-const QuickStat: React.FC<{
-  label: string;
-  value: number;
-  total: number;
-  color: string;
-}> = ({ label, value, total, color }) => {
-  const percentage = (value / total) * 100;
-
-  return (
-    <Box sx={{ mb: 2 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-        <Typography variant="body2" fontWeight={500}>
-          {label}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {value}/{total}
-        </Typography>
-      </Box>
-      <LinearProgress
-        variant="determinate"
-        value={percentage}
-        sx={{
-          height: 8,
-          borderRadius: 4,
-          bgcolor: alpha(color, 0.1),
-          '& .MuiLinearProgress-bar': {
-            borderRadius: 4,
-            bgcolor: color,
-          },
-        }}
-      />
-    </Box>
-  );
-};
+import { useNavigate } from 'react-router-dom';
 
 const DashboardPage: React.FC = () => {
   const theme = useTheme();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
-  // Mock data - In real app, this would come from API
-  const stats = [
-    {
-      title: 'Total Sales',
-      value: '$24,563',
-      subtitle: 'This month',
-      icon: <ShoppingCart />,
-      color: theme.palette.primary.main,
-      trend: { value: 12.5, isPositive: true },
-    },
-    {
-      title: 'Total Products',
-      value: 1234,
-      subtitle: 'In inventory',
-      icon: <Inventory />,
-      color: theme.palette.success.main,
-      trend: { value: 8.2, isPositive: true },
-    },
-    {
-      title: 'Customers',
-      value: 892,
-      subtitle: 'Active customers',
-      icon: <People />,
-      color: theme.palette.info.main,
-      trend: { value: 3.1, isPositive: true },
-    },
-    {
-      title: 'Categories',
-      value: 45,
-      subtitle: 'Product categories',
-      icon: <Category />,
-      color: theme.palette.warning.main,
-      trend: { value: 2.4, isPositive: false },
-    },
-  ];
+  // State management
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [recentSales, setRecentSales] = useState<RecentSale[]>([]);
+  const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
+  const [lowStockProducts, setLowStockProducts] = useState<LowStockProduct[]>([]);
+  const [loading, setLoading] = useState({
+    metrics: true,
+    sales: true,
+    products: true,
+    stock: true,
+  });
+  const [error, setError] = useState<string | null>(null);
 
-  const lowStockItems = [
-    { name: 'Laptop Stand', stock: 3, minStock: 5 },
-    { name: 'Wireless Mouse', stock: 7, minStock: 10 },
-    { name: 'USB Cable', stock: 12, minStock: 15 },
-  ];
+  // Load dashboard data
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
 
-  const recentActivities = [
-    { action: 'New sale', details: 'Laptop - $899', time: '2 minutes ago' },
-    { action: 'Product added', details: 'Gaming Mouse', time: '15 minutes ago' },
-    { action: 'Customer registered', details: 'John Doe', time: '1 hour ago' },
-    { action: 'Low stock alert', details: 'USB Cable', time: '2 hours ago' },
-  ];
+  const loadDashboardData = async () => {
+    setError(null);
+    try {
+      // Load all data in parallel
+      const [metricsResponse, salesResponse, productsResponse, stockResponse] = await Promise.allSettled([
+        dashboardService.getDashboardMetrics(),
+        dashboardService.getRecentSales(10),
+        dashboardService.getTopProducts(10, 30),
+        dashboardService.getLowStockProducts(15),
+      ]);
+
+      // Handle metrics
+      if (metricsResponse.status === 'fulfilled' && metricsResponse.value.succeeded) {
+        setMetrics(metricsResponse.value.data);
+      } else {
+        console.error('Failed to load metrics:', metricsResponse);
+      }
+
+      // Handle recent sales
+      if (salesResponse.status === 'fulfilled' && salesResponse.value.succeeded) {
+        setRecentSales(salesResponse.value.data.items);
+      } else {
+        console.error('Failed to load recent sales:', salesResponse);
+      }
+
+      // Handle top products
+      if (productsResponse.status === 'fulfilled' && productsResponse.value.succeeded) {
+        setTopProducts(productsResponse.value.data);
+      } else {
+        console.error('Failed to load top products:', productsResponse);
+      }
+
+      // Handle low stock products
+      if (stockResponse.status === 'fulfilled' && stockResponse.value.succeeded) {
+        setLowStockProducts(stockResponse.value.data);
+      } else {
+        console.error('Failed to load low stock products:', stockResponse);
+      }
+    } catch (err) {
+      console.error('Dashboard data loading error:', err);
+      setError('Failed to load dashboard data. Please try again.');
+    } finally {
+      setLoading({
+        metrics: false,
+        sales: false,
+        products: false,
+        stock: false,
+      });
+    }
+  };
+
+  const handleViewSaleDetails = (sale: RecentSale) => {
+    navigate(`/sales?id=${sale.id}`);
+  };
+
+  const handleViewProductDetails = (product: LowStockProduct | TopProduct) => {
+    navigate(`/products?id=${product.productId}`);
+  };
+
+  const handleQuickReorder = (product: LowStockProduct) => {
+    navigate(`/purchases?productId=${product.productId}`);
+  };
+
+  const handleKpiClick = (type: string) => {
+    switch (type) {
+      case 'revenue':
+        navigate('/reports');
+        break;
+      case 'sales':
+        navigate('/sales');
+        break;
+      case 'inventory':
+        navigate('/products');
+        break;
+      case 'customers':
+        navigate('/customers');
+        break;
+      default:
+        break;
+    }
+  };
+
+  if (error) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Alert severity="error" sx={{ mb: 4 }}>
+          {error}
+        </Alert>
+      </Container>
+    );
+  }
 
   return (
-    <Box>
-      <Box mb={4}>
-        <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
+    <Container maxWidth={false} sx={{ py: 4, px: 3 }}>
+      {/* Header */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h3" component="h1" fontWeight={700} gutterBottom>
           Welcome back, {user?.firstName || user?.username}! 👋
         </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Here's what's happening with your shop today.
+        <Typography variant="h6" color="text.secondary">
+          Here's what's happening with your business today.
         </Typography>
       </Box>
 
+      {/* KPI Cards - Each taking full row width */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <RevenueKpiCard
+            metrics={metrics || {} as DashboardMetrics}
+            loading={loading.metrics}
+            onClick={() => handleKpiClick('revenue')}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <SalesKpiCard
+            metrics={metrics || {} as DashboardMetrics}
+            loading={loading.metrics}
+            onClick={() => handleKpiClick('sales')}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <InventoryKpiCard
+            metrics={metrics || {} as DashboardMetrics}
+            loading={loading.metrics}
+            onClick={() => handleKpiClick('inventory')}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <CustomerKpiCard
+            metrics={metrics || {} as DashboardMetrics}
+            loading={loading.metrics}
+            onClick={() => handleKpiClick('customers')}
+          />
+        </Grid>
+      </Grid>
+
+      {/* Charts Section */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid size={{ xs: 12, lg: 8 }}>
+          <SalesTrendChart
+            height={400}
+            loading={loading.sales}
+            title="Sales Trend - Last 30 Days"
+            // Pass mock data for now - will be connected to API in Phase 2
+            data={[
+              { date: '2024-01-01', revenue: 5000, sales: 25 },
+              { date: '2024-01-02', revenue: 6500, sales: 32 },
+              { date: '2024-01-03', revenue: 4800, sales: 22 },
+              { date: '2024-01-04', revenue: 7200, sales: 38 },
+              { date: '2024-01-05', revenue: 8100, sales: 42 },
+            ]}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, lg: 4 }}>
+          <TopProductsChart
+            height={400}
+            data={topProducts}
+            loading={loading.products}
+            title="Top Products"
+            limit={5}
+          />
+        </Grid>
+      </Grid>
+
+      {/* Tables Section */}
       <Grid container spacing={3}>
-        {/* Stats Cards */}
-        {stats.map((stat, index) => (
-          <Grid item xs={12} sm={6} lg={3} key={index}>
-            <StatCard {...stat} />
-          </Grid>
-        ))}
-
-        {/* Quick Stats */}
-        <Grid item xs={12} md={6}>
-          <Card sx={{ borderRadius: 2, height: '100%' }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom fontWeight="bold">
-                Stock Overview
-              </Typography>
-              <QuickStat
-                label="In Stock"
-                value={1180}
-                total={1234}
-                color={theme.palette.success.main}
-              />
-              <QuickStat
-                label="Low Stock"
-                value={42}
-                total={1234}
-                color={theme.palette.warning.main}
-              />
-              <QuickStat
-                label="Out of Stock"
-                value={12}
-                total={1234}
-                color={theme.palette.error.main}
-              />
-            </CardContent>
-          </Card>
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <RecentSalesTable
+            data={recentSales}
+            loading={loading.sales}
+            title="Recent Sales"
+            onViewDetails={handleViewSaleDetails}
+            maxRows={8}
+          />
         </Grid>
-
-        {/* Low Stock Alert */}
-        <Grid item xs={12} md={6}>
-          <Card sx={{ borderRadius: 2, height: '100%' }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom fontWeight="bold">
-                Low Stock Alerts
-              </Typography>
-              {lowStockItems.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  All items are well stocked!
-                </Typography>
-              ) : (
-                <Box>
-                  {lowStockItems.map((item, index) => (
-                    <Box
-                      key={index}
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        py: 1,
-                        borderBottom: index < lowStockItems.length - 1 ? 1 : 0,
-                        borderColor: 'divider',
-                      }}
-                    >
-                      <Box display="flex" alignItems="center">
-                        <Warning
-                          sx={{
-                            color: theme.palette.warning.main,
-                            mr: 1,
-                            fontSize: 20,
-                          }}
-                        />
-                        <Box>
-                          <Typography variant="body2" fontWeight={500}>
-                            {item.name}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            Stock: {item.stock} (Min: {item.minStock})
-                          </Typography>
-                        </Box>
-                      </Box>
-                      <Chip
-                        label={item.stock <= item.minStock ? 'Critical' : 'Low'}
-                        size="small"
-                        color={item.stock <= item.minStock ? 'error' : 'warning'}
-                      />
-                    </Box>
-                  ))}
-                </Box>
-              )}
-            </CardContent>
-          </Card>
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <LowStockTable
+            data={lowStockProducts}
+            loading={loading.stock}
+            title="Low Stock Alerts"
+            onViewDetails={handleViewProductDetails}
+            onReorder={handleQuickReorder}
+            maxRows={8}
+          />
         </Grid>
+      </Grid>
 
-        {/* Recent Activity */}
-        <Grid item xs={12} md={6}>
-          <Card sx={{ borderRadius: 2 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom fontWeight="bold">
-                Recent Activity
-              </Typography>
-              <Box>
-                {recentActivities.map((activity, index) => (
-                  <Box
-                    key={index}
-                    sx={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      py: 1.5,
-                      borderBottom: index < recentActivities.length - 1 ? 1 : 0,
-                      borderColor: 'divider',
-                    }}
-                  >
-                    <Box>
-                      <Typography variant="body2" fontWeight={500}>
-                        {activity.action}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {activity.details}
-                      </Typography>
-                    </Box>
-                    <Typography variant="caption" color="text.secondary">
-                      {activity.time}
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Quick Actions */}
-        <Grid item xs={12} md={6}>
-          <Card sx={{ borderRadius: 2 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom fontWeight="bold">
+      {/* Quick Actions Card */}
+      <Grid container spacing={3} sx={{ mt: 2 }}>
+        <Grid size={{ xs: 12 }}>
+          <Card elevation={0}>
+            <CardContent sx={{ py: 3 }}>
+              <Typography variant="h6" fontWeight={600} gutterBottom>
                 Quick Actions
               </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
+              <Grid container spacing={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <Card
                     sx={{
                       p: 2,
                       textAlign: 'center',
                       cursor: 'pointer',
-                      transition: 'all 0.2s ease-in-out',
+                      transition: 'all 0.3s ease-in-out',
+                      border: `2px solid ${theme.palette.primary.main}`,
+                      backgroundColor: alpha(theme.palette.primary.main, 0.05),
                       '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: theme.shadows[4],
+                        transform: 'translateY(-4px)',
+                        boxShadow: theme.shadows[8],
+                        backgroundColor: alpha(theme.palette.primary.main, 0.1),
                       },
                     }}
+                    onClick={() => navigate('/sales')}
                   >
-                    <AttachMoney color="primary" sx={{ fontSize: 32, mb: 1 }} />
-                    <Typography variant="body2" fontWeight={500}>
-                      New Sale
+                    <Typography variant="h6" color="primary.main" fontWeight={600}>
+                      ➕ New Sale
                     </Typography>
                   </Card>
                 </Grid>
-                <Grid item xs={6}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <Card
                     sx={{
                       p: 2,
                       textAlign: 'center',
                       cursor: 'pointer',
-                      transition: 'all 0.2s ease-in-out',
+                      transition: 'all 0.3s ease-in-out',
+                      border: `2px solid ${theme.palette.success.main}`,
+                      backgroundColor: alpha(theme.palette.success.main, 0.05),
                       '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: theme.shadows[4],
+                        transform: 'translateY(-4px)',
+                        boxShadow: theme.shadows[8],
+                        backgroundColor: alpha(theme.palette.success.main, 0.1),
                       },
                     }}
+                    onClick={() => navigate('/products')}
                   >
-                    <Inventory color="success" sx={{ fontSize: 32, mb: 1 }} />
-                    <Typography variant="body2" fontWeight={500}>
-                      Add Product
+                    <Typography variant="h6" color="success.main" fontWeight={600}>
+                      📦 Add Product
                     </Typography>
                   </Card>
                 </Grid>
-                <Grid item xs={6}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <Card
                     sx={{
                       p: 2,
                       textAlign: 'center',
                       cursor: 'pointer',
-                      transition: 'all 0.2s ease-in-out',
+                      transition: 'all 0.3s ease-in-out',
+                      border: `2px solid ${theme.palette.info.main}`,
+                      backgroundColor: alpha(theme.palette.info.main, 0.05),
                       '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: theme.shadows[4],
+                        transform: 'translateY(-4px)',
+                        boxShadow: theme.shadows[8],
+                        backgroundColor: alpha(theme.palette.info.main, 0.1),
                       },
                     }}
+                    onClick={() => navigate('/purchases')}
                   >
-                    <People color="info" sx={{ fontSize: 32, mb: 1 }} />
-                    <Typography variant="body2" fontWeight={500}>
-                      Add Customer
+                    <Typography variant="h6" color="info.main" fontWeight={600}>
+                      🛒 New Purchase
                     </Typography>
                   </Card>
                 </Grid>
-                <Grid item xs={6}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <Card
                     sx={{
                       p: 2,
                       textAlign: 'center',
                       cursor: 'pointer',
-                      transition: 'all 0.2s ease-in-out',
+                      transition: 'all 0.3s ease-in-out',
+                      border: `2px solid ${theme.palette.secondary.main}`,
+                      backgroundColor: alpha(theme.palette.secondary.main, 0.05),
                       '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: theme.shadows[4],
+                        transform: 'translateY(-4px)',
+                        boxShadow: theme.shadows[8],
+                        backgroundColor: alpha(theme.palette.secondary.main, 0.1),
                       },
                     }}
+                    onClick={() => navigate('/reports')}
                   >
-                    <Category color="warning" sx={{ fontSize: 32, mb: 1 }} />
-                    <Typography variant="body2" fontWeight={500}>
-                      Add Category
+                    <Typography variant="h6" color="secondary.main" fontWeight={600}>
+                      📊 Reports
                     </Typography>
                   </Card>
                 </Grid>
@@ -417,7 +342,7 @@ const DashboardPage: React.FC = () => {
           </Card>
         </Grid>
       </Grid>
-    </Box>
+    </Container>
   );
 };
 
