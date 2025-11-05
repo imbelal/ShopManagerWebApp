@@ -6,28 +6,17 @@ import {
   Grid,
   Card,
   CardContent,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Chip,
-  IconButton,
   TextField,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  Pagination,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Alert,
   CircularProgress,
-  Menu,
   Tooltip,
   Tabs,
   Tab,
@@ -36,19 +25,22 @@ import {
   List,
   ListItem,
   ListItemText,
-  ListItemAvatar
+  ListItemAvatar,
+  Fab,
+  TableContainer,
+  Table,
+  Chip,
+  Paper,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow
 } from '@mui/material';
 import {
   Add as AddIcon,
   Search as SearchIcon,
-  MoreVert as MoreVertIcon,
-  Visibility as ViewIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  PictureAsPdf as PdfIcon,
-  Payments as PaymentIcon,
-  Cancel as CancelIcon,
   Refresh as RefreshIcon,
+  Close as CloseIcon,
   Person as PersonIcon,
   Phone as PhoneIcon,
   Email as EmailIcon,
@@ -56,12 +48,20 @@ import {
   ShoppingBasket as ShoppingBasketIcon,
   Receipt as ReceiptIcon,
   Timeline as TimelineIcon,
-  Close as CloseIcon
+  Payments as PaymentIcon
 } from '@mui/icons-material';
 import { salesService, Sales, Customer } from '../services/salesService';
 import { handleApiError } from '../services/apiClient';
 import SalesForm from '../components/SalesForm';
 import PaymentDialog from '../components/PaymentDialog';
+import {
+  DataTable,
+  StatusChip,
+  CurrencyDisplay,
+  createSalesActions,
+  EmptyState,
+  commonStatusConfigs
+} from '../components/common';
 
 const SalesPage: React.FC = () => {
   const [sales, setSales] = useState<Sales[]>([]);
@@ -83,7 +83,6 @@ const SalesPage: React.FC = () => {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedSale, setSelectedSale] = useState<Sales | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [salesFormOpen, setSalesFormOpen] = useState(false);
   const [editSale, setEditSale] = useState<Sales | null>(null);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
@@ -146,27 +145,17 @@ const SalesPage: React.FC = () => {
     loadCustomers();
   }, [page, pageSize, searchTerm, selectedCustomer]);
 
-  // Handle menu actions
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, sale: Sales) => {
-    setSelectedSale(sale);
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-    setSelectedSale(null);
-  };
-
   // Handle view sale
-  const handleViewSale = async () => {
-    if (!selectedSale?.id) return;
+  const handleViewSale = async (sale: Sales) => {
+    if (!sale?.id) return;
 
     setViewLoading(true);
-    setAnchorEl(null);
+    setSelectedSale(sale);
+    setViewDialogOpen(true);
 
     try {
       // Load payments for this sale
-      const paymentsResponse = await salesService.getSalePayments(selectedSale.id);
+      const paymentsResponse = await salesService.getSalePayments(sale.id);
       if (paymentsResponse.data.succeeded && paymentsResponse.data.data) {
         setViewPayments(paymentsResponse.data.data);
       }
@@ -174,14 +163,11 @@ const SalesPage: React.FC = () => {
       // Load customer details
       const customersResponse = await salesService.getCustomers();
       if (customersResponse.data.succeeded && customersResponse.data.data) {
-        const customer = customersResponse.data.data.find(c => c.id === selectedSale.customerId);
+        const customer = customersResponse.data.data.find(c => c.id === sale.customerId);
         setViewCustomer(customer || null);
       }
-
-      setViewDialogOpen(true);
     } catch (error) {
       console.error('Failed to load sale details:', error);
-      setViewDialogOpen(true); // Still open dialog even if some data fails
     } finally {
       setViewLoading(false);
     }
@@ -199,7 +185,6 @@ const SalesPage: React.FC = () => {
         severity: 'warning'
       });
       setDeleteDialogOpen(false);
-      handleMenuClose();
       return;
     }
 
@@ -211,7 +196,6 @@ const SalesPage: React.FC = () => {
         severity: 'warning'
       });
       setDeleteDialogOpen(false);
-      handleMenuClose();
       return;
     }
 
@@ -239,16 +223,15 @@ const SalesPage: React.FC = () => {
       });
     } finally {
       setDeleteDialogOpen(false);
-      handleMenuClose();
     }
   };
 
   // Handle cancel sale
-  const handleCancelSale = async () => {
-    if (!selectedSale) return;
+  const handleCancelSale = async (sale: Sales) => {
+    if (!sale) return;
 
     try {
-      const response = await salesService.cancelSale(selectedSale.id);
+      const response = await salesService.cancelSale(sale.id);
       if (response.data.succeeded) {
         setSnackbar({
           open: true,
@@ -269,41 +252,36 @@ const SalesPage: React.FC = () => {
         message: handleApiError(err),
         severity: 'error'
       });
-    } finally {
-      handleMenuClose();
     }
   };
 
   // Handle add payment
-  const handleAddPayment = async () => {
-    if (!selectedSale?.id) return;
+  const handleAddPayment = async (sale: Sales) => {
+    if (!sale?.id) return;
 
     // Prevent adding payments to cancelled sales
-    if (selectedSale.status === 3) {
+    if (sale.status === 3) {
       setSnackbar({
         open: true,
         message: 'Cannot add payments to cancelled sales',
         severity: 'warning'
       });
-      handleMenuClose();
       return;
     }
 
-    handleMenuClose();
-
     try {
       // Fetch fresh sale data to get current payment information
-      const response = await salesService.getSaleById(selectedSale.id);
+      const response = await salesService.getSaleById(sale.id);
       if (response.data.succeeded && response.data.data) {
         setPaymentDialogSale(response.data.data);
       } else {
-        // If fetch fails, use existing selectedSale data
-        setPaymentDialogSale(selectedSale);
+        // If fetch fails, use existing sale data
+        setPaymentDialogSale(sale);
       }
     } catch (error) {
       console.error('Failed to refresh sale data:', error);
-      // If fetch fails, use existing selectedSale data
-      setPaymentDialogSale(selectedSale);
+      // If fetch fails, use existing sale data
+      setPaymentDialogSale(sale);
     }
 
     // Open dialog immediately after setting payment dialog sale data
@@ -321,11 +299,11 @@ const SalesPage: React.FC = () => {
   };
 
   // Handle PDF download
-  const handleDownloadPdf = async () => {
-    if (!selectedSale) return;
+  const handleDownloadPdf = async (sale: Sales) => {
+    if (!sale) return;
 
     try {
-      await salesService.generateSalesPdf(selectedSale.id);
+      await salesService.generateSalesPdf(sale.id);
       setSnackbar({
         open: true,
         message: 'PDF downloaded successfully',
@@ -337,8 +315,6 @@ const SalesPage: React.FC = () => {
         message: handleApiError(err),
         severity: 'error'
       });
-    } finally {
-      handleMenuClose();
     }
   };
 
@@ -349,10 +325,14 @@ const SalesPage: React.FC = () => {
   };
 
   // Handle page size change
-  const handlePageSizeChange = (event: any) => {
-    const newPageSize = parseInt(event.target.value, 10);
-    setPageSize(newPageSize);
+  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setPageSize(parseInt(event.target.value, 10));
     setPage(1); // Reset to first page when changing page size
+  };
+
+  // Handle page change
+  const handlePageChange = (event: React.MouseEvent<HTMLButtonElement> | null, value: number) => {
+    setPage(value + 1); // Convert from 0-based to 1-based
   };
 
   // Sales form handlers
@@ -369,7 +349,6 @@ const SalesPage: React.FC = () => {
         message: 'Cannot edit paid sales',
         severity: 'warning'
       });
-      handleMenuClose();
       return;
     }
 
@@ -379,13 +358,11 @@ const SalesPage: React.FC = () => {
         message: 'Cannot edit cancelled sales',
         severity: 'warning'
       });
-      handleMenuClose();
       return;
     }
 
     setEditSale(sale);
     setSalesFormOpen(true);
-    handleMenuClose();
   };
 
   const handleSaveSale = async (saleId: string) => {
@@ -404,6 +381,11 @@ const SalesPage: React.FC = () => {
     setEditSale(null);
   };
 
+  // Format date
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
   // Format currency
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -412,9 +394,104 @@ const SalesPage: React.FC = () => {
     }).format(amount);
   };
 
-  // Format date
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+  // Define table columns
+  const columns = [
+    {
+      id: 'salesNumber',
+      label: 'Sales #',
+      minWidth: 120,
+      format: (value) => (
+        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+          {value}
+        </Typography>
+      )
+    },
+    {
+      id: 'customerName',
+      label: 'Customer',
+      minWidth: 150
+    },
+    {
+      id: 'createdDate',
+      label: 'Date',
+      minWidth: 120,
+      format: (value) => new Date(value).toLocaleDateString()
+    },
+    {
+      id: 'grandTotal',
+      label: 'Total',
+      align: 'right' as const,
+      minWidth: 100,
+      format: (value) => (
+        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+          <CurrencyDisplay amount={value} />
+        </Typography>
+      )
+    },
+    {
+      id: 'totalPaid',
+      label: 'Paid',
+      align: 'right' as const,
+      minWidth: 100,
+      format: (value, sale) => (
+        <Typography variant="body2" sx={{
+          color: value >= sale.grandTotal ? 'success.main' : 'warning.main'
+        }}>
+          <CurrencyDisplay amount={value} />
+        </Typography>
+      )
+    },
+    {
+      id: 'remainingAmount',
+      label: 'Balance',
+      align: 'right' as const,
+      minWidth: 100,
+      format: (value) => (
+        <Typography variant="body2" sx={{
+          color: value > 0 ? 'error.main' : 'success.main'
+        }}>
+          <CurrencyDisplay amount={value} />
+        </Typography>
+      )
+    },
+    {
+      id: 'status',
+      label: 'Status',
+      minWidth: 100,
+      format: (value) => (
+        <StatusChip
+          status={value}
+          statusConfig={commonStatusConfigs.salesStatus}
+        />
+      )
+    },
+    {
+      id: 'salesProfit',
+      label: 'Profit',
+      align: 'right' as const,
+      minWidth: 100,
+      format: (value) => (
+        <Typography variant="body2" sx={{
+          color: value >= 0 ? 'success.main' : 'error.main',
+          fontWeight: 500
+        }}>
+          <CurrencyDisplay amount={value} />
+        </Typography>
+      )
+    }
+  ];
+
+  // Define row actions
+  const getRowActions = (sale) => {
+    return createSalesActions(
+      sale,
+      handleViewSale,
+      handleEditSale,
+      handleDeleteSale,
+      handleAddPayment,
+      handleCancelSale,
+      handleDownloadPdf
+    );
   };
 
   return (
@@ -455,7 +532,7 @@ const SalesPage: React.FC = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 InputProps={{
-                  startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />,
+                  startAdornment: <RefreshIcon color="action" sx={{ mr: 1 }} />,
                 }}
                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 } }}
               />
@@ -494,178 +571,37 @@ const SalesPage: React.FC = () => {
       </Card>
 
       {/* Sales Table */}
-      <Card sx={{ borderRadius: 1, boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
-        <CardContent sx={{ p: 0 }}>
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-              <CircularProgress />
-            </Box>
-          ) : error ? (
-            <Box sx={{ p: 4 }}>
-              <Alert severity="error" action={
-                <Button color="inherit" size="small" onClick={handleRefresh}>
-                  Retry
-                </Button>
-              }>
-                {error}
-              </Alert>
-            </Box>
-          ) : (
-            <>
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Sales #</TableCell>
-                      <TableCell>Customer</TableCell>
-                      <TableCell>Date</TableCell>
-                      <TableCell align="right">Total</TableCell>
-                      <TableCell align="right">Paid</TableCell>
-                      <TableCell align="right">Balance</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell align="right">Profit</TableCell>
-                      <TableCell>Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {sales.map((sale) => (
-                      <TableRow key={sale.id} hover>
-                        <TableCell>
-                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                            {sale.salesNumber}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>{sale.customerName}</TableCell>
-                        <TableCell>{formatDate(sale.createdDate)}</TableCell>
-                        <TableCell align="right">
-                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                            {formatCurrency(sale.grandTotal)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="right">
-                          <Typography variant="body2" sx={{
-                            color: sale.totalPaid >= sale.grandTotal ? 'success.main' : 'warning.main'
-                          }}>
-                            {formatCurrency(sale.totalPaid)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="right">
-                          <Typography variant="body2" sx={{
-                            color: sale.remainingAmount > 0 ? 'error.main' : 'success.main'
-                          }}>
-                            {formatCurrency(sale.remainingAmount)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={salesService.getStatusText(sale.status)}
-                            color={salesService.getStatusColor(sale.status) as any}
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell align="right">
-                          <Typography variant="body2" sx={{
-                            color: sale.salesProfit >= 0 ? 'success.main' : 'error.main',
-                            fontWeight: 500
-                          }}>
-                            {formatCurrency(sale.salesProfit)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <IconButton
-                            size="small"
-                            onClick={(e) => handleMenuClick(e, sale)}
-                          >
-                            <MoreVertIcon />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-
-              {/* Pagination */}
-              {(totalPages > 1 || totalCount > 0) && (
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Showing {sales.length} of {totalCount} sales
-                    </Typography>
-                    <FormControl size="small" sx={{ minWidth: 120 }}>
-                      <InputLabel>Page Size</InputLabel>
-                      <Select
-                        value={pageSize}
-                        label="Page Size"
-                        onChange={handlePageSizeChange}
-                        sx={{ borderRadius: 1 }}
-                      >
-                        <MenuItem value={5}>5</MenuItem>
-                        <MenuItem value={10}>10</MenuItem>
-                        <MenuItem value={25}>25</MenuItem>
-                        <MenuItem value={50}>50</MenuItem>
-                        <MenuItem value={100}>100</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Box>
-                  <Pagination
-                    count={totalPages}
-                    page={page}
-                    onChange={(_, newPage) => setPage(newPage)}
-                    color="primary"
-                    showFirstButton
-                    showLastButton
-                    size="medium"
-                  />
-                </Box>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Context Menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-        PaperProps={{
-          sx: { borderRadius: 1, boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }
+      <DataTable
+        data={sales}
+        columns={columns}
+        loading={loading}
+        error={error}
+        emptyState={{
+          icon: '💰',
+          title: 'No sales found',
+          description: searchTerm ? 'Try adjusting your search terms or filters' : 'Get started by creating your first sale',
+          action: {
+            label: 'New Sale',
+            onClick: handleNewSale
+          }
         }}
-      >
-        <MenuItem onClick={handleViewSale}>
-          <ViewIcon sx={{ mr: 1 }} /> View Details
-        </MenuItem>
-        <MenuItem
-          onClick={() => handleEditSale(selectedSale!)}
-          disabled={selectedSale?.status === 2 || selectedSale?.status === 3} // Disable for Paid and Cancelled sales
-        >
-          <EditIcon sx={{ mr: 1 }} /> Edit Sale
-        </MenuItem>
-        <MenuItem onClick={handleDownloadPdf}>
-          <PdfIcon sx={{ mr: 1 }} /> Download PDF
-        </MenuItem>
-        <MenuItem
-          onClick={handleAddPayment}
-          disabled={selectedSale?.remainingAmount <= 0 || selectedSale?.status === 3} // Disable if no balance or cancelled
-        >
-          <PaymentIcon sx={{ mr: 1 }} /> Add Payment
-        </MenuItem>
-        {selectedSale?.status !== 3 && selectedSale?.status !== 2 && ( // Not Cancelled and Not Paid
-          <MenuItem onClick={handleCancelSale} sx={{ color: 'warning.main' }}>
-            <CancelIcon sx={{ mr: 1 }} /> Cancel Sale
-          </MenuItem>
-        )}
-        <MenuItem
-          onClick={() => { setDeleteDialogOpen(true); }}
-          sx={{ color: 'error.main' }}
-          disabled={selectedSale?.status === 2 || selectedSale?.status === 3} // Disable for Paid and Cancelled sales
-        >
-          <DeleteIcon sx={{ mr: 1 }} /> Delete
-        </MenuItem>
-      </Menu>
+        actions={getRowActions}
+        getRowId={(sale) => sale.id}
+        pagination={{
+          page: page - 1, // Material-UI uses 0-based indexing
+          rowsPerPage: pageSize,
+          totalCount: totalCount,
+          onPageChange: handlePageChange,
+          onRowsPerPageChange: handleRowsPerPageChange,
+          rowsPerPageOptions: [5, 10, 25, 50, 100]
+        }}
+        errorAction={{
+          label: 'Retry',
+          onClick: handleRefresh
+        }}
+      />
 
-      {/* Enhanced View Sale Dialog */}
+      {/* View Sale Dialog */}
       <Dialog
         open={viewDialogOpen}
         onClose={() => {
@@ -698,10 +634,9 @@ const SalesPage: React.FC = () => {
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Chip
-                  label={salesService.getStatusText(selectedSale.status)}
-                  color={salesService.getStatusColor(selectedSale.status) as any}
-                  size="small"
+                <StatusChip
+                  status={selectedSale.status}
+                  statusConfig={commonStatusConfigs.salesStatus}
                   sx={{ fontWeight: 500 }}
                 />
                 <Button
@@ -1092,17 +1027,22 @@ const SalesPage: React.FC = () => {
         onPaymentAdded={handlePaymentAdded}
       />
 
-      {/* Snackbar */}
-      <Box
-        sx={{
-          position: 'fixed',
-          bottom: 24,
-          right: 24,
-          zIndex: 9999
-        }}
-      >
-        {/* Snackbar implementation here */}
-      </Box>
+      {/* Floating Action Button for Refresh */}
+      <Tooltip title="Refresh">
+        <Fab
+          color="primary"
+          size="small"
+          onClick={handleRefresh}
+          sx={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          }}
+        >
+          <RefreshIcon />
+        </Fab>
+      </Tooltip>
     </Box>
   );
 };

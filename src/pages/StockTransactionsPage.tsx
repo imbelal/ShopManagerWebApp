@@ -4,17 +4,6 @@ import {
   Grid,
   Paper,
   Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Pagination,
-  IconButton,
-  Menu,
-  MenuItem,
-  Chip,
   TextField,
   FormControl,
   InputLabel,
@@ -36,7 +25,9 @@ import {
   List,
   ListItem,
   ListItemText,
-  ListItemIcon
+  ListItemIcon,
+  Chip,
+  MenuItem
 } from '@mui/material';
 import {
   MoreVert as MoreVertIcon,
@@ -62,6 +53,13 @@ import stockTransactionsService, {
 } from '../services/stockTransactionsService';
 import productService, { Product } from '../services/productService';
 import { handleApiError } from '../services/apiClient';
+import {
+  DataTable,
+  StatusChip,
+  CurrencyDisplay,
+  createStandardActions,
+  EmptyState
+} from '../components/common';
 
 const StockTransactionsPage: React.FC = () => {
   const theme = useTheme();
@@ -96,8 +94,7 @@ const StockTransactionsPage: React.FC = () => {
   });
 
   // Menu and dialog states
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedTransaction, setSelectedTransaction] = useState<StockTransactionDto | null>(null);
+    const [selectedTransaction, setSelectedTransaction] = useState<StockTransactionDto | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [adjustmentDialogOpen, setAdjustmentDialogOpen] = useState(false);
   const [detailsTabValue, setDetailsTabValue] = useState(0);
@@ -293,27 +290,20 @@ const StockTransactionsPage: React.FC = () => {
     setPage(1); // Reset to first page when changing page size
   };
 
-  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
-    setPage(value);
+  // Pagination handlers for DataTable
+  const handlePageChange = (event: React.MouseEvent<HTMLButtonElement> | null, value: number) => {
+    setPage(value + 1); // Convert from 0-based to 1-based
   };
 
-  // Menu handlers
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, transaction: StockTransactionDto) => {
-    event.stopPropagation();
-    setAnchorEl(event.currentTarget);
-    setSelectedTransaction(transaction);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-    setSelectedTransaction(null);
+  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setPageSize(parseInt(event.target.value, 10));
+    setPage(1); // Reset to first page when changing page size
   };
 
   // View details handler
-  const handleViewDetails = () => {
+  const handleViewDetails = (transaction: StockTransactionDto) => {
+    setSelectedTransaction(transaction);
     setViewDialogOpen(true);
-    // Close menu but preserve selectedTransaction for the dialog
-    setAnchorEl(null);
   };
 
   // Adjustment dialog handlers
@@ -410,6 +400,94 @@ const StockTransactionsPage: React.FC = () => {
       default:
         return 'default';
     }
+  };
+
+  // Define table columns matching original structure
+  const columns = [
+    {
+      id: 'transactionDate',
+      label: 'Date',
+      minWidth: 120,
+      format: (value) => new Date(value).toLocaleDateString()
+    },
+    {
+      id: 'productName',
+      label: 'Product',
+      minWidth: 200
+    },
+    {
+      id: 'type',
+      label: 'Type',
+      minWidth: 80,
+      format: (value) => (
+        <Chip
+          label={value === StockTransactionType.IN ? 'IN' : 'OUT'}
+          color={value === StockTransactionType.IN ? 'success' : 'error'}
+          size="small"
+          sx={{ fontWeight: 500 }}
+        />
+      )
+    },
+    {
+      id: 'refTypeName',
+      label: 'Reference',
+      minWidth: 120
+    },
+    {
+      id: 'quantity',
+      label: 'Quantity',
+      align: 'right' as const,
+      minWidth: 100,
+      format: (value, row) => (
+        <Typography variant="body2" sx={{
+          fontWeight: 500,
+          color: row.type === StockTransactionType.IN ? 'success.main' : 'error.main'
+        }}>
+          {row.type === StockTransactionType.IN ? '+' : '-'}{value}
+        </Typography>
+      )
+    },
+    {
+      id: 'unitCost',
+      label: 'Unit Cost',
+      align: 'right' as const,
+      minWidth: 100,
+      format: (value) => (
+        <Typography variant="body2">
+          {formatCurrency(value)}
+        </Typography>
+      )
+    },
+    {
+      id: 'totalCost',
+      label: 'Total Cost',
+      align: 'right' as const,
+      minWidth: 120,
+      format: (value) => (
+        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+          {formatCurrency(value)}
+        </Typography>
+      )
+    },
+    {
+      id: 'createdBy',
+      label: 'Created By',
+      minWidth: 120
+    }
+  ];
+
+  // Define row actions
+  const getRowActions = (transaction: StockTransactionDto) => {
+    return createStandardActions(
+      transaction,
+      () => handleViewDetails(transaction),
+      undefined, // No edit action for stock transactions
+      undefined, // No delete action for stock transactions
+      {
+        canEdit: () => false,
+        canDelete: () => false
+      }
+    );
   };
 
   return (
@@ -553,156 +631,45 @@ const StockTransactionsPage: React.FC = () => {
         </Alert>
       )}
 
-      {/* Transactions Table */}
-      <Paper sx={{ width: '100%', overflow: 'hidden', borderRadius: 2, boxShadow: theme.shadows[2] }}>
-        <TableContainer sx={{ maxHeight: 600 }}>
-          <Table stickyHeader>
-            <TableHead>
-              <TableRow>
-                <TableCell>Date</TableCell>
-                <TableCell>Product</TableCell>
-                <TableCell>Type</TableCell>
-                <TableCell>Reference</TableCell>
-                <TableCell align="right">Quantity</TableCell>
-                <TableCell align="right">Unit Cost</TableCell>
-                <TableCell align="right">Total Cost</TableCell>
-                <TableCell>Created By</TableCell>
-                <TableCell align="center">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
-                    <CircularProgress />
-                  </TableCell>
-                </TableRow>
-              ) : (!transactions || transactions.length === 0) ? (
-                <TableRow>
-                  <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
-                    <Typography variant="body1" color="text.secondary">
-                      No stock transactions found
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                transactions?.map((transaction) => (
-                  <TableRow
-                    key={transaction.id}
-                    hover
-                    sx={{
-                      '&:hover': {
-                        backgroundColor: alpha(theme.palette.primary.main, 0.04)
-                      }
-                    }}
-                  >
-                    <TableCell>{formatDate(transaction.transactionDate)}</TableCell>
-                    <TableCell>
-                      <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-                        {transaction.productName}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={transaction.typeName}
-                        color={getTransactionTypeColor(transaction.type) as any}
-                        size="small"
-                        sx={{ fontWeight: 'medium' }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={transaction.refTypeName}
-                        color={getReferenceTypeColor(transaction.refType) as any}
-                        size="small"
-                        variant="outlined"
-                      />
-                    </TableCell>
-                    <TableCell align="right">
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          fontWeight: 'medium',
-                          color: transaction.type === StockTransactionType.OUT ? 'error.main' : 'success.main'
-                        }}
-                      >
-                        {transaction.type === StockTransactionType.OUT ? '-' : '+'}{transaction.quantity}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="right">{formatCurrency(transaction.unitCost)}</TableCell>
-                    <TableCell align="right">{formatCurrency(transaction.totalCost)}</TableCell>
-                    <TableCell>{transaction.createdBy}</TableCell>
-                    <TableCell align="center">
-                      <IconButton
-                        size="small"
-                        onClick={(e) => handleMenuClick(e, transaction)}
-                      >
-                        <MoreVertIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        {/* Custom Pagination - similar to purchase page */}
-        {!loading && (
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, borderTop: '1px solid rgba(224, 224, 224, 1)' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                Showing {transactions.length} of {pagination.totalCount} transactions
-              </Typography>
-              <FormControl size="small" sx={{ minWidth: 120 }}>
-                <InputLabel>Page Size</InputLabel>
-                <Select
-                  value={pageSize}
-                  label="Page Size"
-                  onChange={handlePageSizeChange}
-                  sx={{ borderRadius: 1 }}
-                >
-                  <MenuItem value={5}>5</MenuItem>
-                  <MenuItem value={10}>10</MenuItem>
-                  <MenuItem value={25}>25</MenuItem>
-                  <MenuItem value={50}>50</MenuItem>
-                  <MenuItem value={100}>100</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-            <Pagination
-              count={pagination.totalPages}
-              page={page}
-              onChange={handlePageChange}
-              color="primary"
-              showFirstButton
-              showLastButton
-              size="medium"
-            />
-          </Box>
-        )}
-      </Paper>
-
-      {/* Action Menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-        PaperProps={{
-          elevation: 3,
-          sx: {
-            minWidth: 150,
-            '& .MuiListItem-root': {
-              px: 2
+      {/* Stock Transactions DataTable */}
+      <DataTable
+        data={transactions || []}
+        columns={columns}
+        loading={loading}
+        error={error}
+        emptyState={{
+          icon: '📈',
+          title: 'No stock transactions found',
+          description: filters.productId || filters.type || filters.refType || filters.fromDate || filters.toDate
+            ? 'Try adjusting your search terms or filters'
+            : 'Stock transactions will appear here when inventory changes occur',
+          action: {
+            label: 'Create Adjustment',
+            onClick: handleCreateAdjustment
+          }
+        }}
+        actions={getRowActions}
+        getRowId={(transaction) => transaction.id}
+        pagination={{
+          page: page - 1, // Material-UI uses 0-based indexing
+          rowsPerPage: pageSize,
+          totalCount: pagination.totalCount,
+          onPageChange: handlePageChange,
+          onRowsPerPageChange: handleRowsPerPageChange,
+          rowsPerPageOptions: [5, 10, 25, 50, 100]
+        }}
+        errorAction={{
+          label: 'Retry',
+          onClick: loadTransactions
+        }}
+        sx={{
+          '& .MuiTableRow-root': {
+            '&:hover': {
+              backgroundColor: alpha(theme.palette.primary.main, 0.04)
             }
           }
         }}
-      >
-        <MenuItem onClick={handleViewDetails}>
-          <VisibilityIcon sx={{ mr: 1, fontSize: 20 }} />
-          View Details
-        </MenuItem>
-      </Menu>
+      />
 
       {/* Enhanced View Details Dialog */}
       <Dialog

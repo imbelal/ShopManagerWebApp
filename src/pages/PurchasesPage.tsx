@@ -6,28 +6,17 @@ import {
   Grid,
   Card,
   CardContent,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Chip,
-  IconButton,
   TextField,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  Pagination,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Alert,
   CircularProgress,
-  Menu,
   Tooltip,
   Tabs,
   Tab,
@@ -36,16 +25,21 @@ import {
   List,
   ListItem,
   ListItemText,
-  ListItemAvatar
+  ListItemAvatar,
+  Fab,
+  TableContainer,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  Paper,
+  Chip,
+  IconButton
 } from '@mui/material';
 import {
   Add as AddIcon,
   Search as SearchIcon,
-  MoreVert as MoreVertIcon,
-  Visibility as ViewIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Cancel as CancelIcon,
   Refresh as RefreshIcon,
   Business as BusinessIcon,
   Phone as PhoneIcon,
@@ -62,6 +56,13 @@ import purchasesService, { Purchase, Supplier, PurchaseStatus } from '../service
 import { productService, Product } from '../services/productService';
 import { handleApiError } from '../services/apiClient';
 import PurchaseForm from '../components/PurchaseForm';
+import {
+  DataTable,
+  StatusChip,
+  CurrencyDisplay,
+  createStandardActions,
+  EmptyState
+} from '../components/common';
 
 const PurchasesPage: React.FC = () => {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
@@ -81,10 +82,13 @@ const PurchasesPage: React.FC = () => {
   const [selectedSupplier, setSelectedSupplier] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
 
-  // Handle page size change
-  const handlePageSizeChange = (event: any) => {
-    const newPageSize = parseInt(event.target.value, 10);
-    setPageSize(newPageSize);
+  // Handle pagination
+  const handlePageChange = (event: React.MouseEvent<HTMLButtonElement> | null, value: number) => {
+    setPage(value + 1); // Convert from 0-based to 1-based
+  };
+
+  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setPageSize(parseInt(event.target.value, 10));
     setPage(1); // Reset to first page when changing page size
   };
 
@@ -94,7 +98,6 @@ const PurchasesPage: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [purchaseToDelete, setPurchaseToDelete] = useState<Purchase | null>(null);
   const [purchaseToView, setPurchaseToView] = useState<Purchase | null>(null);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [purchaseFormOpen, setPurchaseFormOpen] = useState(false);
   const [editPurchase, setEditPurchase] = useState<Purchase | null>(null);
 
@@ -166,64 +169,43 @@ const PurchasesPage: React.FC = () => {
     }
   };
 
-  // Handle menu actions
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, purchase: Purchase) => {
-    setAnchorEl(event.currentTarget);
+  // Action handlers
+  const handleView = async (purchase: Purchase) => {
+    setPurchaseToView(purchase);
     setSelectedPurchase(purchase);
+    setViewDialogOpen(true);
+    setViewTabValue(0);
+
+    // Load supplier details for this purchase
+    const supplier = suppliers.find(s => s.id === purchase.supplierId);
+    setViewSupplier(supplier || null);
   };
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-    setSelectedPurchase(null);
+  const handleEdit = (purchase: Purchase) => {
+    setEditPurchase(purchase);
+    setPurchaseFormOpen(true);
   };
 
-  const handleView = async () => {
-    if (selectedPurchase) {
-      setPurchaseToView(selectedPurchase);
-      setViewDialogOpen(true);
-      setViewTabValue(0);
-
-      // Load supplier details for this purchase
-      const supplier = suppliers.find(s => s.id === selectedPurchase.supplierId);
-      setViewSupplier(supplier || null);
-    }
-    handleMenuClose();
+  const handleDelete = (purchase: Purchase) => {
+    setPurchaseToDelete(purchase);
+    setDeleteDialogOpen(true);
   };
 
-  const handleEdit = () => {
-    if (selectedPurchase) {
-      setEditPurchase(selectedPurchase);
-      setPurchaseFormOpen(true);
-    }
-    handleMenuClose();
-  };
-
-  const handleDelete = () => {
-    if (selectedPurchase) {
-      setPurchaseToDelete(selectedPurchase);
-      setDeleteDialogOpen(true);
-    }
-    handleMenuClose();
-  };
-
-  const handleCancel = async () => {
-    if (selectedPurchase) {
-      try {
-        setLoading(true);
-        const response = await purchasesService.cancelPurchase(selectedPurchase.id);
-        if (response.data.succeeded) {
-          showSnackbar('Purchase cancelled successfully', 'success');
-          loadPurchases();
-        } else {
-          setError(response.data.message || 'Failed to cancel purchase');
-        }
-      } catch (err: any) {
-        setError(handleApiError(err));
-      } finally {
-        setLoading(false);
+  const handleCancel = async (purchase: Purchase) => {
+    try {
+      setLoading(true);
+      const response = await purchasesService.cancelPurchase(purchase.id);
+      if (response.data.succeeded) {
+        showSnackbar('Purchase cancelled successfully', 'success');
+        loadPurchases();
+      } else {
+        setError(response.data.message || 'Failed to cancel purchase');
       }
+    } catch (err: any) {
+      setError(handleApiError(err));
+    } finally {
+      setLoading(false);
     }
-    handleMenuClose();
   };
 
   const confirmDelete = async () => {
@@ -279,12 +261,134 @@ const PurchasesPage: React.FC = () => {
     return purchase.status !== PurchaseStatus.Completed && purchase.status !== PurchaseStatus.Cancelled;
   };
 
-  // Format currency
-  const formatCurrency = (amount: number) => {
+  // Format currency function for view dialog
+  const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(amount);
+  };
+
+  // Purchase status configuration for StatusChip
+  const getPurchaseStatusConfig = (status: PurchaseStatus) => {
+    switch (status) {
+      case PurchaseStatus.Pending:
+        return {
+          label: 'Pending',
+          color: 'warning' as const,
+        };
+      case PurchaseStatus.Completed:
+        return {
+          label: 'Completed',
+          color: 'success' as const,
+        };
+      case PurchaseStatus.Cancelled:
+        return {
+          label: 'Cancelled',
+          color: 'error' as const,
+        };
+      default:
+        return {
+          label: 'Unknown',
+          color: 'default' as const,
+        };
+    }
+  };
+
+
+  // Define table columns matching original structure
+  const columns = [
+    {
+      id: 'purchaseDate',
+      label: 'Purchase Date',
+      minWidth: 120,
+      format: (value) => new Date(value).toLocaleDateString()
+    },
+    {
+      id: 'supplierName',
+      label: 'Supplier',
+      minWidth: 150
+    },
+    {
+      id: 'purchaseItems',
+      label: 'Items',
+      minWidth: 80,
+      format: (value) => (
+        <Typography variant="body2">
+          {value.length} items
+        </Typography>
+      )
+    },
+    {
+      id: 'totalCost',
+      label: 'Total Cost',
+      align: 'right' as const,
+      minWidth: 120,
+      format: (value) => (
+        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+          {formatCurrency(value)}
+        </Typography>
+      )
+    },
+    {
+      id: 'status',
+      label: 'Status',
+      minWidth: 100,
+      format: (value) => (
+        <StatusChip
+          status={value}
+          statusConfig={getPurchaseStatusConfig}
+          size="small"
+        />
+      )
+    },
+    {
+      id: 'createdBy',
+      label: 'Created By',
+      minWidth: 120
+    }
+  ];
+
+  // Define row actions
+  const getRowActions = (purchase) => {
+    return createStandardActions(
+      purchase,
+      handleView,
+      handleEdit,
+      handleDelete,
+      {
+        canDelete: canDeletePurchase
+      }
+    );
+  };
+
+  // Helper functions for purchase status
+  const getPurchaseStatusText = (status: PurchaseStatus): string => {
+    switch (status) {
+      case PurchaseStatus.Pending:
+        return 'Pending';
+      case PurchaseStatus.Completed:
+        return 'Completed';
+      case PurchaseStatus.Cancelled:
+        return 'Cancelled';
+      default:
+        return 'Unknown';
+    }
+  };
+
+  const getPurchaseStatusColor = (status: PurchaseStatus): 'default' | 'error' | 'warning' | 'info' | 'success' => {
+    switch (status) {
+      case PurchaseStatus.Pending:
+        return 'warning';
+      case PurchaseStatus.Completed:
+        return 'success';
+      case PurchaseStatus.Cancelled:
+        return 'error';
+      default:
+        return 'default';
+    }
   };
 
   return (
@@ -374,151 +478,38 @@ const PurchasesPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Purchases Table */}
-      <Card>
-        <CardContent>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Purchase Date</TableCell>
-                  <TableCell>Supplier</TableCell>
-                  <TableCell>Items</TableCell>
-                  <TableCell align="right">Total Cost</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Created By</TableCell>
-                  <TableCell align="center">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} align="center">
-                      <CircularProgress />
-                    </TableCell>
-                  </TableRow>
-                ) : purchases.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} align="center">
-                      <Typography variant="body2" color="text.secondary">
-                        No purchases found
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  purchases.map((purchase) => (
-                    <TableRow key={purchase.id} hover>
-                      <TableCell>
-                        {new Date(purchase.purchaseDate).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" fontWeight="medium">
-                          {purchase.supplierName}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {purchase.purchaseItems.length} items
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography variant="body2" fontWeight="bold">
-                          {formatCurrency(purchase.totalCost)}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={purchasesService.formatPurchaseStatus(purchase.status)}
-                          color={purchasesService.getPurchaseStatusColor(purchase.status)}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {purchase.createdBy}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <IconButton
-                          onClick={(e) => handleMenuClick(e, purchase)}
-                          size="small"
-                        >
-                          <MoreVertIcon />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-
-          {/* Pagination */}
-          {!loading && (
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Showing {purchases.length} of {totalCount} purchases
-                </Typography>
-                <FormControl size="small" sx={{ minWidth: 120 }}>
-                  <InputLabel>Page Size</InputLabel>
-                  <Select
-                    value={pageSize}
-                    label="Page Size"
-                    onChange={handlePageSizeChange}
-                    sx={{ borderRadius: 1 }}
-                  >
-                    <MenuItem value={5}>5</MenuItem>
-                    <MenuItem value={10}>10</MenuItem>
-                    <MenuItem value={25}>25</MenuItem>
-                    <MenuItem value={50}>50</MenuItem>
-                    <MenuItem value={100}>100</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-              <Pagination
-                count={totalPages}
-                page={page}
-                onChange={(e, value) => setPage(value)}
-                color="primary"
-                showFirstButton
-                showLastButton
-                size="medium"
-              />
-            </Box>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Context Menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-      >
-        <MenuItem onClick={handleView}>
-          <ViewIcon sx={{ mr: 1 }} />
-          View Details
-        </MenuItem>
-        {selectedPurchase && canEditPurchase(selectedPurchase) && (
-          <MenuItem onClick={handleEdit}>
-            <EditIcon sx={{ mr: 1 }} />
-            Edit
-          </MenuItem>
-        )}
-        {selectedPurchase && canCancelPurchase(selectedPurchase) && (
-          <MenuItem onClick={handleCancel}>
-            <CancelIcon sx={{ mr: 1 }} />
-            Cancel
-          </MenuItem>
-        )}
-        {selectedPurchase && canDeletePurchase(selectedPurchase) && (
-          <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
-            <DeleteIcon sx={{ mr: 1 }} />
-            Delete
-          </MenuItem>
-        )}
-      </Menu>
+      {/* Purchases DataTable */}
+      <DataTable
+        data={purchases}
+        columns={columns}
+        loading={loading}
+        error={error}
+        emptyState={{
+          icon: '📦',
+          title: 'No purchases found',
+          description: searchTerm || selectedSupplier || selectedStatus
+            ? 'Try adjusting your search terms or filters'
+            : 'Get started by creating your first purchase',
+          action: {
+            label: 'New Purchase',
+            onClick: () => setPurchaseFormOpen(true)
+          }
+        }}
+        actions={getRowActions}
+        getRowId={(purchase) => purchase.id}
+        pagination={{
+          page: page - 1, // Material-UI uses 0-based indexing
+          rowsPerPage: pageSize,
+          totalCount: totalCount,
+          onPageChange: handlePageChange,
+          onRowsPerPageChange: handleRowsPerPageChange,
+          rowsPerPageOptions: [5, 10, 25, 50, 100]
+        }}
+        errorAction={{
+          label: 'Retry',
+          onClick: handleRefresh
+        }}
+      />
 
       {/* Enhanced View Purchase Dialog */}
       <Dialog
@@ -552,9 +543,9 @@ const PurchasesPage: React.FC = () => {
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Chip
-                  label={purchasesService.formatPurchaseStatus(purchaseToView.status)}
-                  color={purchasesService.getPurchaseStatusColor(purchaseToView.status)}
+                <StatusChip
+                  status={purchaseToView.status}
+                  statusConfig={getPurchaseStatusConfig}
                   size="small"
                   sx={{ fontWeight: 500 }}
                 />

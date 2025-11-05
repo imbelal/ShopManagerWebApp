@@ -5,15 +5,7 @@ import {
   Button,
   Card,
   CardContent,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   TextField,
-  Pagination,
   CircularProgress,
   Chip,
   Avatar,
@@ -24,8 +16,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Menu,
-  MenuItem,
   FormControl,
   InputLabel,
   Select,
@@ -35,6 +25,7 @@ import {
   ListItemAvatar,
   Divider,
   IconButton,
+  MenuItem,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -54,6 +45,13 @@ import {
   CalendarToday as CalendarIcon,
 } from '@mui/icons-material';
 import { customersService, Customer, CustomerListRequest } from '../services/customersService';
+import {
+  DataTable,
+  StatusChip,
+  CurrencyDisplay,
+  createStandardActions,
+  EmptyState
+} from '../components/common';
 
 const CustomersPage: React.FC = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -73,7 +71,6 @@ const CustomersPage: React.FC = () => {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [viewCustomer, setViewCustomer] = useState<Customer | null>(null);
   const [viewLoading, setViewLoading] = useState(false);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   // Add Customer Dialog states
@@ -143,13 +140,13 @@ const CustomersPage: React.FC = () => {
   };
 
   // Handle page change
-  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
-    setCurrentPage(value);
+  // Pagination handlers for DataTable
+  const handlePageChange = (event: React.MouseEvent<HTMLButtonElement> | null, value: number) => {
+    setCurrentPage(value + 1); // Convert from 0-based to 1-based
   };
 
-  // Handle page size change
-  const handlePageSizeChange = (event: any) => {
-    setPageSize(event.target.value);
+  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setPageSize(parseInt(event.target.value, 10));
     setCurrentPage(1); // Reset to first page when changing page size
   };
 
@@ -211,7 +208,6 @@ const CustomersPage: React.FC = () => {
       remark: customer.remark
     });
     setEditCustomerDialogOpen(true);
-    handleMenuClose();
   };
 
   // Update existing customer
@@ -255,7 +251,6 @@ const CustomersPage: React.FC = () => {
   const handleDeleteCustomerClick = (customer: Customer) => {
     setCustomerToDelete(customer);
     setDeleteCustomerDialogOpen(true);
-    handleMenuClose();
   };
 
   // Delete customer
@@ -284,28 +279,15 @@ const CustomersPage: React.FC = () => {
   };
 
   // Handle menu actions
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, customer: Customer) => {
-    setAnchorEl(event.currentTarget);
-    setSelectedCustomer(customer);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-    setSelectedCustomer(null);
-  };
-
   // Handle view customer details
-  const handleViewCustomer = async () => {
-    if (!selectedCustomer) return;
-
+  const handleViewCustomer = async (customer: Customer) => {
     setViewLoading(true);
     setViewDialogOpen(true);
-    setViewCustomer(selectedCustomer);
-    handleMenuClose();
+    setViewCustomer(customer);
 
     try {
       // Load customer details (you could add additional data here if needed)
-      setViewCustomer(selectedCustomer);
+      setViewCustomer(customer);
     } catch (error) {
       console.error('Failed to load customer details:', error);
     } finally {
@@ -330,6 +312,108 @@ const CustomersPage: React.FC = () => {
     if (amount === 0) return 'success';
     if (amount < 100) return 'warning';
     return 'error';
+  };
+
+  // Define table columns matching original structure
+  const columns = [
+    {
+      id: 'name',
+      label: 'Customer',
+      minWidth: 200,
+      format: (value, row) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar sx={{ bgcolor: 'primary.main', width: 40, height: 40 }}>
+            {row.firstName.charAt(0)}{row.lastName.charAt(0)}
+          </Avatar>
+          <Box>
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              {row.firstName} {row.lastName}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {row.email}
+            </Typography>
+          </Box>
+        </Box>
+      )
+    },
+    {
+      id: 'contact',
+      label: 'Contact',
+      minWidth: 150,
+      format: (value, row) => (
+        <Box>
+          <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <PhoneIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+            {row.contactNo}
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <LocationIcon sx={{ fontSize: 14 }} />
+            {row.address}
+          </Typography>
+        </Box>
+      )
+    },
+    {
+      id: 'totalSales',
+      label: 'Total Sales',
+      minWidth: 100,
+      format: (value, row) => (
+        <Box>
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            {row.totalSales}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            <CurrencyDisplay amount={row.totalSalesAmount} showSign={false} />
+          </Typography>
+        </Box>
+      )
+    },
+    {
+      id: 'totalDueAmount',
+      label: 'Due Amount',
+      minWidth: 120,
+      format: (value) => (
+        <CurrencyDisplay
+          amount={value}
+          color={value > 0 ? 'error' : 'success'}
+          fontWeight={600}
+        />
+      )
+    },
+    {
+      id: 'lastSaleDate',
+      label: 'Last Sale',
+      minWidth: 120,
+      format: (value) => value ? (
+        <Typography variant="body2">
+          {new Date(value).toLocaleDateString()}
+        </Typography>
+      ) : (
+        <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+          No sales
+        </Typography>
+      )
+    },
+    {
+      id: 'createdDate',
+      label: 'Created',
+      minWidth: 120,
+      format: (value) => (
+        <Typography variant="body2" color="text.secondary">
+          {new Date(value).toLocaleDateString()}
+        </Typography>
+      )
+    }
+  ];
+
+  // Define row actions
+  const getRowActions = (customer: Customer) => {
+    return createStandardActions(
+      customer,
+      () => handleViewCustomer(customer),
+      () => handleEditCustomerClick(customer),
+      () => handleDeleteCustomerClick(customer)
+    );
   };
 
   return (
@@ -437,218 +521,39 @@ const CustomersPage: React.FC = () => {
         </Alert>
       )}
 
-      {/* Customers Table */}
-      <Card>
-        <CardContent sx={{ p: 0 }}>
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 8 }}>
-              <CircularProgress />
-            </Box>
-          ) : customers.length === 0 ? (
-            <Box sx={{ textAlign: 'center', py: 8 }}>
-              <PersonIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="h6" color="text.secondary" gutterBottom>
-                No customers found
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {searchTerm ? 'Try adjusting your search terms' : 'Get started by adding your first customer'}
-              </Typography>
-            </Box>
-          ) : (
-            <>
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 600 }}>Customer</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Contact</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Total Sales</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Due Amount</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Last Sale</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Created</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }} align="center">Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {customers.map((customer) => (
-                      <TableRow key={customer.id} hover>
-                        <TableCell>
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
-                              <PersonIcon />
-                            </Avatar>
-                            <Box>
-                              <Typography variant="subtitle2" fontWeight={600}>
-                                {customer.firstName} {customer.lastName}
-                              </Typography>
-                              {customer.remark && (
-                                <Typography variant="caption" color="text.secondary">
-                                  {customer.remark}
-                                </Typography>
-                              )}
-                            </Box>
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Box>
-                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                              <EmailIcon sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
-                              <Typography variant="body2">{customer.email}</Typography>
-                            </Box>
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              <PhoneIcon sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
-                              <Typography variant="body2">{customer.contactNo}</Typography>
-                            </Box>
-                            {customer.address && (
-                              <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                                <LocationIcon sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
-                                <Typography variant="body2" color="text.secondary">
-                                  {customer.address}
-                                </Typography>
-                              </Box>
-                            )}
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Box>
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              <SalesIcon sx={{ fontSize: 16, mr: 1, color: 'primary.main' }} />
-                              <Typography variant="body2" fontWeight={600}>
-                                {customer.totalSales} sales
-                              </Typography>
-                            </Box>
-                            <Typography variant="body2" color="text.secondary">
-                              {customersService.formatCurrency(customer.totalSalesAmount)}
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            icon={<MoneyIcon sx={{ fontSize: 16 }} />}
-                            label={customersService.formatCurrency(customer.totalDueAmount)}
-                            color={getDueAmountColor(customer.totalDueAmount)}
-                            size="small"
-                            variant={customer.totalDueAmount === 0 ? 'outlined' : 'filled'}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <SaleDateIcon sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
-                            <Typography variant="body2">
-                              {customersService.formatDate(customer.lastSaleDate)}
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" color="text.secondary">
-                            {customersService.formatDate(customer.createdDate)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="center">
-                          <IconButton
-                            size="small"
-                            onClick={(e) => handleMenuClick(e, customer)}
-                          >
-                            <MoreVertIcon />
-                          </IconButton>
-                          <Menu
-                            anchorEl={anchorEl}
-                            open={Boolean(anchorEl)}
-                            onClose={handleMenuClose}
-                            PaperProps={{
-                              elevation: 3,
-                              sx: {
-                                overflow: 'visible',
-                                filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
-                                mt: 1.5,
-                                '& .MuiAvatar-root': {
-                                  width: 32,
-                                  height: 32,
-                                  ml: -0.5,
-                                  mr: 1,
-                                },
-                                '&:before': {
-                                  content: '""',
-                                  display: 'block',
-                                  position: 'absolute',
-                                  top: 0,
-                                  right: 14,
-                                  width: 10,
-                                  height: 10,
-                                  bgcolor: 'background.paper',
-                                  transform: 'translateY(-50%) rotate(45deg)',
-                                  zIndex: 0,
-                                },
-                              },
-                            }}
-                            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                          >
-                            <MenuItem onClick={handleViewCustomer}>
-                              <ViewIcon sx={{ mr: 1 }} /> View Details
-                            </MenuItem>
-                            <MenuItem onClick={() => selectedCustomer && handleEditCustomerClick(selectedCustomer)}>
-                              <EditIcon sx={{ mr: 1 }} /> Edit Customer
-                            </MenuItem>
-                            <MenuItem
-                              onClick={() => selectedCustomer && handleDeleteCustomerClick(selectedCustomer)}
-                              disabled={selectedCustomer ? !!selectedCustomer.lastSaleDate : false}
-                              sx={{ color: 'error.main' }}
-                            >
-                              <DeleteIcon sx={{ mr: 1 }} />
-                              Delete Customer
-                              {selectedCustomer?.lastSaleDate && (
-                                <Typography variant="caption" sx={{ ml: 1, fontStyle: 'italic' }}>
-                                  (Has sales)
-                                </Typography>
-                              )}
-                            </MenuItem>
-                          </Menu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-
-              {/* Pagination */}
-              {(totalPages > 1 || customers.length > 0) && (
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 3 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Showing {customers.length} of {totalCount} customers
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <FormControl size="small" sx={{ minWidth: 120 }}>
-                      <InputLabel>Page Size</InputLabel>
-                      <Select
-                        value={pageSize}
-                        label="Page Size"
-                        onChange={handlePageSizeChange}
-                        sx={{ borderRadius: 1 }}
-                      >
-                        <MenuItem value={5}>5</MenuItem>
-                        <MenuItem value={10}>10</MenuItem>
-                        <MenuItem value={25}>25</MenuItem>
-                        <MenuItem value={50}>50</MenuItem>
-                        <MenuItem value={100}>100</MenuItem>
-                      </Select>
-                    </FormControl>
-                    {totalPages > 1 && (
-                      <Pagination
-                        count={totalPages}
-                        page={currentPage}
-                        onChange={handlePageChange}
-                        color="primary"
-                        showFirstButton
-                        showLastButton
-                      />
-                    )}
-                  </Box>
-                </Box>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
+      {/* Customers DataTable */}
+      <DataTable
+        data={customers}
+        columns={columns}
+        loading={loading}
+        error={error}
+        emptyState={{
+          icon: '👥',
+          title: 'No customers found',
+          description: searchTerm
+            ? 'Try adjusting your search terms'
+            : 'Get started by adding your first customer',
+          action: {
+            label: 'Add Customer',
+            onClick: () => setAddCustomerDialogOpen(true)
+          }
+        }}
+        actions={getRowActions}
+        getRowId={(customer) => customer.id}
+        pagination={{
+          page: currentPage - 1, // Material-UI uses 0-based indexing
+          rowsPerPage: pageSize,
+          totalCount: totalCount,
+          totalPages: totalPages,
+          onPageChange: handlePageChange,
+          onRowsPerPageChange: handleRowsPerPageChange,
+          rowsPerPageOptions: [5, 10, 25, 50, 100]
+        }}
+        errorAction={{
+          label: 'Retry',
+          onClick: loadCustomers
+        }}
+      />
 
       {/* Summary Stats */}
       {!loading && customers.length > 0 && (

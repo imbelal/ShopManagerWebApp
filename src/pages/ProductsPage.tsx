@@ -7,58 +7,48 @@ import {
   Button,
   TextField,
   InputAdornment,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  IconButton,
-  Menu,
+  Grid,
+  FormControl,
+  InputLabel,
+  Select,
   MenuItem,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Chip,
   Avatar,
-  Grid,
-  FormControl,
-  InputLabel,
-  Select,
-  Pagination,
-  Alert,
-  Snackbar,
-  CircularProgress,
-  Fab,
-  Tooltip,
   Accordion,
   AccordionSummary,
   AccordionDetails,
   Switch,
   FormControlLabel,
-  Divider
+  Fab,
+  Tooltip,
+  Snackbar,
+  Alert,
+  CircularProgress,
+  Chip,
+  IconButton
 } from '@mui/material';
 import {
   Search as SearchIcon,
   Add as AddIcon,
-  MoreVert as MoreVertIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Visibility as ViewIcon,
   Refresh as RefreshIcon,
   FilterList as FilterIcon,
   Close as CloseIcon,
-  CheckCircle as CheckCircleIcon,
-  RadioButtonUnchecked as PendingIcon,
-  Pause as PausedIcon,
-  Block as BlockedIcon,
   ExpandMore as ExpandMoreIcon,
   ClearAll as ClearAllIcon
 } from '@mui/icons-material';
 import { productService, Product, ProductListRequest } from '../services/productService';
 import ProductForm from '../components/ProductForm';
+import {
+  DataTable,
+  StatusChip,
+  CurrencyDisplay,
+  createStandardActions,
+  EmptyState,
+  commonStatusConfigs
+} from '../components/common';
 
 interface ProductsPageProps {}
 
@@ -75,10 +65,9 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
   const [sortBy, setSortBy] = useState<'title' | 'price' | 'stockQuantity' | 'createdDate'>('createdDate');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
   const [categories, setCategories] = useState<Array<{ id: string; title: string }>>([]);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -156,15 +145,20 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
     loadProducts();
   };
 
-  // Menu handlers
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, product: Product) => {
-    setAnchorEl(event.currentTarget);
+  // Action handlers
+  const handleViewProduct = (product: Product) => {
     setSelectedProduct(product);
+    setViewDialogOpen(true);
   };
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-    setSelectedProduct(null);
+  const handleEditProduct = (product: Product) => {
+    setEditProduct(product);
+    setProductFormOpen(true);
+  };
+
+  const handleDeleteClick = (product: Product) => {
+    setSelectedProduct(product);
+    setDeleteDialogOpen(true);
   };
 
   // Product form handlers
@@ -174,9 +168,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
   };
 
   const handleOpenEditProduct = (product: Product) => {
-    setEditProduct(product);
-    setProductFormOpen(true);
-    handleMenuClose();
+    handleEditProduct(product);
   };
 
   const handleCloseProductForm = () => {
@@ -219,23 +211,13 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
   };
 
   // Handle pagination
-  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
-    setPage(value);
+  const handlePageChange = (event: React.MouseEvent<HTMLButtonElement> | null, value: number) => {
+    setPage(value + 1); // Convert from 0-based to 1-based
   };
 
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
-
-  // Get profit margin color
-  const getProfitMarginColor = (margin: number) => {
-    if (margin >= 30) return 'success';
-    if (margin >= 15) return 'warning';
-    return 'error';
+  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setPageSize(parseInt(event.target.value, 10));
+    setPage(1); // Reset to first page when changing page size
   };
 
   // Get unit name from ProductUnit enum value
@@ -274,65 +256,130 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
     return unitMap[unitValue] || 'Unit';
   };
 
-  // Get product status info based on ProductStatus enum
-  const getProductStatusInfo = (status: number | string) => {
-    // Handle both numeric enum values and string values
-    const statusValue = typeof status === 'number' ? status : parseInt(status);
-
-    switch (statusValue) {
-      case 1: // ProductStatus.Active
-        return {
-          color: 'success' as const,
-          icon: <CheckCircleIcon sx={{ fontSize: 16 }} />,
-          label: 'Active'
-        };
-      case 2: // ProductStatus.InActive
-        return {
-          color: 'warning' as const,
-          icon: <PendingIcon sx={{ fontSize: 16 }} />,
-          label: 'Inactive'
-        };
-      default:
-        return {
-          color: 'default' as const,
-          icon: <PendingIcon sx={{ fontSize: 16 }} />,
-          label: 'Unknown'
-        };
-    }
-  };
-
-  // Get status text for display
-  const getStatusText = (status: number | string) => {
-    const statusValue = typeof status === 'number' ? status : parseInt(status);
-
-    switch (statusValue) {
-      case 1:
-        return 'Active';
-      case 2:
-        return 'Inactive';
-      default:
-        return 'Unknown';
-    }
-  };
-
-  // Get status color for chips
-  const getStatusColor = (status: number | string) => {
-    const statusValue = typeof status === 'number' ? status : parseInt(status);
-
-    switch (statusValue) {
-      case 1:
-        return 'success';
-      case 2:
-        return 'warning';
-      default:
-        return 'default';
-    }
+  // Get profit margin color
+  const getProfitMarginColor = (margin: number): 'success' | 'warning' | 'error' => {
+    if (margin >= 30) return 'success';
+    if (margin >= 15) return 'warning';
+    return 'error';
   };
 
   useEffect(() => {
     loadProducts();
     loadCategories();
-  }, [page, searchTerm, selectedCategory, selectedUnit, minPrice, maxPrice, inStockOnly, sortBy, sortOrder]);
+  }, [page, pageSize, searchTerm, selectedCategory, selectedUnit, minPrice, maxPrice, inStockOnly, sortBy, sortOrder]);
+
+  // Define table columns
+  const columns = [
+    {
+      id: 'title',
+      label: 'Product',
+      minWidth: 200,
+      format: (value, product) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          {product.productPhotos && product.productPhotos.length > 0 && (
+            <Avatar
+              src={product.productPhotos.find(p => p.isPrimary)?.blobUrl || product.productPhotos[0].blobUrl}
+              variant="rounded"
+              sx={{ width: 48, height: 48 }}
+            >
+              {product.title.charAt(0)}
+            </Avatar>
+          )}
+          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+            {product.title}
+          </Typography>
+        </Box>
+      )
+    },
+    {
+      id: 'categoryName',
+      label: 'Category',
+      minWidth: 120
+    },
+    {
+      id: 'size',
+      label: 'Size',
+      minWidth: 80,
+      format: (value) => value || '-'
+    },
+    {
+      id: 'color',
+      label: 'Color',
+      minWidth: 80,
+      format: (value) => value || '-'
+    },
+    {
+      id: 'sellingPrice',
+      label: 'Price',
+      align: 'right' as const,
+      minWidth: 100,
+      format: (value) => (
+        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+          <CurrencyDisplay amount={value} />
+        </Typography>
+      )
+    },
+    {
+      id: 'stockQuantity',
+      label: 'Stock',
+      minWidth: 120,
+      format: (value, product) => (
+        <Box>
+          <Typography variant="body2">
+            {value} {getUnitName(product.unit)}
+          </Typography>
+          <StatusChip
+            status={value}
+            statusConfig={commonStatusConfigs.stockStatus}
+            size="small"
+            sx={{ mt: 0.5 }}
+          />
+        </Box>
+      )
+    },
+    {
+      id: 'profitMargin',
+      label: 'Margin',
+      minWidth: 80,
+      align: 'center' as const,
+      format: (value) => (
+        <StatusChip
+          status={value}
+          statusConfig={{
+            label: `${value.toFixed(1)}%`,
+            color: getProfitMarginColor(value)
+          }}
+          size="small"
+          variant="outlined"
+        />
+      )
+    },
+    {
+      id: 'status',
+      label: 'Status',
+      minWidth: 100,
+      format: (value) => (
+        <StatusChip
+          status={value}
+          statusConfig={commonStatusConfigs.productStatus}
+        />
+      )
+    }
+  ];
+
+  // Define row actions
+  const getRowActions = (product) => {
+    return createStandardActions(
+      product,
+      handleViewProduct,
+      handleEditProduct,
+      handleDeleteClick,
+      {
+        canEdit: () => true,
+        canDelete: () => true
+      }
+    );
+  };
 
   return (
     <Box sx={{ p: 3 }}>
@@ -581,178 +628,35 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
       </Card>
 
       {/* Products Table */}
-      <Card sx={{ borderRadius: 1, boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
-        <CardContent sx={{ p: 0 }}>
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-              <CircularProgress />
-            </Box>
-          ) : error ? (
-            <Box sx={{ p: 4 }}>
-              <Alert severity="error" action={
-                <Button color="inherit" size="small" onClick={handleRefresh}>
-                  Retry
-                </Button>
-              }>
-                {error}
-              </Alert>
-            </Box>
-          ) : (
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
-                    <TableCell sx={{ fontWeight: 600 }}>Product</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Category</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Size</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Color</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Price</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Stock</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Margin</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {products.map((product) => (
-                    <TableRow key={product.id} hover>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          {product.productPhotos && product.productPhotos.length > 0 && (
-                            <Avatar
-                              src={product.productPhotos.find(p => p.isPrimary)?.blobUrl || product.productPhotos[0].blobUrl}
-                              variant="rounded"
-                              sx={{ width: 48, height: 48 }}
-                            >
-                              {product.title.charAt(0)}
-                            </Avatar>
-                          )}
-                          <Box>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                              {product.title}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      </TableCell>
-                      <TableCell>{product.categoryName}</TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {product.size || '-'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {product.color || '-'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                          {formatCurrency(product.sellingPrice)}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Box>
-                          <Typography variant="body2">
-                            {product.stockQuantity} {getUnitName(product.unit)}
-                          </Typography>
-                          <Chip
-                            label={product.stockQuantity > 0 ? 'In Stock' : 'Out of Stock'}
-                            color={product.stockQuantity > 0 ? 'success' : 'error'}
-                            size="small"
-                            sx={{ mt: 0.5 }}
-                          />
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={`${product.profitMargin.toFixed(1)}%`}
-                          color={getProfitMarginColor(product.profitMargin)}
-                          size="small"
-                          variant="outlined"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {(() => {
-                          const statusInfo = getProductStatusInfo(product.status);
-                          return (
-                            <Chip
-                              icon={statusInfo.icon}
-                              label={statusInfo.label}
-                              color={statusInfo.color}
-                              size="small"
-                              variant="filled"
-                              sx={{
-                                fontWeight: 500,
-                                fontSize: '0.75rem',
-                                height: 24,
-                                '& .MuiChip-icon': {
-                                  fontSize: 14,
-                                }
-                              }}
-                            />
-                          );
-                        })()}
-                      </TableCell>
-                      <TableCell>
-                        <IconButton
-                          onClick={(e) => handleMenuClick(e, product)}
-                          size="small"
-                        >
-                          <MoreVertIcon />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-
-          {/* Pagination */}
-          {!loading && !error && products.length > 0 && (
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, totalCount)} of {totalCount} products
-              </Typography>
-              <Pagination
-                count={Math.ceil(totalCount / pageSize)}
-                page={page}
-                onChange={handlePageChange}
-                color="primary"
-                shape="rounded"
-                showFirstButton
-                showLastButton
-                size="medium"
-                siblingCount={1}
-                boundaryCount={1}
-              />
-            </Box>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Context Menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-        PaperProps={{
-          sx: { borderRadius: 1, boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }
+      <DataTable
+        data={products}
+        columns={columns}
+        loading={loading}
+        error={error}
+        emptyState={{
+          icon: '📦',
+          title: 'No products found',
+          description: searchTerm ? 'Try adjusting your search terms or filters' : 'Get started by adding your first product',
+          action: {
+            label: 'Add Product',
+            onClick: handleOpenAddProduct
+          }
         }}
-      >
-        <MenuItem onClick={() => {
-          setViewDialogOpen(true);
-          setAnchorEl(null); // Only close the menu, don't reset selectedProduct
-        }}>
-          <ViewIcon sx={{ mr: 1 }} /> View
-        </MenuItem>
-        <MenuItem onClick={() => { handleOpenEditProduct(selectedProduct!); }}>
-          <EditIcon sx={{ mr: 1 }} /> Edit
-        </MenuItem>
-        <MenuItem onClick={() => { setDeleteDialogOpen(true); setAnchorEl(null); }} sx={{ color: 'error.main' }}>
-          <DeleteIcon sx={{ mr: 1 }} /> Delete
-        </MenuItem>
-      </Menu>
+        actions={getRowActions}
+        getRowId={(product) => product.id}
+        pagination={{
+          page: page - 1, // Material-UI uses 0-based indexing
+          rowsPerPage: pageSize,
+          totalCount: totalCount,
+          onPageChange: handlePageChange,
+          onRowsPerPageChange: handleRowsPerPageChange,
+          rowsPerPageOptions: [5, 10, 25, 50, 100]
+        }}
+        errorAction={{
+          label: 'Retry',
+          onClick: handleRefresh
+        }}
+      />
 
       {/* View Product Dialog */}
       <Dialog
@@ -931,7 +835,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                           Selling Price
                         </Typography>
                         <Typography variant="body1" sx={{ fontWeight: 500, color: '#2e7d32' }}>
-                          ${selectedProduct.sellingPrice?.toFixed(2)}
+                          <CurrencyDisplay amount={selectedProduct.sellingPrice || 0} />
                         </Typography>
                       </Box>
                     </Grid>
@@ -941,7 +845,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                           Cost Price
                         </Typography>
                         <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                          ${selectedProduct.costPrice?.toFixed(2)}
+                          <CurrencyDisplay amount={selectedProduct.costPrice || 0} />
                         </Typography>
                       </Box>
                     </Grid>
@@ -963,10 +867,9 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                         <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
                           Status
                         </Typography>
-                        <Chip
-                          label={getStatusText(selectedProduct.status)}
-                          color={getStatusColor(selectedProduct.status) as any}
-                          size="small"
+                        <StatusChip
+                          status={selectedProduct.status}
+                          statusConfig={commonStatusConfigs.productStatus}
                         />
                       </Box>
                     </Grid>
@@ -980,9 +883,13 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                       </Typography>
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                         {selectedProduct.productTags.map((tag, index) => (
-                          <Chip
+                          <StatusChip
                             key={index}
-                            label={tag}
+                            status={tag}
+                            statusConfig={{
+                              label: tag,
+                              color: 'default'
+                            }}
                             variant="outlined"
                             size="small"
                             sx={{ fontSize: '0.75rem' }}
