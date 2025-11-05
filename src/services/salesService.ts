@@ -267,7 +267,7 @@ export const salesService = {
   },
 
   // Helper function to get payment method color
-  getPaymentMethodColor(method: string | null | undefined): string {
+  getPaymentMethodColor(method: string | null | undefined): 'default' | 'primary' | 'secondary' | 'success' | 'error' | 'info' | 'warning' {
     if (!method || typeof method !== 'string') {
       return 'default';
     }

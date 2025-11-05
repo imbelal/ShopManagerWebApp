@@ -1,22 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Typography,
-  Button,
-  Grid,
-  Card,
-  CardContent,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
-  Alert,
-  CircularProgress,
   Tooltip,
   Tabs,
   Tab,
@@ -26,20 +13,24 @@ import {
   ListItem,
   ListItemText,
   ListItemAvatar,
-  Fab,
-  TableContainer,
-  Table,
+  Snackbar,
+  Alert,
+  Typography,
+  Button,
+  CircularProgress,
+  Grid,
+  Card,
+  CardContent,
   Chip,
   Paper,
+  Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableRow
 } from '@mui/material';
 import {
-  Add as AddIcon,
-  Search as SearchIcon,
-  Refresh as RefreshIcon,
   Close as CloseIcon,
   Person as PersonIcon,
   Phone as PhoneIcon,
@@ -62,6 +53,10 @@ import {
   EmptyState,
   commonStatusConfigs
 } from '../components/common';
+import PageHeader from '../components/common/PageHeader';
+import FilterBar from '../components/common/FilterBar';
+import ConfirmDeleteDialog from '../components/common/ConfirmDeleteDialog';
+import usePagination, { usePaginationProps } from '../hooks/usePagination';
 
 const SalesPage: React.FC = () => {
   const [sales, setSales] = useState<Sales[]>([]);
@@ -70,9 +65,7 @@ const SalesPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Pagination
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
+  const [pagination, paginationActions] = usePagination();
   const [totalCount, setTotalCount] = useState(0);
 
   // Filters
@@ -100,6 +93,7 @@ const SalesPage: React.FC = () => {
     message: '',
     severity: 'success' as 'success' | 'error' | 'warning' | 'info'
   });
+  const [deleting, setDeleting] = useState(false);
 
   // Load sales data
   const loadSales = async () => {
@@ -108,15 +102,14 @@ const SalesPage: React.FC = () => {
 
     try {
       const response = await salesService.getSales({
-        pageNumber: page,
-        pageSize: pageSize,
+        pageNumber: pagination.page,
+        pageSize: pagination.pageSize,
         searchTerm: searchTerm || undefined,
         customerId: selectedCustomer || undefined
       });
 
       if (response.data.succeeded && response.data.data) {
         setSales(response.data.data.items);
-        setTotalPages(response.data.data.totalPages);
         setTotalCount(response.data.data.totalCount);
       } else {
         setError(response.data.message || 'Failed to load sales');
@@ -143,7 +136,7 @@ const SalesPage: React.FC = () => {
   useEffect(() => {
     loadSales();
     loadCustomers();
-  }, [page, pageSize, searchTerm, selectedCustomer]);
+  }, [pagination.page, pagination.pageSize, searchTerm, selectedCustomer]);
 
   // Handle view sale
   const handleViewSale = async (sale: Sales) => {
@@ -174,6 +167,11 @@ const SalesPage: React.FC = () => {
   };
 
   // Handle delete sale
+  const handleDeleteSaleClick = (sale: Sales) => {
+    setSelectedSale(sale);
+    setDeleteDialogOpen(true);
+  };
+
   const handleDeleteSale = async () => {
     if (!selectedSale) return;
 
@@ -185,6 +183,7 @@ const SalesPage: React.FC = () => {
         severity: 'warning'
       });
       setDeleteDialogOpen(false);
+      setSelectedSale(null);
       return;
     }
 
@@ -196,10 +195,12 @@ const SalesPage: React.FC = () => {
         severity: 'warning'
       });
       setDeleteDialogOpen(false);
+      setSelectedSale(null);
       return;
     }
 
     try {
+      setDeleting(true);
       const response = await salesService.deleteSale(selectedSale.id);
       if (response.data.succeeded) {
         setSnackbar({
@@ -207,6 +208,8 @@ const SalesPage: React.FC = () => {
           message: 'Sale deleted successfully',
           severity: 'success'
         });
+        setDeleteDialogOpen(false);
+        setSelectedSale(null);
         loadSales();
       } else {
         setSnackbar({
@@ -222,7 +225,7 @@ const SalesPage: React.FC = () => {
         severity: 'error'
       });
     } finally {
-      setDeleteDialogOpen(false);
+      setDeleting(false);
     }
   };
 
@@ -324,15 +327,18 @@ const SalesPage: React.FC = () => {
     loadCustomers();
   };
 
-  // Handle page size change
-  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setPageSize(parseInt(event.target.value, 10));
-    setPage(1); // Reset to first page when changing page size
+  // Handle filter changes
+  const handleFilterChange = () => {
+    paginationActions.setPage(1);
+    loadSales();
   };
 
-  // Handle page change
-  const handlePageChange = (event: React.MouseEvent<HTMLButtonElement> | null, value: number) => {
-    setPage(value + 1); // Convert from 0-based to 1-based
+  // Clear all filters
+  const clearAllFilters = () => {
+    setSearchTerm('');
+    setSelectedCustomer('');
+    paginationActions.setPage(1);
+    loadSales();
   };
 
   // Sales form handlers
@@ -487,7 +493,7 @@ const SalesPage: React.FC = () => {
       sale,
       handleViewSale,
       handleEditSale,
-      handleDeleteSale,
+      handleDeleteSaleClick,
       handleAddPayment,
       handleCancelSale,
       handleDownloadPdf
@@ -496,79 +502,45 @@ const SalesPage: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 600, color: '#1a1a1a' }}>
-          Sales
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          sx={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            textTransform: 'none',
-            borderRadius: 1,
-            px: 3,
-            py: 1,
-            boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
-            '&:hover': {
-              boxShadow: '0 6px 20px rgba(102, 126, 234, 0.6)',
-            }
-          }}
-          onClick={handleNewSale}
-        >
-          New Sale
-        </Button>
-      </Box>
+      <PageHeader
+        title="Sales"
+        subtitle="Manage your sales transactions"
+        actionButton={{
+          label: "New Sale",
+          onClick: handleNewSale
+        }}
+        showRefresh={true}
+        onRefresh={handleRefresh}
+        loading={loading}
+      />
 
-      {/* Search and Filters */}
-      <Card sx={{ mb: 3, borderRadius: 1, boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
-        <CardContent sx={{ p: 3 }}>
-          <Grid container spacing={2} alignItems="center">
-            <Grid sx={{ xs: 12, md: 4 }}>
-              <TextField
-                fullWidth
-                placeholder="Search by sales number or customer name..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: <RefreshIcon color="action" sx={{ mr: 1 }} />,
-                }}
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 } }}
-              />
-            </Grid>
-            <Grid sx={{ xs: 12, md: 3, minWidth: 250 }}>
-              <FormControl fullWidth>
-                <InputLabel>Customer</InputLabel>
-                <Select
-                  value={selectedCustomer}
-                  label="Customer"
-                  onChange={(e) => setSelectedCustomer(e.target.value)}
-                  sx={{ borderRadius: 1 }}
-                >
-                  <MenuItem value="">All Customers</MenuItem>
-                  {customers.map((customer) => (
-                    <MenuItem key={customer.id} value={customer.id}>
-                      {customer.firstName} {customer.lastName}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid sx={{ xs: 12, md: 2 }}>
-              <Button
-                variant="outlined"
-                startIcon={<RefreshIcon />}
-                onClick={handleRefresh}
-                fullWidth
-                sx={{ borderRadius: 1, height: '56px' }}
-              >
-                Refresh
-              </Button>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
+      <FilterBar
+        searchPlaceholder="Search by sales number or customer name..."
+        searchTerm={searchTerm}
+        onSearchChange={(value) => {
+          setSearchTerm(value);
+          handleFilterChange();
+        }}
+        filters={[
+          {
+            id: 'customer',
+            label: 'Customer',
+            value: selectedCustomer,
+            options: customers.map((customer) => ({
+              value: customer.id,
+              label: `${customer.firstName} ${customer.lastName}`
+            }))
+          }
+        ]}
+        onFilterChange={(filterId, value) => {
+          if (filterId === 'customer') {
+            setSelectedCustomer(value);
+          }
+          handleFilterChange();
+        }}
+        onClearFilters={clearAllFilters}
+        loading={loading}
+      />
 
       {/* Sales Table */}
       <DataTable
@@ -587,14 +559,7 @@ const SalesPage: React.FC = () => {
         }}
         actions={getRowActions}
         getRowId={(sale) => sale.id}
-        pagination={{
-          page: page - 1, // Material-UI uses 0-based indexing
-          rowsPerPage: pageSize,
-          totalCount: totalCount,
-          onPageChange: handlePageChange,
-          onRowsPerPageChange: handleRowsPerPageChange,
-          rowsPerPageOptions: [5, 10, 25, 50, 100]
-        }}
+        pagination={usePaginationProps(pagination, paginationActions, totalCount)}
         errorAction={{
           label: 'Retry',
           onClick: handleRefresh
@@ -983,26 +948,15 @@ const SalesPage: React.FC = () => {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
+      <ConfirmDeleteDialog
         open={deleteDialogOpen}
         onClose={() => { setDeleteDialogOpen(false); setSelectedSale(null); }}
-        PaperProps={{ sx: { borderRadius: 1 } }}
-      >
-        <DialogTitle>Delete Sale</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete sale "{selectedSale?.salesNumber}"? This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => { setDeleteDialogOpen(false); setSelectedSale(null); }}>
-            Cancel
-          </Button>
-          <Button onClick={handleDeleteSale} color="error" variant="contained">
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleDeleteSale}
+        entityName={`Sale #${selectedSale?.salesNumber || ''}`}
+        entityType="Sale"
+        loading={deleting}
+        warning="Cannot delete paid or cancelled sales"
+      />
 
       {/* Sales Form Dialog */}
       <SalesForm
@@ -1027,22 +981,6 @@ const SalesPage: React.FC = () => {
         onPaymentAdded={handlePaymentAdded}
       />
 
-      {/* Floating Action Button for Refresh */}
-      <Tooltip title="Refresh">
-        <Fab
-          color="primary"
-          size="small"
-          onClick={handleRefresh}
-          sx={{
-            position: 'fixed',
-            bottom: 24,
-            right: 24,
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          }}
-        >
-          <RefreshIcon />
-        </Fab>
-      </Tooltip>
     </Box>
   );
 };
