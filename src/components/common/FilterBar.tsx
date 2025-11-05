@@ -23,16 +23,27 @@ export interface FilterOption {
   options: Array<{ value: string; label: string }>;
 }
 
+export interface DateFieldOption {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: 'date' | 'datetime-local';
+}
+
 export interface FilterBarProps {
   searchPlaceholder: string;
   searchTerm: string;
   onSearchChange: (value: string) => void;
   filters?: FilterOption[];
+  dateFields?: DateFieldOption[];
   onFilterChange: (filterId: string, value: string) => void;
   onClearFilters?: () => void;
   showClearButton?: boolean;
   loading?: boolean;
   sx?: object;
+  children?: React.ReactNode;
+  hideSearch?: boolean;
 }
 
 const FilterBar: React.FC<FilterBarProps> = ({
@@ -40,11 +51,14 @@ const FilterBar: React.FC<FilterBarProps> = ({
   searchTerm,
   onSearchChange,
   filters = [],
+  dateFields = [],
   onFilterChange,
   onClearFilters,
   showClearButton = true,
   loading = false,
-  sx = {}
+  sx = {},
+  children,
+  hideSearch = false
 }) => {
   const hasActiveFilters = filters.some(filter => filter.value !== '');
   const hasActiveSearch = searchTerm.trim() !== '';
@@ -53,18 +67,20 @@ const FilterBar: React.FC<FilterBarProps> = ({
     <Box sx={{ mb: 3, ...sx }}>
       <Grid container spacing={2} alignItems="center">
         {/* Search Field */}
-        <Grid sx={{ xs: 12, md: 3 }}>
-          <TextField
-            fullWidth
-            placeholder={searchPlaceholder}
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-            InputProps={{
-              startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />
-            }}
-            size="small"
-          />
-        </Grid>
+        {!hideSearch && (
+          <Grid sx={{ xs: 12, md: 3 }}>
+            <TextField
+              fullWidth
+              placeholder={searchPlaceholder}
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+              InputProps={{
+                startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />
+              }}
+              size="small"
+            />
+          </Grid>
+        )}
 
         {/* Filter Dropdowns */}
         {filters.map((filter) => (
@@ -87,6 +103,24 @@ const FilterBar: React.FC<FilterBarProps> = ({
           </Grid>
         ))}
 
+        {/* Date Fields */}
+        {dateFields.map((dateField) => (
+          <Grid sx={{ xs: 12, sm: 6, md: 2 }} key={dateField.id}>
+            <TextField
+              fullWidth
+              label={dateField.label}
+              type={dateField.type || 'date'}
+              value={dateField.value}
+              onChange={(e) => dateField.onChange(e.target.value)}
+              size="small"
+              sx={{ minWidth: 150 }}
+              InputLabelProps={{
+                shrink: true,
+              }}
+            />
+          </Grid>
+        ))}
+
         {/* Action Buttons */}
         <Grid sx={{ xs: 12, md: 'auto' }}>
           <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
@@ -106,6 +140,13 @@ const FilterBar: React.FC<FilterBarProps> = ({
           </Box>
         </Grid>
       </Grid>
+
+      {/* Custom Content */}
+      {children && (
+        <Box sx={{ mt: 2 }}>
+          {children}
+        </Box>
+      )}
     </Box>
   );
 };

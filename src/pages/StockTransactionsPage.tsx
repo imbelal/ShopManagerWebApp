@@ -33,7 +33,6 @@ import {
   MoreVert as MoreVertIcon,
   Visibility as VisibilityIcon,
   Add as AddIcon,
-  FilterList as FilterIcon,
   Info as InfoIcon,
   Inventory as ProductIcon,
   Receipt as ReceiptIcon,
@@ -60,6 +59,9 @@ import {
   createStandardActions,
   EmptyState
 } from '../components/common';
+import PageHeader from '../components/common/PageHeader';
+import FilterBar from '../components/common/FilterBar';
+import usePagination, { usePaginationProps } from '../hooks/usePagination';
 
 const StockTransactionsPage: React.FC = () => {
   const theme = useTheme();
@@ -70,19 +72,10 @@ const StockTransactionsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Pagination state - similar to purchase page
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-
-  // Pagination state
-  const [pagination, setPagination] = useState({
-    pageNumber: 1,
-    pageSize: 20,
-    totalCount: 0,
-    totalPages: 0,
-    hasNextPage: false,
-    hasPreviousPage: false
-  });
+  // Pagination
+  const [pagination, paginationActions] = usePagination(1, 20);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -117,51 +110,40 @@ const StockTransactionsPage: React.FC = () => {
 
     try {
       const request: StockTransactionListRequest = {
-        pageSize: pageSize,
-        pageNumber: page,
-        ...filters
+        pageSize: pagination.pageSize,
+        pageNumber: pagination.page
       };
 
       // Only include non-empty filters
       if (filters.productId) request.productId = filters.productId;
-      if (filters.type) request.type = parseInt(filters.type) as StockTransactionType;
-      if (filters.refType) request.refType = parseInt(filters.refType) as StockReferenceType;
+      if (filters.type) {
+        const typeValue = parseInt(filters.type) as StockTransactionType;
+        request.type = typeValue;
+              }
+      if (filters.refType) {
+        const refTypeValue = parseInt(filters.refType) as StockReferenceType;
+        request.refType = refTypeValue;
+              }
       if (filters.fromDate) request.fromDate = filters.fromDate;
       if (filters.toDate) request.toDate = filters.toDate;
 
-      const response = await stockTransactionsService.getTransactions(request);
+            const response = await stockTransactionsService.getTransactions(request);
 
       if (response.data.succeeded && response.data.data) {
         const data = response.data.data;
 
         // Handle response format - backend returns either array or paginated object
         if (Array.isArray(data)) {
-          // Direct array response - calculate pagination manually
-          const totalCount = data.length;
-          const calculatedTotalPages = Math.ceil(totalCount / pageSize);
-
+          // Direct array response - set transactions directly
           setTransactions(data);
-          setPagination(prev => ({
-            ...prev,
-            pageNumber: page,
-            totalCount: totalCount,
-            totalPages: calculatedTotalPages,
-            hasNextPage: page < calculatedTotalPages,
-            hasPreviousPage: page > 1
-          }));
-        } else {
+          setTotalCount(data.length);
+          setTotalPages(Math.ceil(data.length / pagination.pageSize));
+                  } else {
           // Paginated response
           setTransactions(data.items);
-          setPagination(prev => ({
-            ...prev,
-            pageNumber: data.pageNumber,
-            pageSize: data.pageSize,
-            totalCount: data.totalCount,
-            totalPages: data.totalPages,
-            hasNextPage: data.hasNextPage,
-            hasPreviousPage: data.hasPreviousPage
-          }));
-        }
+          setTotalCount(data.totalCount);
+          setTotalPages(data.totalPages);
+                  }
       } else {
         setError(response.data.message || 'Failed to load stock transactions');
       }
@@ -188,12 +170,18 @@ const StockTransactionsPage: React.FC = () => {
   useEffect(() => {
     loadTransactions();
     loadProducts();
-  }, [filters]); // Only reload when filters change
+  }, []); // Only load once on mount
 
-  // Reload when page or pageSize changes
+  // Reload when pagination or filters change
   useEffect(() => {
     loadTransactions();
-  }, [page, pageSize]);
+  }, [pagination.page, pagination.pageSize]); // Only reload when pagination changes
+
+  // Reload when filters change
+  useEffect(() => {
+    paginationActions.resetPage();
+    loadTransactions();
+  }, [filters.productId, filters.type, filters.refType, filters.fromDate, filters.toDate]);
 
   // Handle filter changes
   const handleFilterChange = (field: string, value: string) => {
@@ -201,7 +189,7 @@ const StockTransactionsPage: React.FC = () => {
   };
 
   const applyFilters = () => {
-    setPagination(prev => ({ ...prev, pageNumber: 1 }));
+    paginationActions.setPage(1);
     loadTransactions();
   };
 
@@ -215,7 +203,7 @@ const StockTransactionsPage: React.FC = () => {
     };
 
     setFilters(clearedFilters);
-    setPagination(prev => ({ ...prev, pageNumber: 1 }));
+    paginationActions.setPage(1);
 
     // Load transactions with cleared filters immediately
     loadTransactionsWithFilters(clearedFilters);
@@ -228,7 +216,7 @@ const StockTransactionsPage: React.FC = () => {
 
     try {
       const request: StockTransactionListRequest = {
-        pageSize: pageSize,
+        pageSize: pagination.pageSize,
         pageNumber: 1, // Always start from page 1 when applying filters
         ...filterValues
       };
@@ -247,32 +235,16 @@ const StockTransactionsPage: React.FC = () => {
 
         // Handle response format - backend returns either array or paginated object
         if (Array.isArray(data)) {
-          // Direct array response - calculate pagination manually
-          const totalCount = data.length;
-          const calculatedTotalPages = Math.ceil(totalCount / pageSize);
-
+          // Direct array response - set transactions directly
           setTransactions(data);
-          setPagination(prev => ({
-            ...prev,
-            pageNumber: page,
-            totalCount: totalCount,
-            totalPages: calculatedTotalPages,
-            hasNextPage: page < calculatedTotalPages,
-            hasPreviousPage: page > 1
-          }));
-        } else {
+          setTotalCount(data.length);
+          setTotalPages(Math.ceil(data.length / pagination.pageSize));
+                  } else {
           // Paginated response
           setTransactions(data.items);
-          setPagination(prev => ({
-            ...prev,
-            pageNumber: data.pageNumber,
-            pageSize: data.pageSize,
-            totalCount: data.totalCount,
-            totalPages: data.totalPages,
-            hasNextPage: data.hasNextPage,
-            hasPreviousPage: data.hasPreviousPage
-          }));
-        }
+          setTotalCount(data.totalCount);
+          setTotalPages(data.totalPages);
+                  }
       } else {
         setError(response.data.message || 'Failed to load stock transactions');
       }
@@ -290,16 +262,7 @@ const StockTransactionsPage: React.FC = () => {
     setPage(1); // Reset to first page when changing page size
   };
 
-  // Pagination handlers for DataTable
-  const handlePageChange = (event: React.MouseEvent<HTMLButtonElement> | null, value: number) => {
-    setPage(value + 1); // Convert from 0-based to 1-based
-  };
-
-  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setPageSize(parseInt(event.target.value, 10));
-    setPage(1); // Reset to first page when changing page size
-  };
-
+  
   // View details handler
   const handleViewDetails = (transaction: StockTransactionDto) => {
     setSelectedTransaction(transaction);
@@ -492,137 +455,72 @@ const StockTransactionsPage: React.FC = () => {
 
   return (
     <Box sx={{ flexGrow: 1, p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#1a1a1a' }}>
-          Stock Transactions
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleCreateAdjustment}
-          sx={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            textTransform: 'none',
-            boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)',
-            }
-          }}
-        >
-          Create Adjustment
-        </Button>
-      </Box>
+      <PageHeader
+        title="Stock Transactions"
+        subtitle="Track and manage your inventory movements"
+        actionButton={{
+          label: "Create Adjustment",
+          onClick: handleCreateAdjustment
+        }}
+        showRefresh={true}
+        onRefresh={loadTransactions}
+        loading={loading}
+      />
 
-      {/* Filters Card */}
-      <Card sx={{ mb: 3, borderRadius: 2, boxShadow: theme.shadows[2] }}>
-        <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <FilterIcon sx={{ mr: 1, color: 'primary.main' }} />
-            <Typography variant="h6" sx={{ fontWeight: 'medium' }}>
-              Filters
-            </Typography>
-          </Box>
-
-          <Grid container spacing={2}>
-            <Grid sx={{ xs: 12, sm: 6, md: 2, minWidth: 220 }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Product</InputLabel>
-                <Select
-                  value={filters.productId}
-                  label="Product"
-                  onChange={(e) => handleFilterChange('productId', e.target.value)}
-                >
-                  <MenuItem value="">All Products</MenuItem>
-                  {products?.map((product) => (
-                    <MenuItem key={product.id} value={product.id}>
-                      {product.title}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid sx={{ xs: 12, sm: 6, md: 2, minWidth: 220 }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Transaction Type</InputLabel>
-                <Select
-                  value={filters.type}
-                  label="Transaction Type"
-                  onChange={(e) => handleFilterChange('type', e.target.value)}
-                >
-                  <MenuItem value="">All Types</MenuItem>
-                  {stockTransactionsService.getTransactionTypeOptions().map((option) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid sx={{ xs: 12, sm: 6, md: 2, minWidth: 220 }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Reference Type</InputLabel>
-                <Select
-                  value={filters.refType}
-                  label="Reference Type"
-                  onChange={(e) => handleFilterChange('refType', e.target.value)}
-                >
-                  <MenuItem value="">All References</MenuItem>
-                  {stockTransactionsService.getReferenceTypeOptions().map((option) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid sx={{ xs: 12, sm: 6, md: 2, minWidth: 220 }}>
-              <TextField
-                fullWidth
-                size="small"
-                label="From Date"
-                type="date"
-                value={filters.fromDate}
-                onChange={(e) => handleFilterChange('fromDate', e.target.value)}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-
-            <Grid sx={{ xs: 12, sm: 6, md: 2, minWidth: 220 }}>
-              <TextField
-                fullWidth
-                size="small"
-                label="To Date"
-                type="date"
-                value={filters.toDate}
-                onChange={(e) => handleFilterChange('toDate', e.target.value)}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-
-            <Grid sx={{ xs: 12, sm: 6, md: 2, minWidth: 220 }}>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button
-                  variant="contained"
-                  onClick={applyFilters}
-                  sx={{ flex: 1 }}
-                >
-                  Apply
-                </Button>
-                <Button
-                  variant="outlined"
-                  onClick={clearFilters}
-                  sx={{ flex: 1 }}
-                >
-                  Clear
-                </Button>
-              </Box>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
+          <FilterBar
+        searchPlaceholder=""
+        searchTerm=""
+        onSearchChange={() => {}}
+        hideSearch={true}
+        filters={[
+          {
+            id: 'productId',
+            label: 'Product',
+            value: filters.productId,
+            options: products?.map((product) => ({ value: product.id, label: product.title })) || []
+          },
+          {
+            id: 'type',
+            label: 'Transaction Type',
+            value: filters.type,
+            options: stockTransactionsService.getTransactionTypeOptions().map((option) => ({
+              value: option.value.toString(),
+              label: option.label
+            }))
+          },
+          {
+            id: 'refType',
+            label: 'Reference Type',
+            value: filters.refType,
+            options: stockTransactionsService.getReferenceTypeOptions().map((option) => ({
+              value: option.value.toString(),
+              label: option.label
+            }))
+          }
+        ]}
+        dateFields={[
+          {
+            id: 'fromDate',
+            label: 'From Date',
+            value: filters.fromDate,
+            onChange: (value) => handleFilterChange('fromDate', value),
+            type: 'date'
+          },
+          {
+            id: 'toDate',
+            label: 'To Date',
+            value: filters.toDate,
+            onChange: (value) => handleFilterChange('toDate', value),
+            type: 'date'
+          }
+        ]}
+        onFilterChange={(filterId, value) => {
+          handleFilterChange(filterId, value);
+        }}
+        onClearFilters={clearFilters}
+        loading={loading}
+        showClearButton={true}
+      />
 
       {/* Error Alert */}
       {error && (
@@ -650,14 +548,7 @@ const StockTransactionsPage: React.FC = () => {
         }}
         actions={getRowActions}
         getRowId={(transaction) => transaction.id}
-        pagination={{
-          page: page - 1, // Material-UI uses 0-based indexing
-          rowsPerPage: pageSize,
-          totalCount: pagination.totalCount,
-          onPageChange: handlePageChange,
-          onRowsPerPageChange: handleRowsPerPageChange,
-          rowsPerPageOptions: [5, 10, 25, 50, 100]
-        }}
+        pagination={usePaginationProps(pagination, paginationActions, totalCount, totalPages, [5, 10, 20, 25, 50, 100])}
         errorAction={{
           label: 'Retry',
           onClick: loadTransactions
