@@ -16,9 +16,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  FormControl,
-  InputLabel,
-  Select,
   List,
   ListItem,
   ListItemText,
@@ -52,16 +49,21 @@ import {
   createStandardActions,
   EmptyState
 } from '../components/common';
+import PageHeader from '../components/common/PageHeader';
+import FilterBar from '../components/common/FilterBar';
+import ConfirmDeleteDialog from '../components/common/ConfirmDeleteDialog';
+import usePagination, { usePaginationProps } from '../hooks/usePagination';
 
 const CustomersPage: React.FC = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+
+  // Pagination using custom hook
+  const [pagination, paginationActions] = usePagination(1, 10);
 
   // Sorting states
   const [sortBy, setSortBy] = useState<'totalDueAmount' | 'lastSaleDate' | 'createdDate'>('lastSaleDate');
@@ -110,8 +112,8 @@ const CustomersPage: React.FC = () => {
 
     try {
       const params: CustomerListRequest = {
-        pageNumber: currentPage,
-        pageSize,
+        pageNumber: pagination.page, // Hook uses 1-based internally
+        pageSize: pagination.pageSize,
         searchTerm: searchTerm.trim() || undefined,
         sortBy,
         sortOrder
@@ -133,21 +135,18 @@ const CustomersPage: React.FC = () => {
     }
   };
 
-  // Handle search
-  const handleSearch = () => {
-    setCurrentPage(1);
-    loadCustomers();
+  
+  // Handle search change
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    // Reset to first page when search changes
+    paginationActions.setPage(1);
   };
 
-  // Handle page change
-  // Pagination handlers for DataTable
-  const handlePageChange = (event: React.MouseEvent<HTMLButtonElement> | null, value: number) => {
-    setCurrentPage(value + 1); // Convert from 0-based to 1-based
-  };
-
-  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setPageSize(parseInt(event.target.value, 10));
-    setCurrentPage(1); // Reset to first page when changing page size
+  // Handle clear filters
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    paginationActions.setPage(1);
   };
 
   // Create new customer
@@ -295,18 +294,21 @@ const CustomersPage: React.FC = () => {
     }
   };
 
-  // Load data on component mount and when dependencies change
+  // Load data on component mount and when dependencies change (excluding searchTerm)
   useEffect(() => {
     loadCustomers();
-  }, [currentPage, pageSize, sortBy, sortOrder]);
+  }, [pagination.page, pagination.pageSize, sortBy, sortOrder]);
 
-  // Handle Enter key in search
-  const handleSearchKeyPress = (event: React.KeyboardEvent) => {
-    if (event.key === 'Enter') {
-      handleSearch();
-    }
-  };
+  // Separate effect for search with debouncing
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      loadCustomers();
+    }, 300); // 300ms debounce
 
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  
   // Get due amount color
   const getDueAmountColor = (amount: number): 'success' | 'warning' | 'error' | 'default' => {
     if (amount === 0) return 'success';
@@ -418,101 +420,55 @@ const CustomersPage: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      {/* Header */}
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h4" component="h1" fontWeight={600}>
-          Customers
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => setAddCustomerDialogOpen(true)}
-          sx={{ borderRadius: 2 }}
-        >
-          Add Customer
-        </Button>
-      </Box>
+      <PageHeader
+        title="Customers"
+        actionButton={{
+          label: "Add Customer",
+          onClick: () => setAddCustomerDialogOpen(true),
+          startIcon: <AddIcon />
+        }}
+        showRefresh={true}
+        onRefresh={loadCustomers}
+        loading={loading}
+      />
 
-      {/* Search Bar */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent sx={{ py: 2 }}>
-          <Grid container spacing={2} alignItems="center">
-            <Grid size={{ xs: 12, md: 4 }}>
-              <TextField
-                fullWidth
-                placeholder="Search customers by name, email, phone, or address..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={handleSearchKeyPress}
-                InputProps={{
-                  startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
-                }}
-                size="small"
-              />
-            </Grid>
-            <Grid size={{ xs: 6, md: 2 }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Sort By</InputLabel>
-                <Select
-                  value={sortBy}
-                  label="Sort By"
-                  onChange={(e) => {
-                    setSortBy(e.target.value as any);
-                    setCurrentPage(1);
-                    loadCustomers();
-                  }}
-                  sx={{ borderRadius: 1 }}
-                >
-                  <MenuItem value="totalDueAmount">Due Amount</MenuItem>
-                  <MenuItem value="lastSaleDate">Last Sale Date</MenuItem>
-                  <MenuItem value="createdDate">Created Date</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 6, md: 2 }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Order</InputLabel>
-                <Select
-                  value={sortOrder}
-                  label="Order"
-                  onChange={(e) => {
-                    setSortOrder(e.target.value as any);
-                    setCurrentPage(1);
-                    loadCustomers();
-                  }}
-                  sx={{ borderRadius: 1 }}
-                >
-                  <MenuItem value="asc">Ascending</MenuItem>
-                  <MenuItem value="desc">Descending</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 6, md: 2 }}>
-              <Button
-                variant="outlined"
-                onClick={handleSearch}
-                startIcon={<SearchIcon />}
-                fullWidth
-              >
-                Search
-              </Button>
-            </Grid>
-            <Grid size={{ xs: 6, md: 2 }}>
-              <Button
-                variant="text"
-                onClick={() => {
-                  setSearchTerm('');
-                  setCurrentPage(1);
-                  setTimeout(loadCustomers, 100);
-                }}
-                fullWidth
-              >
-                Clear
-              </Button>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
+      <FilterBar
+        searchPlaceholder="Search customers by name, email, phone, or address..."
+        searchTerm={searchTerm}
+        onSearchChange={handleSearchChange}
+        onClearFilters={handleClearFilters}
+        loading={loading}
+        showClearButton={true}
+        filters={[
+          {
+            id: 'sortBy',
+            label: 'Sort By',
+            value: sortBy,
+            options: [
+              { value: 'totalDueAmount', label: 'Due Amount' },
+              { value: 'lastSaleDate', label: 'Last Sale Date' },
+              { value: 'createdDate', label: 'Created Date' }
+            ]
+          },
+          {
+            id: 'sortOrder',
+            label: 'Order',
+            value: sortOrder,
+            options: [
+              { value: 'asc', label: 'Ascending' },
+              { value: 'desc', label: 'Descending' }
+            ]
+          }
+        ]}
+        onFilterChange={(filterId, value) => {
+          if (filterId === 'sortBy') {
+            setSortBy(value as any);
+          } else if (filterId === 'sortOrder') {
+            setSortOrder(value as any);
+          }
+          paginationActions.setPage(1);
+        }}
+      />
 
       {/* Error Alert */}
       {error && (
@@ -540,15 +496,7 @@ const CustomersPage: React.FC = () => {
         }}
         actions={getRowActions}
         getRowId={(customer) => customer.id}
-        pagination={{
-          page: currentPage - 1, // Material-UI uses 0-based indexing
-          rowsPerPage: pageSize,
-          totalCount: totalCount,
-          totalPages: totalPages,
-          onPageChange: handlePageChange,
-          onRowsPerPageChange: handleRowsPerPageChange,
-          rowsPerPageOptions: [5, 10, 25, 50, 100]
-        }}
+        pagination={usePaginationProps(pagination, paginationActions, totalCount, totalPages, [5, 10, 20, 25, 50, 100])}
         errorAction={{
           label: 'Retry',
           onClick: loadCustomers
@@ -952,58 +900,15 @@ const CustomersPage: React.FC = () => {
       </Dialog>
 
       {/* Delete Customer Confirmation Dialog */}
-      <Dialog
+      <ConfirmDeleteDialog
         open={deleteCustomerDialogOpen}
         onClose={() => setDeleteCustomerDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{ sx: { borderRadius: 1 } }}
-      >
-        <DialogTitle sx={{ pb: 1 }}>
-          <Typography variant="h6" component="div" sx={{ display: 'flex', alignItems: 'center' }}>
-            <DeleteIcon sx={{ mr: 1, color: 'error.main' }} />
-            Delete Customer
-          </Typography>
-        </DialogTitle>
-        <DialogContent sx={{ pt: 1 }}>
-          <Typography variant="body1" gutterBottom>
-            Are you sure you want to delete this customer?
-          </Typography>
-          {customerToDelete && (
-            <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-              <Typography variant="subtitle2" color="primary">
-                {customerToDelete.firstName} {customerToDelete.lastName}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {customerToDelete.email}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {customerToDelete.contactNo}
-              </Typography>
-            </Box>
-          )}
-          <Typography variant="body2" color="error.main" sx={{ mt: 2 }}>
-            <strong>Warning:</strong> This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button
-            onClick={() => setDeleteCustomerDialogOpen(false)}
-            disabled={deleteCustomerLoading}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleDeleteCustomer}
-            variant="contained"
-            color="error"
-            disabled={deleteCustomerLoading}
-            startIcon={deleteCustomerLoading ? <CircularProgress size={20} /> : <DeleteIcon />}
-          >
-            {deleteCustomerLoading ? 'Deleting...' : 'Delete Customer'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleDeleteCustomer}
+        entityName={customerToDelete ? `${customerToDelete.firstName} ${customerToDelete.lastName}` : 'Customer'}
+        entityType="Customer"
+        loading={deleteCustomerLoading}
+        warning="This action cannot be undone and will remove all customer data including sales history."
+      />
     </Box>
   );
 };
