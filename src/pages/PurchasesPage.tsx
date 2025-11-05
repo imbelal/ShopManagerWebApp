@@ -3,20 +3,9 @@ import {
   Box,
   Typography,
   Button,
-  Grid,
-  Card,
-  CardContent,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
-  Alert,
-  CircularProgress,
   Tooltip,
   Tabs,
   Tab,
@@ -26,21 +15,23 @@ import {
   ListItem,
   ListItemText,
   ListItemAvatar,
-  Fab,
-  TableContainer,
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
+  Snackbar,
+  Alert,
+  CircularProgress,
+  Grid,
+  Card,
+  CardContent,
   Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Chip,
   IconButton
 } from '@mui/material';
 import {
-  Add as AddIcon,
-  Search as SearchIcon,
-  Refresh as RefreshIcon,
   Business as BusinessIcon,
   Phone as PhoneIcon,
   Email as EmailIcon,
@@ -63,6 +54,10 @@ import {
   createStandardActions,
   EmptyState
 } from '../components/common';
+import PageHeader from '../components/common/PageHeader';
+import FilterBar from '../components/common/FilterBar';
+import ConfirmDeleteDialog from '../components/common/ConfirmDeleteDialog';
+import usePagination, { usePaginationProps } from '../hooks/usePagination';
 
 const PurchasesPage: React.FC = () => {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
@@ -72,9 +67,7 @@ const PurchasesPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Pagination
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
+  const [pagination, paginationActions] = usePagination();
   const [totalCount, setTotalCount] = useState(0);
 
   // Filters
@@ -82,14 +75,19 @@ const PurchasesPage: React.FC = () => {
   const [selectedSupplier, setSelectedSupplier] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
 
-  // Handle pagination
-  const handlePageChange = (event: React.MouseEvent<HTMLButtonElement> | null, value: number) => {
-    setPage(value + 1); // Convert from 0-based to 1-based
+  // Handle filter changes
+  const handleFilterChange = () => {
+    paginationActions.setPage(1);
+    loadPurchases();
   };
 
-  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setPageSize(parseInt(event.target.value, 10));
-    setPage(1); // Reset to first page when changing page size
+  // Clear all filters
+  const clearAllFilters = () => {
+    setSearchTerm('');
+    setSelectedSupplier('');
+    setSelectedStatus('');
+    paginationActions.setPage(1);
+    loadPurchases();
   };
 
   // Dialog states
@@ -112,6 +110,7 @@ const PurchasesPage: React.FC = () => {
     message: '',
     severity: 'success' as 'success' | 'error' | 'warning' | 'info'
   });
+  const [deleting, setDeleting] = useState(false);
 
   // Load purchases
   const loadPurchases = async () => {
@@ -119,8 +118,8 @@ const PurchasesPage: React.FC = () => {
     setError(null);
     try {
       const filters = {
-        pageNumber: page,
-        pageSize: pageSize,
+        pageNumber: pagination.page,
+        pageSize: pagination.pageSize,
         searchTerm: searchTerm || undefined,
         supplierId: selectedSupplier || undefined,
         status: selectedStatus ? parseInt(selectedStatus) as PurchaseStatus : undefined
@@ -129,7 +128,6 @@ const PurchasesPage: React.FC = () => {
       const response = await purchasesService.getPurchases(filters);
       if (response.data.succeeded && response.data.data) {
         setPurchases(response.data.data.items);
-        setTotalPages(response.data.data.totalPages);
         setTotalCount(response.data.data.totalCount);
       } else {
         setError(response.data.message || 'Failed to load purchases');
@@ -186,7 +184,7 @@ const PurchasesPage: React.FC = () => {
     setPurchaseFormOpen(true);
   };
 
-  const handleDelete = (purchase: Purchase) => {
+  const handleDeleteClick = (purchase: Purchase) => {
     setPurchaseToDelete(purchase);
     setDeleteDialogOpen(true);
   };
@@ -211,10 +209,12 @@ const PurchasesPage: React.FC = () => {
   const confirmDelete = async () => {
     if (purchaseToDelete) {
       try {
-        setLoading(true);
+        setDeleting(true);
         const response = await purchasesService.deletePurchase(purchaseToDelete.id);
         if (response.data.succeeded) {
           showSnackbar('Purchase deleted successfully', 'success');
+          setDeleteDialogOpen(false);
+          setPurchaseToDelete(null);
           loadPurchases();
         } else {
           setError(response.data.message || 'Failed to delete purchase');
@@ -222,9 +222,7 @@ const PurchasesPage: React.FC = () => {
       } catch (err: any) {
         setError(handleApiError(err));
       } finally {
-        setLoading(false);
-        setDeleteDialogOpen(false);
-        setPurchaseToDelete(null);
+        setDeleting(false);
       }
     }
   };
@@ -246,7 +244,7 @@ const PurchasesPage: React.FC = () => {
     loadPurchases();
     loadSuppliers();
     loadProducts();
-  }, [page, pageSize, searchTerm, selectedSupplier, selectedStatus]);
+  }, [pagination.page, pagination.pageSize, searchTerm, selectedSupplier, selectedStatus]);
 
   // Business rule helpers
   const canEditPurchase = (purchase: Purchase) => {
@@ -357,8 +355,9 @@ const PurchasesPage: React.FC = () => {
       purchase,
       handleView,
       handleEdit,
-      handleDelete,
+      handleDeleteClick,
       {
+        canEdit: canEditPurchase,
         canDelete: canDeletePurchase
       }
     );
@@ -393,21 +392,20 @@ const PurchasesPage: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Purchases Management
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => {
+      <PageHeader
+        title="Purchases Management"
+        subtitle="Track and manage your purchase orders"
+        actionButton={{
+          label: "Add Purchase",
+          onClick: () => {
             setEditPurchase(null);
             setPurchaseFormOpen(true);
-          }}
-        >
-          Add Purchase
-        </Button>
-      </Box>
+          }
+        }}
+        showRefresh={true}
+        onRefresh={handleRefresh}
+        loading={loading}
+      />
 
       {/* Error Display */}
       {error && (
@@ -416,67 +414,42 @@ const PurchasesPage: React.FC = () => {
         </Alert>
       )}
 
-      {/* Filters */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Grid container spacing={2} alignItems="center">
-            <Grid sx={{ xs: 12, md: 4, minWidth: 220 }}>
-              <TextField
-                fullWidth
-                placeholder="Search purchases..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: <SearchIcon sx={{ color: 'text.secondary', mr: 1 }} />
-                }}
-              />
-            </Grid>
-            <Grid sx={{ xs: 12, md: 3, minWidth: 220 }}>
-              <FormControl fullWidth>
-                <InputLabel>Supplier</InputLabel>
-                <Select
-                  value={selectedSupplier}
-                  label="Supplier"
-                  onChange={(e) => setSelectedSupplier(e.target.value)}
-                >
-                  <MenuItem value="">All Suppliers</MenuItem>
-                  {suppliers.map((supplier) => (
-                    <MenuItem key={supplier.id} value={supplier.id}>
-                      {supplier.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid sx={{ xs: 12, md: 3, minWidth: 220 }}>
-              <FormControl fullWidth>
-                <InputLabel>Status</InputLabel>
-                <Select
-                  value={selectedStatus}
-                  label="Status"
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                >
-                  <MenuItem value="">All Status</MenuItem>
-                  <MenuItem value="0">Pending</MenuItem>
-                  <MenuItem value="1">Completed</MenuItem>
-                  <MenuItem value="2">Cancelled</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid sx={{ xs: 12, md: 2, minWidth: 220 }}>
-              <Button
-                variant="outlined"
-                startIcon={<RefreshIcon />}
-                onClick={handleRefresh}
-                disabled={loading}
-                fullWidth
-              >
-                Refresh
-              </Button>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
+      <FilterBar
+        searchPlaceholder="Search purchases..."
+        searchTerm={searchTerm}
+        onSearchChange={(value) => {
+          setSearchTerm(value);
+          handleFilterChange();
+        }}
+        filters={[
+          {
+            id: 'supplier',
+            label: 'Supplier',
+            value: selectedSupplier,
+            options: suppliers.map((supplier) => ({ value: supplier.id, label: supplier.name }))
+          },
+          {
+            id: 'status',
+            label: 'Status',
+            value: selectedStatus,
+            options: [
+              { value: '0', label: 'Pending' },
+              { value: '1', label: 'Completed' },
+              { value: '2', label: 'Cancelled' }
+            ]
+          }
+        ]}
+        onFilterChange={(filterId, value) => {
+          if (filterId === 'supplier') {
+            setSelectedSupplier(value);
+          } else if (filterId === 'status') {
+            setSelectedStatus(value);
+          }
+          handleFilterChange();
+        }}
+        onClearFilters={clearAllFilters}
+        loading={loading}
+      />
 
       {/* Purchases DataTable */}
       <DataTable
@@ -497,14 +470,7 @@ const PurchasesPage: React.FC = () => {
         }}
         actions={getRowActions}
         getRowId={(purchase) => purchase.id}
-        pagination={{
-          page: page - 1, // Material-UI uses 0-based indexing
-          rowsPerPage: pageSize,
-          totalCount: totalCount,
-          onPageChange: handlePageChange,
-          onRowsPerPageChange: handleRowsPerPageChange,
-          rowsPerPageOptions: [5, 10, 25, 50, 100]
-        }}
+        pagination={usePaginationProps(pagination, paginationActions, totalCount)}
         errorAction={{
           label: 'Retry',
           onClick: handleRefresh
@@ -790,38 +756,17 @@ const PurchasesPage: React.FC = () => {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
+      <ConfirmDeleteDialog
         open={deleteDialogOpen}
         onClose={() => {
           setDeleteDialogOpen(false);
           setPurchaseToDelete(null);
         }}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete this purchase? This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => {
-            setDeleteDialogOpen(false);
-            setPurchaseToDelete(null);
-          }}>
-            Cancel
-          </Button>
-          <Button
-            onClick={confirmDelete}
-            color="error"
-            variant="contained"
-            disabled={loading}
-          >
-            {loading ? <CircularProgress size={20} /> : 'Delete'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={confirmDelete}
+        entityName={`Purchase #${purchaseToDelete?.purchaseNumber || ''}`}
+        entityType="Purchase"
+        loading={deleting}
+      />
 
       {/* Purchase Form Dialog */}
       <PurchaseForm
