@@ -15,13 +15,7 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
   Avatar,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Switch,
-  FormControlLabel,
   Fab,
   Tooltip,
   Snackbar,
@@ -34,10 +28,7 @@ import {
   Search as SearchIcon,
   Add as AddIcon,
   Refresh as RefreshIcon,
-  FilterList as FilterIcon,
-  Close as CloseIcon,
-  ExpandMore as ExpandMoreIcon,
-  ClearAll as ClearAllIcon
+  Close as CloseIcon
 } from '@mui/icons-material';
 import { productService, Product, ProductListRequest } from '../services/productService';
 import ProductForm from '../components/ProductForm';
@@ -49,6 +40,10 @@ import {
   EmptyState,
   commonStatusConfigs
 } from '../components/common';
+import PageHeader from '../components/common/PageHeader';
+import FilterBar from '../components/common/FilterBar';
+import ConfirmDeleteDialog from '../components/common/ConfirmDeleteDialog';
+import usePagination, { usePaginationProps } from '../hooks/usePagination';
 
 interface ProductsPageProps {}
 
@@ -64,9 +59,10 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
   const [inStockOnly, setInStockOnly] = useState(false);
   const [sortBy, setSortBy] = useState<'title' | 'price' | 'stockQuantity' | 'createdDate'>('createdDate');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
+
+  // Use pagination hook
+  const [pagination, paginationActions] = usePagination();
   const [categories, setCategories] = useState<Array<{ id: string; title: string }>>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -75,6 +71,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
   const [productFormOpen, setProductFormOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+  const [deleting, setDeleting] = useState(false);
 
   // Load products
   const loadProducts = async () => {
@@ -83,8 +80,8 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
       setError(null);
 
       const request: ProductListRequest = {
-        pageSize,
-        pageNumber: page,
+        pageSize: pagination.pageSize,
+        pageNumber: pagination.page,
         searchTerm: searchTerm || undefined,
         categoryId: selectedCategory || undefined,
         unit: selectedUnit || undefined,
@@ -127,16 +124,20 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
     if (!selectedProduct) return;
 
     try {
+      setDeleting(true);
       const response = await productService.deleteProduct(selectedProduct.id);
       if (response.data.succeeded) {
         setSnackbar({ open: true, message: 'Product deleted successfully', severity: 'success' });
         setDeleteDialogOpen(false);
+        setSelectedProduct(null);
         loadProducts();
       } else {
         throw new Error(response.data.message || 'Failed to delete product');
       }
     } catch (err: any) {
       setSnackbar({ open: true, message: err.message || 'Failed to delete product', severity: 'error' });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -188,13 +189,13 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
   // Handle search
   const handleSearch = (event: React.FormEvent) => {
     event.preventDefault();
-    setPage(1);
+    paginationActions.setPage(1);
     loadProducts();
   };
 
   // Handle filter changes
   const handleFilterChange = () => {
-    setPage(1);
+    paginationActions.setPage(1);
     loadProducts();
   };
 
@@ -207,19 +208,10 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
     setInStockOnly(false);
     setSortBy('createdDate');
     setSortOrder('desc');
-    setPage(1);
+    paginationActions.setPage(1);
   };
 
-  // Handle pagination
-  const handlePageChange = (event: React.MouseEvent<HTMLButtonElement> | null, value: number) => {
-    setPage(value + 1); // Convert from 0-based to 1-based
-  };
-
-  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setPageSize(parseInt(event.target.value, 10));
-    setPage(1); // Reset to first page when changing page size
-  };
-
+  
   // Get unit name from ProductUnit enum value
   const getUnitName = (unit: number | string) => {
     const unitValue = typeof unit === 'number' ? unit : parseInt(unit);
@@ -266,7 +258,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
   useEffect(() => {
     loadProducts();
     loadCategories();
-  }, [page, pageSize, searchTerm, selectedCategory, selectedUnit, minPrice, maxPrice, inStockOnly, sortBy, sortOrder]);
+  }, [pagination.page, pagination.pageSize, searchTerm, selectedCategory, selectedUnit, minPrice, maxPrice, inStockOnly, sortBy, sortOrder]);
 
   // Define table columns
   const columns = [
@@ -383,250 +375,99 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 600, color: '#1a1a1a' }}>
-          Products
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          sx={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            textTransform: 'none',
-            borderRadius: 1,
-            px: 3,
-            py: 1,
-            boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
-            '&:hover': {
-              boxShadow: '0 6px 20px rgba(102, 126, 234, 0.6)',
-            }
-          }}
-          onClick={handleOpenAddProduct}
-        >
-          Add Product
-        </Button>
-      </Box>
+      <PageHeader
+        title="Products"
+        actionButton={{
+          label: "Add Product",
+          onClick: handleOpenAddProduct
+        }}
+        showRefresh={true}
+        onRefresh={loadProducts}
+        loading={loading}
+      />
 
-      {/* Search and Filters */}
-      <Card sx={{ mb: 3, borderRadius: 1, boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
-        <CardContent sx={{ p: 3 }}>
-          {/* Basic Search Bar */}
-          <Box sx={{ mb: 2 }}>
-            <Grid container spacing={2} alignItems="center">
-              <Grid sx={{ xs: 12, md: 6 }}>
-                <TextField
-                  fullWidth
-                  placeholder="Search products by name, description, size, or color..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon color="action" />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 } }}
-                />
-              </Grid>
-              <Grid sx={{ xs: 12, md: 3 }}>
-                <FormControl fullWidth>
-                  <InputLabel>Sort By</InputLabel>
-                  <Select
-                    value={sortBy}
-                    label="Sort By"
-                    onChange={(e) => {
-                      setSortBy(e.target.value as any);
-                      handleFilterChange();
-                    }}
-                    sx={{ borderRadius: 1 }}
-                  >
-                    <MenuItem value="title">Name</MenuItem>
-                    <MenuItem value="price">Price</MenuItem>
-                    <MenuItem value="stockQuantity">Stock</MenuItem>
-                    <MenuItem value="createdDate">Created Date</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid sx={{ xs: 12, md: 3 }}>
-                <FormControl fullWidth>
-                  <InputLabel>Order</InputLabel>
-                  <Select
-                    value={sortOrder}
-                    label="Order"
-                    onChange={(e) => {
-                      setSortOrder(e.target.value as any);
-                      handleFilterChange();
-                    }}
-                    sx={{ borderRadius: 1 }}
-                  >
-                    <MenuItem value="asc">Ascending</MenuItem>
-                    <MenuItem value="desc">Descending</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-            </Grid>
-          </Box>
+      <FilterBar
+        searchPlaceholder="Search products by name, description, size, or color..."
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        filters={[
+          {
+            id: 'category',
+            label: 'Category',
+            value: selectedCategory,
+            options: categories.map((category) => ({ value: category.id, label: category.title }))
+          },
+          {
+            id: 'unit',
+            label: 'Unit',
+            value: selectedUnit,
+            options: [
+              { value: '0', label: 'Box' },
+              { value: '1', label: 'Piece' },
+              { value: '2', label: 'Square Feet' },
+              { value: '3', label: 'Kilogram' },
+              { value: '4', label: 'Gram' },
+              { value: '5', label: 'Liter' },
+              { value: '6', label: 'Milliliter' },
+              { value: '7', label: 'Meter' },
+              { value: '8', label: 'Centimeter' },
+              { value: '9', label: 'Inch' },
+              { value: '10', label: 'Yard' },
+              { value: '11', label: 'Ton' },
+              { value: '12', label: 'Pack' },
+              { value: '13', label: 'Dozen' },
+              { value: '14', label: 'Pair' },
+              { value: '15', label: 'Roll' },
+              { value: '16', label: 'Bundle' },
+              { value: '17', label: 'Carton' },
+              { value: '18', label: 'Bag' },
+              { value: '19', label: 'Set' },
+              { value: '20', label: 'Barrel' },
+              { value: '21', label: 'Gallon' },
+              { value: '22', label: 'Can' },
+              { value: '23', label: 'Tube' },
+              { value: '24', label: 'Packet' },
+              { value: '25', label: 'Unit' }
+            ]
+          },
+          {
+            id: 'sortBy',
+            label: 'Sort By',
+            value: sortBy,
+            options: [
+              { value: 'title', label: 'Name' },
+              { value: 'price', label: 'Price' },
+              { value: 'stockQuantity', label: 'Stock' },
+              { value: 'createdDate', label: 'Created Date' }
+            ]
+          },
+          {
+            id: 'sortOrder',
+            label: 'Order',
+            value: sortOrder,
+            options: [
+              { value: 'asc', label: 'Ascending' },
+              { value: 'desc', label: 'Descending' }
+            ]
+          }
+        ]}
+        onFilterChange={(filterId, value) => {
+          if (filterId === 'category') {
+            setSelectedCategory(value);
+          } else if (filterId === 'unit') {
+            setSelectedUnit(value);
+          } else if (filterId === 'sortBy') {
+            setSortBy(value as any);
+          } else if (filterId === 'sortOrder') {
+            setSortOrder(value as any);
+          }
+          handleFilterChange();
+        }}
+        onClearFilters={clearAllFilters}
+        loading={loading}
+      />
 
-          {/* Advanced Filters */}
-          <Accordion sx={{ boxShadow: 'none', '&:before': { display: 'none' } }}>
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              sx={{
-                minHeight: 48,
-                '& .MuiAccordionSummary-content': { my: 1 },
-                backgroundColor: '#f8f9fa',
-                borderRadius: 1
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <FilterIcon />
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Advanced Filters
-                </Typography>
-                {(selectedCategory || selectedUnit || minPrice || maxPrice || inStockOnly) && (
-                  <Chip
-                    label="Active"
-                    size="small"
-                    color="primary"
-                    sx={{ ml: 1 }}
-                  />
-                )}
-              </Box>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Grid container spacing={2}>
-                <Grid sx={{ xs: 12, sm: 6 }}>
-                  <FormControl fullWidth sx={{ minWidth: 150 }}>
-                    <InputLabel>Category</InputLabel>
-                    <Select
-                      value={selectedCategory}
-                      label="Category"
-                      onChange={(e) => {
-                        setSelectedCategory(e.target.value);
-                        handleFilterChange();
-                      }}
-                      sx={{ borderRadius: 1 }}
-                    >
-                      <MenuItem value="">All Categories</MenuItem>
-                      {categories.map((category) => (
-                        <MenuItem key={category.id} value={category.id}>
-                          {category.title}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid sx={{ xs: 12 }}>
-                  <FormControl fullWidth sx={{ minWidth: 150 }}>
-                    <InputLabel>Unit</InputLabel>
-                    <Select
-                      value={selectedUnit}
-                      label="Unit"
-                      onChange={(e) => {
-                        setSelectedUnit(e.target.value);
-                        handleFilterChange();
-                      }}
-                      sx={{ borderRadius: 1 }}
-                    >
-                      <MenuItem value="">All Units</MenuItem>
-                      <MenuItem value="0">Box</MenuItem>
-                      <MenuItem value="1">Piece</MenuItem>
-                      <MenuItem value="2">Square Feet</MenuItem>
-                      <MenuItem value="3">Kilogram</MenuItem>
-                      <MenuItem value="4">Gram</MenuItem>
-                      <MenuItem value="5">Liter</MenuItem>
-                      <MenuItem value="6">Milliliter</MenuItem>
-                      <MenuItem value="7">Meter</MenuItem>
-                      <MenuItem value="8">Centimeter</MenuItem>
-                      <MenuItem value="9">Inch</MenuItem>
-                      <MenuItem value="10">Yard</MenuItem>
-                      <MenuItem value="11">Ton</MenuItem>
-                      <MenuItem value="12">Pack</MenuItem>
-                      <MenuItem value="13">Dozen</MenuItem>
-                      <MenuItem value="14">Pair</MenuItem>
-                      <MenuItem value="15">Roll</MenuItem>
-                      <MenuItem value="16">Bundle</MenuItem>
-                      <MenuItem value="17">Carton</MenuItem>
-                      <MenuItem value="18">Bag</MenuItem>
-                      <MenuItem value="19">Set</MenuItem>
-                      <MenuItem value="20">Barrel</MenuItem>
-                      <MenuItem value="21">Gallon</MenuItem>
-                      <MenuItem value="22">Can</MenuItem>
-                      <MenuItem value="23">Tube</MenuItem>
-                      <MenuItem value="24">Packet</MenuItem>
-                      <MenuItem value="25">Unit</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid sx={{ xs: 12, sm: 6, minWidth: 120 }}>
-                  <TextField
-                    fullWidth
-                    label="Min Price"
-                    type="number"
-                    value={minPrice}
-                    onChange={(e) => {
-                      setMinPrice(e.target.value);
-                      handleFilterChange();
-                    }}
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                    }}
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 } }}
-                  />
-                </Grid>
-                <Grid sx={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    fullWidth
-                    label="Max Price"
-                    type="number"
-                    value={maxPrice}
-                    onChange={(e) => {
-                      setMaxPrice(e.target.value);
-                      handleFilterChange();
-                    }}
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                    }}
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 } }}
-                  />
-                </Grid>
-                <Grid sx={{ xs: 12, md: 1 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={inStockOnly}
-                          onChange={(e) => {
-                            setInStockOnly(e.target.checked);
-                            handleFilterChange();
-                          }}
-                          color="primary"
-                        />
-                      }
-                      label="In Stock Only"
-                      sx={{ mr: 2 }}
-                    />
-                    <Tooltip title="Clear all filters">
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<ClearAllIcon />}
-                        onClick={clearAllFilters}
-                        sx={{ borderRadius: 1 }}
-                      >
-                        Clear
-                      </Button>
-                    </Tooltip>
-                  </Box>
-                </Grid>
-              </Grid>
-            </AccordionDetails>
-          </Accordion>
-        </CardContent>
-      </Card>
-
+  
       {/* Products Table */}
       <DataTable
         data={products}
@@ -644,14 +485,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
         }}
         actions={getRowActions}
         getRowId={(product) => product.id}
-        pagination={{
-          page: page - 1, // Material-UI uses 0-based indexing
-          rowsPerPage: pageSize,
-          totalCount: totalCount,
-          onPageChange: handlePageChange,
-          onRowsPerPageChange: handleRowsPerPageChange,
-          rowsPerPageOptions: [5, 10, 25, 50, 100]
-        }}
+        pagination={usePaginationProps(pagination, paginationActions, totalCount)}
         errorAction={{
           label: 'Retry',
           onClick: handleRefresh
@@ -906,24 +740,14 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
+      <ConfirmDeleteDialog
         open={deleteDialogOpen}
         onClose={() => { setDeleteDialogOpen(false); setSelectedProduct(null); }}
-        PaperProps={{ sx: { borderRadius: 1 } }}
-      >
-        <DialogTitle>Delete Product</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete "{selectedProduct?.title}"? This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => { setDeleteDialogOpen(false); setSelectedProduct(null); }}>Cancel</Button>
-          <Button onClick={handleDeleteProduct} color="error" variant="contained">
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleDeleteProduct}
+        entityName={selectedProduct?.title || ''}
+        entityType="Product"
+        loading={deleting}
+      />
 
       {/* Product Form Dialog */}
       <ProductForm
