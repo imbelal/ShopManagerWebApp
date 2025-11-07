@@ -27,7 +27,8 @@ import {
   ListItemText,
   ListItemIcon,
   Chip,
-  MenuItem
+  MenuItem,
+  Autocomplete
 } from '@mui/material';
 import {
   MoreVert as MoreVertIcon,
@@ -217,11 +218,10 @@ const StockTransactionsPage: React.FC = () => {
     try {
       const request: StockTransactionListRequest = {
         pageSize: pagination.pageSize,
-        pageNumber: 1, // Always start from page 1 when applying filters
-        ...filterValues
+        pageNumber: 1 // Always start from page 1 when applying filters
       };
 
-      // Only include non-empty filters
+      // Only include non-empty filters with proper type conversion
       if (filterValues.productId) request.productId = filterValues.productId;
       if (filterValues.type) request.type = parseInt(filterValues.type) as StockTransactionType;
       if (filterValues.refType) request.refType = parseInt(filterValues.refType) as StockReferenceType;
@@ -255,12 +255,7 @@ const StockTransactionsPage: React.FC = () => {
     }
   };
 
-  // Pagination handlers - similar to purchase page
-  const handlePageSizeChange = (event: any) => {
-    const newPageSize = parseInt(event.target.value, 10);
-    setPageSize(newPageSize);
-    setPage(1); // Reset to first page when changing page size
-  };
+  // Note: Pagination is now handled by usePagination hook
 
   
   // View details handler
@@ -272,8 +267,6 @@ const StockTransactionsPage: React.FC = () => {
   // Adjustment dialog handlers
   const handleCreateAdjustment = () => {
     setAdjustmentDialogOpen(true);
-    // Close menu but preserve selectedTransaction
-    setAnchorEl(null);
   };
 
   const handleAdjustmentFormChange = (field: string, value: any) => {
@@ -472,13 +465,8 @@ const StockTransactionsPage: React.FC = () => {
         searchTerm=""
         onSearchChange={() => {}}
         hideSearch={true}
+        filterMinWidth={200}
         filters={[
-          {
-            id: 'productId',
-            label: 'Product',
-            value: filters.productId,
-            options: products?.map((product) => ({ value: product.id, label: product.title })) || []
-          },
           {
             id: 'type',
             label: 'Transaction Type',
@@ -496,6 +484,15 @@ const StockTransactionsPage: React.FC = () => {
               value: option.value.toString(),
               label: option.label
             }))
+          }
+        ]}
+        autocompleteFields={[
+          {
+            id: 'productId',
+            label: 'Product',
+            value: filters.productId,
+            options: products?.map((product) => ({ value: product.id, label: product.title })) || [],
+            onChange: (value) => handleFilterChange('productId', value)
           }
         ]}
         dateFields={[
@@ -918,7 +915,7 @@ const StockTransactionsPage: React.FC = () => {
       <Dialog
         open={adjustmentDialogOpen}
         onClose={() => setAdjustmentDialogOpen(false)}
-        maxWidth="sm"
+        maxWidth="lg"
         fullWidth
         PaperProps={{ sx: { borderRadius: 2 } }}
       >
@@ -938,30 +935,35 @@ const StockTransactionsPage: React.FC = () => {
             )}
 
             <Grid container spacing={2}>
-              <Grid sx={{ xs: 12 }}>
-                <FormControl fullWidth required>
-                  <InputLabel>Product</InputLabel>
-                  <Select
-                    value={adjustmentForm.productId}
-                    label="Product"
-                    onChange={(e) => handleAdjustmentFormChange('productId', e.target.value)}
-                  >
-                    {products?.map((product) => (
-                      <MenuItem key={product.id} value={product.id}>
-                        {product.title}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+              {/* First Row: Product, Adjustment Type, Quantity */}
+              <Grid sx={{ xs: 12, sm: 12, md: 6 }}>
+                <Autocomplete
+                  fullWidth
+                  options={products?.map((product) => ({ value: product.id, label: product.title })) || []}
+                  value={products?.find((product) => product.id === adjustmentForm.productId) ?
+                    { value: adjustmentForm.productId, label: products.find((product) => product.id === adjustmentForm.productId)?.title || '' } : null}
+                  onChange={(event, newValue) => {
+                    handleAdjustmentFormChange('productId', newValue ? newValue.value : '');
+                  }}
+                  isOptionEqualToValue={(option, value) => option.value === value?.value}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Product"
+                      required
+                      sx={{ minWidth: 200 }}
+                    />
+                  )}
+                />
               </Grid>
 
-              <Grid sx={{ xs: 12, sm: 6 }}>
-                <FormControl fullWidth required>
+              <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
+                <FormControl fullWidth required sx={{ minWidth: 200 }}>
                   <InputLabel>Adjustment Type</InputLabel>
                   <Select
                     value={adjustmentForm.type}
                     label="Adjustment Type"
-                    onChange={(e) => handleAdjustmentFormChange('type', parseInt(e.target.value) as StockTransactionType)}
+                    onChange={(e) => handleAdjustmentFormChange('type', e.target.value as StockTransactionType)}
                   >
                     {stockTransactionsService.getTransactionTypeOptions().map((option) => (
                       <MenuItem key={option.value} value={option.value}>
@@ -972,7 +974,7 @@ const StockTransactionsPage: React.FC = () => {
                 </FormControl>
               </Grid>
 
-              <Grid sx={{ xs: 12, sm: 6 }}>
+              <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
                 <TextField
                   fullWidth
                   label="Quantity"
@@ -981,9 +983,11 @@ const StockTransactionsPage: React.FC = () => {
                   onChange={(e) => handleAdjustmentFormChange('quantity', parseInt(e.target.value) || 0)}
                   required
                   inputProps={{ min: 1 }}
+                  sx={{ minWidth: 200 }}
                 />
               </Grid>
 
+              {/* Second Row: Reason */}
               <Grid sx={{ xs: 12 }}>
                 <TextField
                   fullWidth
@@ -994,6 +998,7 @@ const StockTransactionsPage: React.FC = () => {
                   onChange={(e) => handleAdjustmentFormChange('reason', e.target.value)}
                   required
                   placeholder="Describe the reason for this adjustment..."
+                  sx={{ minWidth: 200 }}
                 />
               </Grid>
             </Grid>
