@@ -26,7 +26,8 @@ import {
   Paper,
   Chip,
   Card,
-  CardContent
+  CardContent,
+  Autocomplete
 } from '@mui/material';
 import {
   Delete as DeleteIcon,
@@ -37,11 +38,11 @@ import {
 import purchasesService, {
   Purchase,
   Supplier,
-  Product,
   CreatePurchaseRequest,
   UpdatePurchaseRequest,
   CreatePurchaseItemRequest
 } from '../services/purchasesService';
+import { productService, Product } from '../services/productService';
 import { handleApiError } from '../services/apiClient';
 
 interface PurchaseFormProps {
@@ -341,21 +342,28 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
             Purchase Information
           </Typography>
           <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid item xs={12} sm={6} minWidth={220}>
-              <FormControl fullWidth required>
-                <InputLabel>Supplier</InputLabel>
-                <Select
-                  value={formData.supplierId}
-                  label="Supplier"
-                  onChange={(e) => handleInputChange('supplierId', e.target.value)}
-                >
-                  {suppliers.map((supplier) => (
-                    <MenuItem key={supplier.id} value={supplier.id}>
-                      {supplier.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+            <Grid sx={{ xs: 12, sm: 6, minWidth: 200 }}>
+              <Autocomplete
+                fullWidth
+                options={suppliers.map((supplier) => ({
+                  value: supplier.id,
+                  label: supplier.name
+                }))}
+                value={suppliers.find((supplier) => supplier.id === formData.supplierId) ?
+                  { value: formData.supplierId, label: suppliers.find((supplier) => supplier.id === formData.supplierId)?.name || '' } : null}
+                onChange={(event, newValue) => {
+                  handleInputChange('supplierId', newValue ? newValue.value : '');
+                }}
+                isOptionEqualToValue={(option, value) => option.value === value?.value}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Supplier"
+                    required
+                    sx={{ minWidth: 200 }}
+                  />
+                )}
+              />
               {selectedSupplier && (
                 <Box sx={{ mt: 1, p: 1, backgroundColor: 'grey.50', borderRadius: 1 }}>
                   <Typography variant="caption" color="text.secondary">
@@ -364,7 +372,7 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
                 </Box>
               )}
             </Grid>
-            <Grid item xs={12} sm={6} minWidth={220}>
+            <Grid sx={{ xs: 12, sm: 6, minWidth: 200 }}>
               <TextField
                 fullWidth
                 label="Purchase Date"
@@ -375,7 +383,7 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid sx={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label="Remarks (Optional)"
@@ -442,31 +450,45 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
                 Add Item
               </Typography>
               <Grid container spacing={2} alignItems="center">
-                <Grid item xs={4} minWidth={220}>
-                  <FormControl fullWidth>
-                    <InputLabel>Product</InputLabel>
-                    <Select
-                      value={newItem.productId}
-                      onChange={(e) => handleProductChange(e.target.value)}
-                      disabled={newItem.productId !== ''}
-                    >
-                      <MenuItem value="">Select Product</MenuItem>
-                      {products.map((product) => (
-                        <MenuItem key={product.id} value={product.id}>
-                          {product.title}
-                          {product.stockQuantity > 0 && (
+                <Grid sx={{ xs: 4, minWidth: 200 }}>
+                  <Autocomplete
+                    fullWidth
+                    options={products.map((product) => ({
+                      value: product.id,
+                      label: product.title,
+                      stock: product.stockQuantity
+                    }))}
+                    value={products.find((product) => product.id === newItem.productId) ?
+                      { value: newItem.productId, label: products.find((product) => product.id === newItem.productId)?.title || '', stock: products.find((product) => product.id === newItem.productId)?.stockQuantity || 0 } : null}
+                    onChange={(event, newValue) => {
+                      handleProductChange(newValue ? newValue.value : '');
+                    }}
+                    isOptionEqualToValue={(option, value) => option.value === value?.value}
+                    disabled={newItem.productId !== ''}
+                    renderOption={(props, option) => (
+                      <li {...props}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                          <Typography>{option.label}</Typography>
+                          {option.stock > 0 && (
                             <Chip
-                              label={`${product.stockQuantity} in stock`}
+                              label={`${option.stock} in stock`}
                               size="small"
                               sx={{ ml: 1 }}
                             />
                           )}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                        </Box>
+                      </li>
+                    )}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Product"
+                        sx={{ minWidth: 200 }}
+                      />
+                    )}
+                  />
                 </Grid>
-                <Grid item xs={2}>
+                <Grid sx={{ xs: 2 }}>
                   <TextField
                     fullWidth
                     label="Quantity"
@@ -474,9 +496,10 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
                     value={newItem.quantity}
                     onChange={(e) => handleNewItemChange('quantity', parseInt(e.target.value) || 0)}
                     inputProps={{ min: 1 }}
+                    sx={{ minWidth: 200 }}
                   />
                 </Grid>
-                <Grid item xs={3}>
+                <Grid sx={{ xs: 3 }}>
                   <TextField
                     fullWidth
                     label="Cost per Unit"
@@ -484,9 +507,10 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
                     value={newItem.costPerUnit}
                     onChange={(e) => handleNewItemChange('costPerUnit', parseFloat(e.target.value) || 0)}
                     inputProps={{ min: 0, step: 0.01 }}
+                    sx={{ minWidth: 200 }}
                   />
                 </Grid>
-                <Grid item xs={3}>
+                <Grid sx={{ xs: 3 }}>
                   <Button
                     variant="contained"
                     startIcon={<AddIcon />}

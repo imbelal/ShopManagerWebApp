@@ -29,7 +29,8 @@ import {
   TableHead,
   TableRow,
   Chip,
-  IconButton
+  IconButton,
+  Autocomplete
 } from '@mui/material';
 import {
   Business as BusinessIcon,
@@ -421,13 +422,8 @@ const PurchasesPage: React.FC = () => {
           setSearchTerm(value);
           handleFilterChange();
         }}
+        filterMinWidth={200}
         filters={[
-          {
-            id: 'supplier',
-            label: 'Supplier',
-            value: selectedSupplier,
-            options: suppliers.map((supplier) => ({ value: supplier.id, label: supplier.name }))
-          },
           {
             id: 'status',
             label: 'Status',
@@ -439,16 +435,27 @@ const PurchasesPage: React.FC = () => {
             ]
           }
         ]}
-        onFilterChange={(filterId, value) => {
-          if (filterId === 'supplier') {
-            setSelectedSupplier(value);
-          } else if (filterId === 'status') {
-            setSelectedStatus(value);
+        autocompleteFields={[
+          {
+            id: 'supplier',
+            label: 'Supplier',
+            value: selectedSupplier,
+            options: suppliers.map((supplier) => ({ value: supplier.id, label: supplier.name })),
+            onChange: (value) => {
+              setSelectedSupplier(value);
+              handleFilterChange();
+            }
           }
-          handleFilterChange();
+        ]}
+        onFilterChange={(filterId, value) => {
+          if (filterId === 'status') {
+            setSelectedStatus(value);
+            handleFilterChange();
+          }
         }}
         onClearFilters={clearAllFilters}
         loading={loading}
+        showClearButton={true}
       />
 
       {/* Purchases DataTable */}
@@ -763,7 +770,7 @@ const PurchasesPage: React.FC = () => {
           setPurchaseToDelete(null);
         }}
         onConfirm={confirmDelete}
-        entityName={`Purchase #${purchaseToDelete?.purchaseNumber || ''}`}
+        entityName={`Purchase #${purchaseToDelete?.id || ''}`}
         entityType="Purchase"
         loading={deleting}
       />
