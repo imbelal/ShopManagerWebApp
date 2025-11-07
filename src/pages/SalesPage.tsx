@@ -28,7 +28,8 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow
+  TableRow,
+  Autocomplete
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -521,7 +522,8 @@ const SalesPage: React.FC = () => {
           setSearchTerm(value);
           handleFilterChange();
         }}
-        filters={[
+        filterMinWidth={200}
+        autocompleteFields={[
           {
             id: 'customer',
             label: 'Customer',
@@ -529,17 +531,17 @@ const SalesPage: React.FC = () => {
             options: customers.map((customer) => ({
               value: customer.id,
               label: `${customer.firstName} ${customer.lastName}`
-            }))
+            })),
+            onChange: (value) => {
+              setSelectedCustomer(value);
+              handleFilterChange();
+            }
           }
         ]}
-        onFilterChange={(filterId, value) => {
-          if (filterId === 'customer') {
-            setSelectedCustomer(value);
-          }
-          handleFilterChange();
-        }}
+        onFilterChange={() => {}} // Required prop but not used with autocompleteFields only
         onClearFilters={clearAllFilters}
         loading={loading}
+        showClearButton={true}
       />
 
       {/* Sales Table */}

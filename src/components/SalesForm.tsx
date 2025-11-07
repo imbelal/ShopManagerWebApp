@@ -29,7 +29,8 @@ import {
   Paper,
   Tooltip,
   Switch,
-  FormControlLabel
+  FormControlLabel,
+  Autocomplete
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -448,24 +449,30 @@ const SalesForm: React.FC<SalesFormProps> = ({
 
             {/* Customer Selection */}
             <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={9} minWidth={250}>
-                <FormControl fullWidth required>
-                  <InputLabel>Customer</InputLabel>
-                  <Select
-                    value={formData.customerId || ''}
-                    label="Customer"
-                    onChange={(e) => handleInputChange('customerId', e.target.value)}
-                  >
-                    <MenuItem value="">Select Customer</MenuItem>
-                    {customers.map((customer) => (
-                      <MenuItem key={customer.id} value={customer.id}>
-                        {customer.firstName} {customer.lastName}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+              <Grid sx={{ xs: 9, minWidth: 250 }}>
+                <Autocomplete
+                  fullWidth
+                  options={customers.map((customer) => ({
+                    value: customer.id,
+                    label: `${customer.firstName} ${customer.lastName}`
+                  }))}
+                  value={customers.find((customer) => customer.id === formData.customerId) ?
+                    { value: formData.customerId, label: customers.find((customer) => customer.id === formData.customerId)?.firstName + ' ' + customers.find((customer) => customer.id === formData.customerId)?.lastName || '' } : null}
+                  onChange={(event, newValue) => {
+                    handleInputChange('customerId', newValue ? newValue.value : '');
+                  }}
+                  isOptionEqualToValue={(option, value) => option.value === value?.value}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Customer"
+                      required
+                      sx={{ minWidth: 200 }}
+                    />
+                  )}
+                />
               </Grid>
-              <Grid item xs={3}>
+              <Grid sx={{ xs: 3 }}>
                 <Button
                   variant="outlined"
                   startIcon={<PlusIcon />}
@@ -529,31 +536,45 @@ const SalesForm: React.FC<SalesFormProps> = ({
                   Add Item
                 </Typography>
                 <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={4} minWidth={250}>
-                    <FormControl fullWidth>
-                      <InputLabel>Product</InputLabel>
-                      <Select
-                        value={newItem.productId}
-                        onChange={(e) => handleProductChange(e.target.value)}
-                        disabled={newItem.productId !== ''}
-                      >
-                      <MenuItem value="">Select Product</MenuItem>
-                      {products.map((product) => (
-                        <MenuItem key={product.id} value={product.id}>
-                          {product.title}
-                          {product.stockQuantity > 0 && (
-                            <Chip
-                              label={`${product.stockQuantity} in stock`}
-                              size="small"
-                              sx={{ ml: 1 }}
-                            />
-                          )}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                    </FormControl>
+                  <Grid sx={{ xs: 4, minWidth: 250 }}>
+                    <Autocomplete
+                      fullWidth
+                      options={products.map((product) => ({
+                        value: product.id,
+                        label: product.title,
+                        stock: product.stockQuantity
+                      }))}
+                      value={products.find((product) => product.id === newItem.productId) ?
+                        { value: newItem.productId, label: products.find((product) => product.id === newItem.productId)?.title || '', stock: products.find((product) => product.id === newItem.productId)?.stockQuantity || 0 } : null}
+                      onChange={(event, newValue) => {
+                        handleProductChange(newValue ? newValue.value : '');
+                      }}
+                      isOptionEqualToValue={(option, value) => option.value === value?.value}
+                      disabled={newItem.productId !== ''}
+                      renderOption={(props, option) => (
+                        <li {...props}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                            <Typography>{option.label}</Typography>
+                            {option.stock > 0 && (
+                              <Chip
+                                label={`${option.stock} in stock`}
+                                size="small"
+                                sx={{ ml: 1 }}
+                              />
+                            )}
+                          </Box>
+                        </li>
+                      )}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Product"
+                          sx={{ minWidth: 200 }}
+                        />
+                      )}
+                    />
                   </Grid>
-                  <Grid item xs={2}>
+                  <Grid sx={{ xs: 2 }}>
                     <TextField
                       fullWidth
                       label="Quantity"
@@ -561,9 +582,10 @@ const SalesForm: React.FC<SalesFormProps> = ({
                       value={newItem.quantity}
                       onChange={(e) => handleNewItemChange('quantity', parseInt(e.target.value) || 0)}
                       inputProps={{ min: 1 }}
+                      sx={{ minWidth: 200 }}
                     />
                   </Grid>
-                  <Grid item xs={3}>
+                  <Grid sx={{ xs: 3 }}>
                     <TextField
                       fullWidth
                       label="Unit Price"
@@ -571,9 +593,10 @@ const SalesForm: React.FC<SalesFormProps> = ({
                       value={newItem.unitPrice}
                       onChange={(e) => handleNewItemChange('unitPrice', parseFloat(e.target.value) || 0)}
                       inputProps={{ min: 0, step: 0.01 }}
+                      sx={{ minWidth: 200 }}
                     />
                   </Grid>
-                  <Grid item xs={3}>
+                  <Grid sx={{ xs: 3 }}>
                     <Button
                       variant="contained"
                       startIcon={<AddIcon />}
@@ -590,7 +613,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
 
             {/* Discount, Tax, and Payment */}
             <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={3}>
+              <Grid sx={{ xs: 3 }}>
                 <TextField
                   fullWidth
                   label="Discount %"
@@ -601,7 +624,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
                   helperText={`${formatCurrency(discountAmount)} discount`}
                 />
               </Grid>
-              <Grid item xs={3}>
+              <Grid sx={{ xs: 3 }}>
                 <TextField
                   fullWidth
                   label="Tax %"
@@ -612,7 +635,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
                   helperText={`${formatCurrency(taxAmount)} tax`}
                 />
               </Grid>
-              <Grid item xs={3}>
+              <Grid sx={{ xs: 3 }}>
                 <TextField
                   fullWidth
                   label="Total Paid"
@@ -622,7 +645,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
                   inputProps={{ min: 0, step: 0.01 }}
                 />
               </Grid>
-              <Grid item xs={3}>
+              <Grid sx={{ xs: 3 }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', pt: 1 }}>
                   <Typography variant="body2" color="text.secondary" gutterBottom>
                     Grand Total: {formatCurrency(grandTotal)}
@@ -679,7 +702,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
         <DialogTitle>Add New Customer</DialogTitle>
         <DialogContent sx={{ p: 3 }}>
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid sx={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
                 label="First Name"
@@ -688,7 +711,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
                 required
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid sx={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
                 label="Last Name"
@@ -697,7 +720,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
                 required
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid sx={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label="Email"
@@ -706,7 +729,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
                 onChange={(e) => setNewCustomer(prev => ({ ...prev, email: e.target.value }))}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid sx={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label="Phone"
@@ -714,7 +737,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
                 onChange={(e) => setNewCustomer(prev => ({ ...prev, contactNo: e.target.value }))}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid sx={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label="Address"
@@ -724,7 +747,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
                 onChange={(e) => setNewCustomer(prev => ({ ...prev, address: e.target.value }))}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid sx={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label="Remark"
