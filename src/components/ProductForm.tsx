@@ -22,7 +22,8 @@ import {
   CardContent,
   CardMedia,
   Avatar,
-  Tooltip
+  Tooltip,
+  Autocomplete
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -32,7 +33,7 @@ import {
   CloudUpload as CloudUploadIcon,
   Image as ImageIcon
 } from '@mui/icons-material';
-import { productService, Product, Category, Tag, CreateProductRequest, UpdateProductRequest } from '../services/productService';
+import { productService, Product, Category, Tag, CreateProductRequest, UpdateProductRequest, ProductPhoto } from '../services/productService';
 import CategoryDialog from './CategoryDialog';
 
 interface ProductFormProps {
@@ -420,7 +421,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
           <Grid container spacing={3} direction="column" sx={{ width: '100%' }}>
             {/* Product Title - Single Field Row */}
-            <Grid item xs={12} sx={{ width: '100%', marginBottom: 2 }}>
+            <Grid sx={{ xs: 12, width: '100%', marginBottom: 2 }}>
               <TextField
                 fullWidth
                 label="Product Title"
@@ -433,7 +434,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             </Grid>
 
             {/* Description - Single Field Row */}
-            <Grid item xs={12} sx={{ width: '100%', marginBottom: 2 }}>
+            <Grid sx={{ xs: 12, width: '100%', marginBottom: 2 }}>
               <TextField
                 fullWidth
                 multiline
@@ -448,26 +449,32 @@ const ProductForm: React.FC<ProductFormProps> = ({
             </Grid>
 
             {/* Category, Unit and Selling Price - Three Fields in One Row */}
-            <Grid container item spacing={2} sx={{ marginBottom: 2 }}>
-              <Grid item xs={4}>
+            <Grid container spacing={2} sx={{ marginBottom: 2 }}>
+              <Grid sx={{ xs: 4, minWidth: 200 }}>
                 <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-                  <FormControl fullWidth required error={!!formErrors.categoryId} sx={{ minWidth: 250 }}>
-                    <InputLabel>Category</InputLabel>
-                    <Select
-                      value={formData.categoryId}
-                      label="Category"
-                      onChange={(e) => handleInputChange('categoryId', e.target.value)}
-                    >
-                      <MenuItem value="">
-                        <em>Select a category</em>
-                      </MenuItem>
-                      {categories.map((category) => (
-                        <MenuItem key={category.id} value={category.id}>
-                          {category.title}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  <Autocomplete
+                    fullWidth
+                    options={categories.map((category) => ({
+                      value: category.id,
+                      label: category.title
+                    }))}
+                    value={categories.find((category) => category.id === formData.categoryId) ?
+                      { value: formData.categoryId, label: categories.find((category) => category.id === formData.categoryId)?.title || '' } : null}
+                    onChange={(event, newValue) => {
+                      handleInputChange('categoryId', newValue ? newValue.value : '');
+                    }}
+                    isOptionEqualToValue={(option, value) => option.value === value?.value}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Category"
+                        required
+                        error={!!formErrors.categoryId}
+                        helperText={formErrors.categoryId}
+                        sx={{ minWidth: 200 }}
+                      />
+                    )}
+                  />
                   <Tooltip title="Add new category">
                     <IconButton
                       onClick={() => setCategoryDialogOpen(true)}
@@ -487,23 +494,32 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   </Tooltip>
                 </Box>
               </Grid>
-              <Grid item xs={4}>
-                <FormControl fullWidth required error={!!formErrors.unit} sx={{ minWidth: 150 }}>
-                  <InputLabel>Unit</InputLabel>
-                  <Select
-                    value={formData.unit}
-                    label="Unit"
-                    onChange={(e) => handleInputChange('unit', e.target.value)}
-                  >
-                    {commonUnits.map((unit) => (
-                      <MenuItem key={unit.value} value={unit.value}>
-                        {unit.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+              <Grid sx={{ xs: 4, minWidth: 200 }}>
+                <Autocomplete
+                  fullWidth
+                  options={commonUnits.map((unit) => ({
+                    value: unit.value,
+                    label: unit.label
+                  }))}
+                  value={commonUnits.find((unit) => unit.value.toString() === formData.unit.toString()) ?
+                    { value: parseInt(formData.unit), label: commonUnits.find((unit) => unit.value.toString() === formData.unit.toString())?.label || '' } : null}
+                  onChange={(event, newValue) => {
+                    handleInputChange('unit', newValue ? newValue.value.toString() : '');
+                  }}
+                  isOptionEqualToValue={(option, value) => option.value === value?.value}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Unit"
+                      required
+                      error={!!formErrors.unit}
+                      helperText={formErrors.unit}
+                      sx={{ minWidth: 200 }}
+                    />
+                  )}
+                />
               </Grid>
-              <Grid item xs={4}>
+              <Grid sx={{ xs: 4, minWidth: 200 }}>
                 <TextField
                   fullWidth
                   label="Selling Price"
@@ -513,6 +529,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   error={!!formErrors.sellingPrice}
                   helperText={formErrors.sellingPrice}
                   required
+                  sx={{ minWidth: 200 }}
                   InputProps={{
                     startAdornment: <Typography variant="body2">$</Typography>
                   }}
@@ -521,29 +538,31 @@ const ProductForm: React.FC<ProductFormProps> = ({
             </Grid>
 
             {/* Size and Color - Two Fields in One Row */}
-            <Grid container item spacing={2} sx={{ marginBottom: 2 }}>
-              <Grid item xs={6}>
+            <Grid container spacing={2} sx={{ marginBottom: 2 }}>
+              <Grid sx={{ xs: 6, minWidth: 200 }}>
                 <TextField
                   fullWidth
                   label="Size"
                   value={formData.size}
                   onChange={(e) => handleInputChange('size', e.target.value)}
                   placeholder="e.g., M, L, XL"
+                  sx={{ minWidth: 200 }}
                 />
               </Grid>
-              <Grid item xs={6}>
+              <Grid sx={{ xs: 6, minWidth: 200 }}>
                 <TextField
                   fullWidth
                   label="Color"
                   value={formData.color}
                   onChange={(e) => handleInputChange('color', e.target.value)}
                   placeholder="e.g., Red, Blue"
+                  sx={{ minWidth: 200 }}
                 />
               </Grid>
             </Grid>
 
             {/* Product Images */}
-            <Grid item xs={12}>
+            <Grid sx={{ xs: 12, minWidth: 200 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, mt: 1 }}>
                 Product Images
               </Typography>
@@ -572,7 +591,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               {editProduct && existingPhotos.length > 0 && (
                 <Grid container spacing={2} sx={{ marginBottom: 2 }}>
                   {existingPhotos.map((photo) => (
-                    <Grid item xs={12} sm={6} md={4} key={photo.id}>
+                    <Grid sx={{ xs: 12, sm: 6, md: 4, minWidth: 200 }} key={photo.id}>
                       <Card sx={{ position: 'relative' }}>
                         <CardMedia
                           component="img"
@@ -620,7 +639,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               {previewImages.length > 0 && (
                 <Grid container spacing={2}>
                   {previewImages.map((image, index) => (
-                    <Grid item xs={12} sm={6} md={4} key={`new-${index}`}>
+                    <Grid sx={{ xs: 12, sm: 6, md: 4, minWidth: 200 }} key={`new-${index}`}>
                       <Card sx={{ position: 'relative' }}>
                         <Box
                           sx={{

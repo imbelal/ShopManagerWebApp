@@ -22,7 +22,8 @@ import {
   Alert,
   CircularProgress,
   Chip,
-  IconButton
+  IconButton,
+  Autocomplete
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -390,12 +391,16 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
         searchPlaceholder="Search products by name, description, size, or color..."
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        filters={[
+        filterMinWidth={200}
+        autocompleteFields={[
           {
             id: 'category',
             label: 'Category',
             value: selectedCategory,
-            options: categories.map((category) => ({ value: category.id, label: category.title }))
+            options: categories.map((category) => ({ value: category.id, label: category.title })),
+            onChange: (value) => {
+              setSelectedCategory(value);
+            }
           },
           {
             id: 'unit',
@@ -428,8 +433,13 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
               { value: '23', label: 'Tube' },
               { value: '24', label: 'Packet' },
               { value: '25', label: 'Unit' }
-            ]
-          },
+            ],
+            onChange: (value) => {
+              setSelectedUnit(value);
+            }
+          }
+        ]}
+        filters={[
           {
             id: 'sortBy',
             label: 'Sort By',
@@ -452,11 +462,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
           }
         ]}
         onFilterChange={(filterId, value) => {
-          if (filterId === 'category') {
-            setSelectedCategory(value);
-          } else if (filterId === 'unit') {
-            setSelectedUnit(value);
-          } else if (filterId === 'sortBy') {
+          if (filterId === 'sortBy') {
             setSortBy(value as any);
           } else if (filterId === 'sortOrder') {
             setSortOrder(value as any);
@@ -465,6 +471,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
         }}
         onClearFilters={clearAllFilters}
         loading={loading}
+        showClearButton={true}
       />
 
   
