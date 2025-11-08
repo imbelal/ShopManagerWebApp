@@ -34,6 +34,7 @@ import {
   Notifications,
   ShoppingBasket as PurchaseIcon,
   SwapHoriz as StockTransactionsIcon,
+  ReceiptLong as ExpenseIcon,
 } from '@mui/icons-material';
 import { styled, useTheme as useStyledTheme } from '@mui/material/styles';
 import { useAuth } from '../context/AuthContext';
@@ -135,6 +136,7 @@ const navigationItems: NavigationItem[] = [
   { text: 'Products', icon: <Inventory />, path: '/products' },
   { text: 'Sales', icon: <ShoppingCart />, path: '/sales' },
   { text: 'Purchases', icon: <PurchaseIcon />, path: '/purchases' },
+  { text: 'Expenses', icon: <ExpenseIcon />, path: '/expenses' },
   { text: 'Stock Transactions', icon: <StockTransactionsIcon />, path: '/stock-transactions' },
   { text: 'Categories', icon: <Category />, path: '/categories' },
   { text: 'Customers', icon: <People />, path: '/customers' },

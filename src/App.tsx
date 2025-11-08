@@ -8,6 +8,7 @@ import DashboardPage from './pages/DashboardPage';
 import ProductsPage from './pages/ProductsPage';
 import SalesPage from './pages/SalesPage';
 import PurchasesPage from './pages/PurchasesPage';
+import ExpensesPage from './pages/ExpensesPage';
 import CustomersPage from './pages/CustomersPage';
 import StockTransactionsPage from './pages/StockTransactionsPage';
 import DashboardLayout from './components/DashboardLayout';
@@ -162,6 +163,16 @@ function App() {
                   <ProtectedRoute>
                     <DashboardLayout>
                       <PurchasesPage />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/expenses"
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <ExpensesPage />
                     </DashboardLayout>
                   </ProtectedRoute>
                 }
