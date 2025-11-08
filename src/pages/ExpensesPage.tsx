@@ -15,18 +15,14 @@ import {
   TextField,
   Alert,
   Grid,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  InputAdornment,
   LinearProgress,
-  Stack,
   Tabs,
   Tab,
-  CircularProgress
+  CircularProgress,
+  Snackbar
 } from '@mui/material';
 import DataTable, { TableColumn, ContextAction } from '../components/common/DataTable';
+import FilterBar from '../components/common/FilterBar';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -36,16 +32,13 @@ import {
   ThumbUp as ApproveIcon,
   ThumbDown as RejectIcon,
   Paid as PaidIcon,
-  Search as SearchIcon,
-  DateRange as DateRangeIcon,
-  FilterList as FilterIcon,
   Refresh as RefreshIcon,
   Receipt as ReceiptIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
+  PictureAsPdf as PdfIcon
 } from '@mui/icons-material';
-import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { format } from 'date-fns';
 import { usePagination } from '../hooks/usePagination';
 import expensesService, { Expense, ExpensesFilter, ExpenseStatus } from '../services/expensesService';
 import PageHeader from '../components/common/PageHeader';
@@ -78,11 +71,15 @@ const ExpensesPage: React.FC = () => {
   const [viewTabValue, setViewTabValue] = useState(0);
   const [viewLoading, setViewLoading] = useState(false);
 
+  // Snackbar state
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success' as 'success' | 'error' | 'warning' | 'info'
+  });
+
   // Filter states
   const [filters, setFilters] = useState<ExpensesFilter>({});
-
-  // Show filters state
-  const [showFilters, setShowFilters] = useState(false);
 
   // Pagination hook
   const [paginationState, paginationActions] = usePagination(1, 10);
@@ -134,7 +131,7 @@ const ExpensesPage: React.FC = () => {
       id: 'expenseDate',
       label: 'Date',
       minWidth: 100,
-      format: (value) => format(new Date(value), 'MMM dd, yyyy')
+      format: (value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     },
     {
       id: 'statusName',
@@ -224,8 +221,46 @@ const ExpensesPage: React.FC = () => {
   }, [filters, paginationState.page, paginationState.pageSize]);
 
   // Filter handlers
-  const handleFilterChange = (newFilters: Partial<ExpensesFilter>) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
+  const handleFilterChange = (filterId: string, value: string) => {
+    setFilters(prev => {
+      const updatedFilters = { ...prev };
+
+      // Convert empty string to undefined for optional fields
+      const processedValue = value === '' ? undefined : value;
+
+      switch (filterId) {
+        case 'search':
+          updatedFilters.search = processedValue;
+          break;
+        case 'fromDate':
+          // Convert HTML date input format (YYYY-MM-DD) to ISO string
+          updatedFilters.startDate = processedValue ? new Date(processedValue).toISOString() : undefined;
+          break;
+        case 'toDate':
+          // Convert HTML date input format (YYYY-MM-DD) to ISO string
+          updatedFilters.endDate = processedValue ? new Date(processedValue).toISOString() : undefined;
+          break;
+        case 'expenseType':
+          updatedFilters.expenseType = processedValue ? parseInt(processedValue) : undefined;
+          break;
+        case 'status':
+          updatedFilters.status = processedValue ? parseInt(processedValue) : undefined;
+          break;
+        case 'paymentMethod':
+          updatedFilters.paymentMethod = processedValue ? parseInt(processedValue) : undefined;
+          break;
+        default:
+          break;
+      }
+
+      return updatedFilters;
+    });
+    paginationActions.resetPage();
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setFilters({});
     paginationActions.resetPage();
   };
 
@@ -360,6 +395,44 @@ const ExpensesPage: React.FC = () => {
     }
   };
 
+  // Handle PDF download
+  const handleDownloadPdf = async () => {
+    try {
+      setLoading(true);
+
+      // Create a descriptive message for the download
+      const hasDateFilter = filters.startDate || filters.endDate;
+      const message = hasDateFilter
+        ? 'Generating PDF for filtered expenses...'
+        : 'Generating PDF for all expenses...';
+
+      setSnackbar({
+        open: true,
+        message,
+        severity: 'info'
+      });
+
+      await expensesService.generateExpensesPdf(
+        filters.startDate,
+        filters.endDate
+      );
+
+      setSnackbar({
+        open: true,
+        message: 'PDF downloaded successfully!',
+        severity: 'success'
+      });
+    } catch (error: any) {
+      setSnackbar({
+        open: true,
+        message: error.message || 'Failed to generate PDF',
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Table actions
   const getExpenseActions = (expense: Expense): ContextAction[] => {
     const actions: ContextAction[] = [
@@ -451,125 +524,91 @@ const ExpensesPage: React.FC = () => {
         )}
 
         {/* Filters Section */}
-        <Card sx={{ mb: 3, borderRadius: 2 }}>
-          <CardContent sx={{ p: 2 }}>
-            <Grid container spacing={2} alignItems="center">
-              {showFilters && (
-                <>
-                  <Grid sx={{ xs: 12, sm: 6, md: 3, minWidth: 200 }}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      placeholder="Search expenses..."
-                      value={filters.search || ''}
-                      onChange={(e) => handleFilterChange({ search: e.target.value || undefined })}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <SearchIcon />
-                          </InputAdornment>
-                        )
-                      }}
-                    />
-                  </Grid>
-
-                  <Grid sx={{ xs: 12, sm: 4, md: 2, minWidth: 150 }}>
-                    <DatePicker
-                      label="From Date"
-                      value={filters.fromDate ? new Date(filters.fromDate) : null}
-                      onChange={(date) => handleFilterChange({ fromDate: date?.toISOString() || undefined })}
-                      slotProps={{ textField: { size: 'small', fullWidth: true } }}
-                    />
-                  </Grid>
-
-                  <Grid sx={{ xs: 12, sm: 4, md: 2, minWidth: 150 }}>
-                    <DatePicker
-                      label="To Date"
-                      value={filters.toDate ? new Date(filters.toDate) : null}
-                      onChange={(date) => handleFilterChange({ toDate: date?.toISOString() || undefined })}
-                      slotProps={{ textField: { size: 'small', fullWidth: true } }}
-                    />
-                  </Grid>
-
-                  <Grid sx={{ xs: 12, sm: 4, md: 1, minWidth: 150 }}>
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Type</InputLabel>
-                      <Select
-                        value={filters.expenseType || ''}
-                        onChange={(e) => handleFilterChange({ expenseType: e.target.value || undefined })}
-                        label="Type"
-                      >
-                        <MenuItem value="">All Types</MenuItem>
-                        {expenseTypeOptions.map((option) => (
-                          <MenuItem key={option.value} value={option.value}>
-                            {option.label}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-
-                  <Grid sx={{ xs: 12, sm: 4, md: 1, minWidth: 150 }}>
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Status</InputLabel>
-                      <Select
-                        value={filters.status || ''}
-                        onChange={(e) => handleFilterChange({ status: e.target.value || undefined })}
-                        label="Status"
-                      >
-                        <MenuItem value="">All Statuses</MenuItem>
-                        {statusOptions.map((option) => (
-                          <MenuItem key={option.value} value={option.value}>
-                            {option.label}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-
-                  <Grid sx={{ xs: 12, sm: 4, md: 1, minWidth: 150 }}>
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Payment</InputLabel>
-                      <Select
-                        value={filters.paymentMethod || ''}
-                        onChange={(e) => handleFilterChange({ paymentMethod: e.target.value || undefined })}
-                        label="Payment"
-                      >
-                        <MenuItem value="">All Methods</MenuItem>
-                        {paymentMethodOptions.map((option) => (
-                          <MenuItem key={option.value} value={option.value}>
-                            {option.label}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                </>
-              )}
-
-              <Grid sx={{ xs: 12, md: 2, minWidth: 150 }}>
-                <Stack direction="row" spacing={1}>
-                  <Button
-                    variant="outlined"
-                    startIcon={<FilterIcon />}
-                    onClick={() => setShowFilters(!showFilters)}
-                    sx={{ borderRadius: 1 }}
-                  >
-                    Filters
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<RefreshIcon />}
-                    onClick={loadExpenses}
-                    sx={{ borderRadius: 1 }}
-                  >
-                    Refresh
-                  </Button>
-                </Stack>
-              </Grid>
-            </Grid>
-          </CardContent>
-        </Card>
+        <FilterBar
+          searchPlaceholder="Search expenses..."
+          searchTerm={filters?.search || ''}
+          onSearchChange={(value) => handleFilterChange('search', value)}
+          filters={[
+            {
+              id: 'expenseType',
+              label: 'Type',
+              value: (filters && filters.expenseType != null) ? filters.expenseType.toString() : '',
+              options: [
+                { value: '', label: 'All Types' },
+                ...(expenseTypeOptions || []).map(option => ({
+                  value: (option && option.value != null) ? option.value.toString() : '',
+                  label: option?.label || ''
+                }))
+              ]
+            },
+            {
+              id: 'status',
+              label: 'Status',
+              value: (filters && filters.status != null) ? filters.status.toString() : '',
+              options: [
+                { value: '', label: 'All Statuses' },
+                ...(statusOptions || []).map(option => ({
+                  value: (option && option.value != null) ? option.value.toString() : '',
+                  label: option?.label || ''
+                }))
+              ]
+            },
+            {
+              id: 'paymentMethod',
+              label: 'Payment Method',
+              value: (filters && filters.paymentMethod != null) ? filters.paymentMethod.toString() : '',
+              options: [
+                { value: '', label: 'All Methods' },
+                ...(paymentMethodOptions || []).map(option => ({
+                  value: (option && option.value != null) ? option.value.toString() : '',
+                  label: option?.label || ''
+                }))
+              ]
+            }
+          ]}
+          dateFields={[
+            {
+              id: 'fromDate',
+              label: 'From Date',
+              value: (filters && filters.startDate) ? new Date(filters.startDate).toISOString().split('T')[0] : '',
+              onChange: (value) => handleFilterChange('fromDate', value),
+              type: 'date'
+            },
+            {
+              id: 'toDate',
+              label: 'To Date',
+              value: (filters && filters.endDate) ? new Date(filters.endDate).toISOString().split('T')[0] : '',
+              onChange: (value) => handleFilterChange('toDate', value),
+              type: 'date'
+            }
+          ]}
+          onFilterChange={handleFilterChange}
+          onClearFilters={clearFilters}
+          loading={loading}
+          showClearButton={true}
+          filterMinWidth={200}
+          sx={{ mb: 3 }}
+        >
+          <Box sx={{ display: 'flex', gap: 1, ml: 'auto' }}>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={loadExpenses}
+              sx={{ borderRadius: 1 }}
+            >
+              Refresh
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<PdfIcon />}
+              onClick={handleDownloadPdf}
+              disabled={loading}
+              sx={{ borderRadius: 1 }}
+            >
+              Download PDF
+            </Button>
+          </Box>
+        </FilterBar>
 
         {/* Loading Progress */}
         {loading && <LinearProgress sx={{ mb: 2 }} />}
@@ -938,6 +977,22 @@ const ExpensesPage: React.FC = () => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert
+            onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+            severity={snackbar.severity}
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Box>
     </LocalizationProvider>
   );

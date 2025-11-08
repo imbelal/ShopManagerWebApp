@@ -1,4 +1,4 @@
-import apiClient from './apiClient';
+import apiClient, { handleApiError } from './apiClient';
 
 // Enums matching the backend
 export const ExpenseType = {
@@ -253,6 +253,38 @@ class ExpensesService {
   // Check if expense can be marked as paid
   canMarkAsPaid(status: number): boolean {
     return status === ExpenseStatus.Approved;
+  }
+
+  // Generate PDF for expenses within date range
+  async generateExpensesPdf(startDate?: string, endDate?: string): Promise<void> {
+    try {
+      const params = new URLSearchParams();
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+
+      const response = await apiClient.get(`${this.baseUrl}/pdf${params.toString() ? '?' + params.toString() : ''}`, {
+        responseType: 'blob'
+      });
+
+      // Create download link
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+
+      // Generate filename with date range
+      const today = new Date().toISOString().split('T')[0];
+      const startFileName = startDate ? startDate.split('T')[0] : 'all';
+      const endFileName = endDate ? endDate.split('T')[0] : 'all';
+      link.download = `Expenses_${startFileName}_to_${endFileName}_${today}.pdf`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error: any) {
+      throw new Error(handleApiError(error));
+    }
   }
 }
 

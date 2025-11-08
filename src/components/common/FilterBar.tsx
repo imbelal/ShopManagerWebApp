@@ -105,9 +105,9 @@ const FilterBar: React.FC<FilterBarProps> = ({
                 label={filter.label}
                 onChange={(e) => onFilterChange(filter.id, e.target.value)}
               >
-                <MenuItem value="">All {filter.label}</MenuItem>
-                {filter.options.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
+                <MenuItem key={`${filter.id}-all`} value="">All {filter.label}</MenuItem>
+                {filter.options.map((option, index) => (
+                  <MenuItem key={`${filter.id}-option-${index}`} value={option.value}>
                     {option.label}
                   </MenuItem>
                 ))}
