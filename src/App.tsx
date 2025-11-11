@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline, Box, Typography } from '@mui/material';
 import { AuthProvider } from './context/AuthContext';
+import { SnackbarProvider } from './context/SnackbarContext';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import ProductsPage from './pages/ProductsPage';
@@ -11,6 +12,7 @@ import PurchasesPage from './pages/PurchasesPage';
 import ExpensesPage from './pages/ExpensesPage';
 import CustomersPage from './pages/CustomersPage';
 import StockTransactionsPage from './pages/StockTransactionsPage';
+import ReportsPage from './pages/ReportsPage';
 import DashboardLayout from './components/DashboardLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -124,7 +126,8 @@ function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <AuthProvider>
-          <Router>
+          <SnackbarProvider>
+            <Router>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route
@@ -217,12 +220,7 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <DashboardLayout>
-                      <Box p={3}>
-                        <Typography variant="h4">Reports Page</Typography>
-                        <Typography variant="body1" color="text.secondary">
-                          Reports and analytics will be implemented here.
-                        </Typography>
-                      </Box>
+                      <ReportsPage />
                     </DashboardLayout>
                   </ProtectedRoute>
                 }
@@ -271,7 +269,8 @@ function App() {
                 }
               />
             </Routes>
-          </Router>
+            </Router>
+          </SnackbarProvider>
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
