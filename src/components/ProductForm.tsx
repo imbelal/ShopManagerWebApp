@@ -65,7 +65,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
     size: '',
     color: '',
     categoryId: '',
-    unit: '',
+    unit: 0, // Default to number instead of empty string
     sellingPrice: '',
     tagIds: [] as string[]
   });
@@ -81,7 +81,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
       size: '',
       color: '',
       categoryId: '',
-      unit: '',
+      unit: 0, // Default to number instead of empty string
       sellingPrice: '',
       tagIds: []
     });
@@ -157,7 +157,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
       errors.categoryId = 'Category is required';
     }
 
-    if (!formData.unit || formData.unit.toString().trim() === '') {
+    if (!formData.unit || formData.unit === 0) {
       errors.unit = 'Unit is required';
     }
 
@@ -262,7 +262,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
           size: formData.size,
           color: formData.color,
           categoryId: formData.categoryId,
-          unit: formData.unit,
+          unit: formData.unit, // Already a number
           sellingPrice: parseFloat(formData.sellingPrice)
         };
 
@@ -275,7 +275,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
           size: formData.size,
           color: formData.color,
           categoryId: formData.categoryId,
-          unit: formData.unit,
+          unit: formData.unit, // Already a number
           sellingPrice: parseFloat(formData.sellingPrice),
           tagIds: formData.tagIds
         };
@@ -504,7 +504,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   value={commonUnits.find((unit) => unit.value.toString() === formData.unit.toString()) ?
                     { value: parseInt(formData.unit), label: commonUnits.find((unit) => unit.value.toString() === formData.unit.toString())?.label || '' } : null}
                   onChange={(event, newValue) => {
-                    handleInputChange('unit', newValue ? newValue.value.toString() : '');
+                    handleInputChange('unit', newValue ? newValue.value : 0);
                   }}
                   isOptionEqualToValue={(option, value) => option.value === value?.value}
                   renderInput={(params) => (

@@ -76,7 +76,7 @@ export interface CreateProductRequest {
   size: string;
   color: string;
   categoryId: string;
-  unit: string;
+  unit: number; // Changed from string to number to match backend enum
   sellingPrice: number;
   tagIds: string[];
 }
@@ -88,7 +88,7 @@ export interface UpdateProductRequest {
   size: string;
   color: string;
   categoryId: string;
-  unit: string;
+  unit: number; // Changed from string to number to match backend enum
   sellingPrice: number;
 }
 
