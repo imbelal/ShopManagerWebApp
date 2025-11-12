@@ -191,22 +191,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/categories"
-                element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <Box p={3}>
-                        <Typography variant="h4">Categories Page</Typography>
-                        <Typography variant="body1" color="text.secondary">
-                          Categories management will be implemented here.
-                        </Typography>
-                      </Box>
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
+                            <Route
                 path="/customers"
                 element={
                   <ProtectedRoute>
