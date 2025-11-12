@@ -38,6 +38,7 @@ export interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
   refreshToken: () => Promise<void>;
+  updateUserProfile: (userData: Partial<User>) => Promise<void>;
 }
 
 export interface LoginFormData {
@@ -48,4 +49,30 @@ export interface LoginFormData {
 export interface ApiError {
   message: string;
   status?: number;
+}
+
+export interface UpdateUserRequest {
+  userId: string;
+  email: string;
+  firstname: string;
+  lastname: string;
+}
+
+export interface UpdatePasswordRequest {
+  userId: string;
+  username: string;
+  oldPassword: string;
+  newPassword: string;
+}
+
+export interface UserFormData {
+  email: string;
+  firstname: string;
+  lastname: string;
+}
+
+export interface PasswordFormData {
+  oldPassword: string;
+  newPassword: string;
+  confirmPassword: string;
 }

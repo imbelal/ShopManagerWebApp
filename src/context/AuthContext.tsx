@@ -17,7 +17,8 @@ type AuthAction =
   | { type: 'LOGOUT' }
   | { type: 'REFRESH_TOKEN_SUCCESS'; payload: string }
   | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'CLEAR_ERROR' };
+  | { type: 'CLEAR_ERROR' }
+  | { type: 'UPDATE_USER'; payload: User };
 
 const initialState: AuthState = {
   user: null,
@@ -76,6 +77,11 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
       return {
         ...state,
         error: null,
+      };
+    case 'UPDATE_USER':
+      return {
+        ...state,
+        user: action.payload,
       };
     default:
       return state;
@@ -191,6 +197,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const updateUserProfile = async (userData: Partial<User>): Promise<void> => {
+    if (!state.user) {
+      throw new Error('No user is currently authenticated');
+    }
+
+    try {
+      // Fetch the updated user profile from the backend
+      const profileResponse = await authService.getUserProfile(state.user.id);
+
+      if (profileResponse.data.succeeded && profileResponse.data.data) {
+        const updatedUser = profileResponse.data.data;
+
+        // Update both localStorage and context
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+
+        dispatch({
+          type: 'UPDATE_USER',
+          payload: updatedUser,
+        });
+      } else {
+        throw new Error('Failed to fetch updated user profile');
+      }
+    } catch (error) {
+      console.error('Failed to update user profile:', error);
+      throw error;
+    }
+  };
+
   const value: AuthContextType = {
     user: state.user,
     accessToken: state.accessToken,
@@ -200,6 +234,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     logout,
     refreshToken,
+    updateUserProfile,
   };
 
   return (

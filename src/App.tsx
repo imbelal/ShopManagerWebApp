@@ -13,6 +13,7 @@ import ExpensesPage from './pages/ExpensesPage';
 import CustomersPage from './pages/CustomersPage';
 import StockTransactionsPage from './pages/StockTransactionsPage';
 import ReportsPage from './pages/ReportsPage';
+import TenantSettingsPage from './pages/TenantSettingsPage';
 import DashboardLayout from './components/DashboardLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -230,12 +231,7 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <DashboardLayout>
-                      <Box p={3}>
-                        <Typography variant="h4">Settings Page</Typography>
-                        <Typography variant="body1" color="text.secondary">
-                          Application settings will be implemented here.
-                        </Typography>
-                      </Box>
+                      <TenantSettingsPage />
                     </DashboardLayout>
                   </ProtectedRoute>
                 }

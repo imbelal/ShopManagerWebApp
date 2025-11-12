@@ -1,5 +1,5 @@
 import { AxiosResponse } from 'axios';
-import { LoginRequest, AuthResponse, RefreshTokenRequest, User, ApiResponse } from '../types/auth';
+import { LoginRequest, AuthResponse, RefreshTokenRequest, User, ApiResponse, UpdateUserRequest, UpdatePasswordRequest } from '../types/auth';
 import apiClient, { handleApiError } from './apiClient';
 
 export const authService = {
@@ -23,6 +23,16 @@ export const authService = {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
+  },
+
+  // Update user profile
+  async updateUserProfile(request: UpdateUserRequest): Promise<AxiosResponse<ApiResponse<string>>> {
+    return apiClient.put('/Users', request);
+  },
+
+  // Change password
+  async changePassword(request: UpdatePasswordRequest): Promise<AxiosResponse<ApiResponse<string>>> {
+    return apiClient.put('/Users/ChangePassword', request);
   },
 
   // Helper function to get user-friendly error messages
