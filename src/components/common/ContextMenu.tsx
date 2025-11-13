@@ -133,14 +133,19 @@ export const createStandardActions = <T = any>(
     canEdit?: (item: T) => boolean;
     canDelete?: (item: T) => boolean;
     deleteTooltip?: string;
+    translations?: {
+      viewDetails?: string;
+      edit?: string;
+      delete?: string;
+    };
   } = {}
 ): ContextAction[] => {
-  const { canEdit, canDelete, deleteTooltip } = options;
+  const { canEdit, canDelete, deleteTooltip, translations } = options;
 
   const actions: ContextAction[] = [
     {
       id: 'view',
-      label: 'View Details',
+      label: translations?.viewDetails || 'View Details',
       icon: <ViewIcon sx={{ fontSize: 16 }} />,
       onClick: () => onView?.(item)
     }
@@ -149,7 +154,7 @@ export const createStandardActions = <T = any>(
   if (onEdit) {
     actions.push({
       id: 'edit',
-      label: 'Edit',
+      label: translations?.edit || 'Edit',
       icon: <EditIcon sx={{ fontSize: 16 }} />,
       onClick: () => onEdit?.(item),
       disabled: canEdit ? !canEdit(item) : false
@@ -159,7 +164,7 @@ export const createStandardActions = <T = any>(
   if (onDelete) {
     actions.push({
       id: 'delete',
-      label: 'Delete',
+      label: translations?.delete || 'Delete',
       icon: <DeleteIcon sx={{ fontSize: 16 }} />,
       onClick: () => onDelete?.(item),
       disabled: canDelete ? !canDelete(item) : false,

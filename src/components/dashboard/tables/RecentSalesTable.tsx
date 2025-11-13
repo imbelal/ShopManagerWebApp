@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Card,
@@ -37,11 +38,14 @@ interface RecentSalesTableProps {
 const RecentSalesTable: React.FC<RecentSalesTableProps> = ({
   data = [],
   loading = false,
-  title = "Recent Sales",
+  title,
   onViewDetails,
   maxRows = 10,
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
+
+  const tableTitle = title || t('dashboard.recentSales');
 
   const getStatusColor = (status: string): 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' => {
     switch (status?.toLowerCase()) {
@@ -84,7 +88,7 @@ const RecentSalesTable: React.FC<RecentSalesTableProps> = ({
       <Card elevation={0}>
         <CardContent sx={{ padding: theme.spacing(2), '&:last-child': { pb: 2 } }}>
           <Typography variant="h6" fontWeight={600} gutterBottom>
-            {title}
+            {tableTitle}
           </Typography>
           <Box display="flex" justifyContent="center" alignItems="center" py={4}>
             <CircularProgress />
@@ -98,7 +102,7 @@ const RecentSalesTable: React.FC<RecentSalesTableProps> = ({
     <Card elevation={0}>
       <CardContent sx={{ padding: theme.spacing(2), '&:last-child': { pb: 2 } }}>
         <Typography variant="h6" fontWeight={600} gutterBottom>
-          {title}
+          {tableTitle}
         </Typography>
 
         {displayData.length === 0 ? (
@@ -124,22 +128,22 @@ const RecentSalesTable: React.FC<RecentSalesTableProps> = ({
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ fontWeight: 600, color: 'text.primary', borderBottom: `2px solid ${theme.palette.divider}` }}>
-                    Customer
+                    {t('dashboard.tableHeaders.customer')}
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600, color: 'text.primary', borderBottom: `2px solid ${theme.palette.divider}` }}>
-                    Items
+                    {t('dashboard.tableHeaders.items')}
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600, color: 'text.primary', borderBottom: `2px solid ${theme.palette.divider}` }}>
-                    Amount
+                    {t('dashboard.tableHeaders.amount')}
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600, color: 'text.primary', borderBottom: `2px solid ${theme.palette.divider}` }}>
-                    Payment Status
+                    {t('dashboard.tableHeaders.paymentStatus')}
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600, color: 'text.primary', borderBottom: `2px solid ${theme.palette.divider}` }}>
-                    Date
+                    {t('dashboard.tableHeaders.date')}
                   </TableCell>
                   <TableCell align="center" sx={{ fontWeight: 600, color: 'text.primary', borderBottom: `2px solid ${theme.palette.divider}` }}>
-                    Actions
+                    {t('dashboard.tableHeaders.actions')}
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -208,7 +212,7 @@ const RecentSalesTable: React.FC<RecentSalesTableProps> = ({
                     </TableCell>
                     <TableCell align="center">
                       {onViewDetails && (
-                        <Tooltip title="View Details">
+                        <Tooltip title={t('dashboard.tableHeaders.viewDetails')}>
                           <IconButton
                             size="small"
                             onClick={() => onViewDetails(sale)}

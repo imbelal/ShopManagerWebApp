@@ -6,6 +6,7 @@ import {
   Pause as PausedIcon,
   Block as BlockedIcon
 } from '@mui/icons-material';
+import { TFunction } from 'i18next';
 
 export interface StatusConfig {
   label: string;
@@ -58,37 +59,37 @@ export default StatusChip;
 // Predefined status configurations
 export const commonStatusConfigs = {
   // Generic active/inactive
-  active: (status: string | number): StatusConfig => ({
-    label: 'Active',
+  active: (t: TFunction, status: string | number): StatusConfig => ({
+    label: t('products.active'),
     color: 'success',
     icon: <CheckCircleIcon sx={{ fontSize: 16 }} />
   }),
 
-  inactive: (status: string | number): StatusConfig => ({
-    label: 'Inactive',
+  inactive: (t: TFunction, status: string | number): StatusConfig => ({
+    label: t('products.inactive'),
     color: 'warning',
     icon: <PendingIcon sx={{ fontSize: 16 }} />
   }),
 
   // Product status
-  productStatus: (status: string | number): StatusConfig => {
+  productStatus: (t: TFunction, status: string | number): StatusConfig => {
     const statusValue = typeof status === 'number' ? status : parseInt(status);
     switch (statusValue) {
       case 1: // Active
         return {
-          label: 'Active',
+          label: t('products.active'),
           color: 'success',
           icon: <CheckCircleIcon sx={{ fontSize: 16 }} />
         };
       case 2: // InActive
         return {
-          label: 'Inactive',
+          label: t('products.inactive'),
           color: 'warning',
           icon: <PendingIcon sx={{ fontSize: 16 }} />
         };
       default:
         return {
-          label: 'Unknown',
+          label: t('products.unknown'),
           color: 'default',
           icon: <PendingIcon sx={{ fontSize: 16 }} />
         };
@@ -96,30 +97,30 @@ export const commonStatusConfigs = {
   },
 
   // Sales status
-  salesStatus: (status: string | number): StatusConfig => {
+  salesStatus: (t: TFunction, status: string | number): StatusConfig => {
     const statusValue = typeof status === 'number' ? status : parseInt(status);
     switch (statusValue) {
       case 1: // Pending
         return {
-          label: 'Pending',
+          label: t('products.pending'),
           color: 'warning',
           icon: <PendingIcon sx={{ fontSize: 16 }} />
         };
       case 2: // Paid
         return {
-          label: 'Paid',
+          label: t('products.paid'),
           color: 'success',
           icon: <CheckCircleIcon sx={{ fontSize: 16 }} />
         };
       case 3: // Cancelled
         return {
-          label: 'Cancelled',
+          label: t('products.cancelled'),
           color: 'error',
           icon: <BlockedIcon sx={{ fontSize: 16 }} />
         };
       default:
         return {
-          label: 'Unknown',
+          label: t('products.unknown'),
           color: 'default',
           icon: <PendingIcon sx={{ fontSize: 16 }} />
         };
@@ -127,8 +128,8 @@ export const commonStatusConfigs = {
   },
 
   // Stock status
-  stockStatus: (quantity: number): StatusConfig => ({
-    label: quantity > 0 ? 'In Stock' : 'Out of Stock',
+  stockStatus: (t: TFunction, quantity: number): StatusConfig => ({
+    label: quantity > 0 ? t('products.inStock') : t('products.outOfStock'),
     color: quantity > 0 ? 'success' : 'error',
     icon: quantity > 0 ? <CheckCircleIcon sx={{ fontSize: 16 }} /> : <BlockedIcon sx={{ fontSize: 16 }} />
   })

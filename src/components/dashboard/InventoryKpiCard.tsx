@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Inventory as InventoryIcon,
 } from '@mui/icons-material';
@@ -16,11 +17,13 @@ const InventoryKpiCard: React.FC<InventoryKpiCardProps> = ({
   loading = false,
   onClick,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <KpiCard
-      title="Total Products"
+      title={t('dashboard.totalProducts')}
       value={(metrics.totalProducts || 0).toLocaleString()}
-      subtitle={`${metrics.lowStockProducts || 0} low stock items`}
+      subtitle={`${metrics.lowStockProducts || 0} ${t('dashboard.lowStockItems')}`}
       icon={<InventoryIcon />}
       loading={loading}
       color="warning"

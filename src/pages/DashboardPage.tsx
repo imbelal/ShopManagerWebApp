@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Grid,
   Box,
@@ -32,6 +33,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const DashboardPage: React.FC = () => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -162,10 +164,10 @@ const DashboardPage: React.FC = () => {
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h3" component="h1" fontWeight={700} gutterBottom>
-          Welcome back, {user?.firstName || user?.username}! 👋
+          {t('auth.welcomeBack')}, {user?.firstName || user?.username}! 👋
         </Typography>
         <Typography variant="h6" color="text.secondary">
-          Here's what's happening with your business today.
+          {t('dashboard.businessOverview')}
         </Typography>
       </Box>
 
@@ -207,7 +209,7 @@ const DashboardPage: React.FC = () => {
           <SalesTrendChart
             height={400}
             loading={loading.trends}
-            title="Sales Trend - Last 30 Days"
+            title={t('dashboard.salesTrendLast30Days')}
             data={salesTrends?.dailySales?.map(day => ({
               date: new Date(day.date).toISOString().split('T')[0], // Format date to YYYY-MM-DD
               revenue: day.totalRevenue,
@@ -220,7 +222,7 @@ const DashboardPage: React.FC = () => {
             height={400}
             data={topProducts}
             loading={loading.products}
-            title="Top Products"
+            title={t('dashboard.topProducts')}
             limit={5}
           />
         </Grid>
@@ -232,7 +234,7 @@ const DashboardPage: React.FC = () => {
           <RecentSalesTable
             data={recentSales}
             loading={loading.sales}
-            title="Recent Sales"
+            title={t('dashboard.recentSales')}
             onViewDetails={handleViewSaleDetails}
             maxRows={8}
           />
@@ -241,7 +243,7 @@ const DashboardPage: React.FC = () => {
           <LowStockTable
             data={lowStockProducts}
             loading={loading.stock}
-            title="Low Stock Alerts"
+            title={t('dashboard.lowStockAlerts')}
             onViewDetails={handleViewProductDetails}
             onReorder={handleQuickReorder}
             maxRows={8}
@@ -255,7 +257,7 @@ const DashboardPage: React.FC = () => {
           <Card elevation={0}>
             <CardContent sx={{ py: 3 }}>
               <Typography variant="h6" fontWeight={600} gutterBottom>
-                Quick Actions
+                {t('dashboard.tableHeaders.quickActions')}
               </Typography>
               <Grid container spacing={3}>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -276,7 +278,7 @@ const DashboardPage: React.FC = () => {
                     onClick={() => navigate('/sales')}
                   >
                     <Typography variant="h6" color="primary.main" fontWeight={600}>
-                      ➕ New Sale
+                      {t('dashboard.tableHeaders.newSale')}
                     </Typography>
                   </Card>
                 </Grid>
@@ -298,7 +300,7 @@ const DashboardPage: React.FC = () => {
                     onClick={() => navigate('/products')}
                   >
                     <Typography variant="h6" color="success.main" fontWeight={600}>
-                      📦 Add Product
+                      {t('dashboard.tableHeaders.addProduct')}
                     </Typography>
                   </Card>
                 </Grid>
@@ -320,7 +322,7 @@ const DashboardPage: React.FC = () => {
                     onClick={() => navigate('/purchases')}
                   >
                     <Typography variant="h6" color="info.main" fontWeight={600}>
-                      🛒 New Purchase
+                      {t('dashboard.tableHeaders.newPurchase')}
                     </Typography>
                   </Card>
                 </Grid>
@@ -342,7 +344,7 @@ const DashboardPage: React.FC = () => {
                     onClick={() => navigate('/reports')}
                   >
                     <Typography variant="h6" color="secondary.main" fontWeight={600}>
-                      📊 Reports
+                      {t('dashboard.tableHeaders.reports')}
                     </Typography>
                   </Card>
                 </Grid>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Card,
@@ -34,9 +35,13 @@ const SalesTrendChart: React.FC<SalesTrendChartProps> = ({
   data = [],
   loading = false,
   height = 300,
-  title = "Sales Trend",
+  title,
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
+
+  // Use translated title or fallback to provided title
+  const chartTitle = title || t('dashboard.salesTrend');
 
   // Format data for chart
   const chartData = data.map(item => ({
@@ -80,7 +85,7 @@ const SalesTrendChart: React.FC<SalesTrendChartProps> = ({
                   borderRadius: '50%',
                 }}
               />
-              {entry.name}: {entry.name === 'Revenue' ? '$' : ''}{entry.value.toLocaleString()}
+              {entry.name === 'Revenue' ? t('dashboard.tableHeaders.revenue') : entry.name}: {entry.name === 'Revenue' ? '$' : ''}{entry.value.toLocaleString()}
               {entry.name === 'Revenue' ? 'K' : ''}
             </Typography>
           ))}
@@ -97,7 +102,7 @@ const SalesTrendChart: React.FC<SalesTrendChartProps> = ({
           <Box textAlign="center">
             <CircularProgress size={40} />
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Loading chart data...
+              {t('common.loading')}
             </Typography>
           </Box>
         </CardContent>
@@ -111,10 +116,10 @@ const SalesTrendChart: React.FC<SalesTrendChartProps> = ({
         <CardContent sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Box textAlign="center">
             <Typography variant="h6" color="text.secondary" gutterBottom>
-              No data available
+              {t('dashboard.noData')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Sales trend data will appear here once available
+              {t('dashboard.salesTrendDataWillAppear')}
             </Typography>
           </Box>
         </CardContent>
@@ -126,7 +131,7 @@ const SalesTrendChart: React.FC<SalesTrendChartProps> = ({
     <Card elevation={0} sx={{ height }}>
       <CardContent sx={{ height: '100%', padding: theme.spacing(2), '&:last-child': { pb: 2 } }}>
         <Typography variant="h6" fontWeight={600} gutterBottom>
-          {title}
+          {chartTitle}
         </Typography>
         <ResponsiveContainer width="100%" height={height - 60}>
           <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -163,7 +168,7 @@ const SalesTrendChart: React.FC<SalesTrendChartProps> = ({
               strokeWidth={2}
               fillOpacity={1}
               fill="url(#colorRevenue)"
-              name="Revenue"
+              name={t('dashboard.tableHeaders.revenue')}
             />
           </AreaChart>
         </ResponsiveContainer>

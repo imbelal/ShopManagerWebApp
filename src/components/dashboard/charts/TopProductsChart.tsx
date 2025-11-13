@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Card,
@@ -32,9 +33,12 @@ const TopProductsChart: React.FC<TopProductsChartProps> = ({
   loading = false,
   height = 300,
   limit = 5,
-  title = "Top Products",
+  title,
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
+
+  const chartTitle = title || t('dashboard.topProducts');
 
   // Prepare chart data with limited items
   const chartData = data
@@ -77,10 +81,10 @@ const TopProductsChart: React.FC<TopProductsChartProps> = ({
             {data.fullName}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Revenue: ${data.revenue.toFixed(1)}K
+            {t('dashboard.tableHeaders.revenue')}: ${data.revenue.toFixed(1)}K
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Quantity: {data.quantity.toLocaleString()} units
+            {t('dashboard.tableHeaders.quantity')}: {data.quantity.toLocaleString()} {t('dashboard.tableHeaders.units')}
           </Typography>
           {data.growth !== 0 && (
             <Typography
@@ -117,10 +121,10 @@ const TopProductsChart: React.FC<TopProductsChartProps> = ({
         <CardContent sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Box textAlign="center">
             <Typography variant="h6" color="text.secondary" gutterBottom>
-              No data available
+              {t('dashboard.noData')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Top products data will appear here once available
+              {t('dashboard.topProductsDataWillAppear')}
             </Typography>
           </Box>
         </CardContent>
@@ -132,7 +136,7 @@ const TopProductsChart: React.FC<TopProductsChartProps> = ({
     <Card elevation={0} sx={{ height }}>
       <CardContent sx={{ height: '100%', padding: theme.spacing(2), '&:last-child': { pb: 2 } }}>
         <Typography variant="h6" fontWeight={600} gutterBottom>
-          {title}
+          {chartTitle}
         </Typography>
         <ResponsiveContainer width="100%" height={height - 60}>
           <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 60 }}>

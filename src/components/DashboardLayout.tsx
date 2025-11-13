@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Drawer,
@@ -38,6 +39,7 @@ import {
 import { styled, useTheme as useStyledTheme } from '@mui/material/styles';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
+import LanguageSwitcher from './common/LanguageSwitcher';
 
 const drawerWidth = 280;
 
@@ -130,19 +132,20 @@ interface NavigationItem {
   badge?: number;
 }
 
-const navigationItems: NavigationItem[] = [
-  { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
-  { text: 'Products', icon: <Inventory />, path: '/products' },
-  { text: 'Sales', icon: <ShoppingCart />, path: '/sales' },
-  { text: 'Purchases', icon: <PurchaseIcon />, path: '/purchases' },
-  { text: 'Expenses', icon: <ExpenseIcon />, path: '/expenses' },
-  { text: 'Stock Transactions', icon: <StockTransactionsIcon />, path: '/stock-transactions' },
-  { text: 'Customers', icon: <People />, path: '/customers' },
-  { text: 'Reports', icon: <Assessment />, path: '/reports' },
-  { text: 'Settings', icon: <Settings />, path: '/settings' },
+const getNavigationItems = (t: any): NavigationItem[] => [
+  { text: t('navigation.dashboard'), icon: <Dashboard />, path: '/dashboard' },
+  { text: t('navigation.products'), icon: <Inventory />, path: '/products' },
+  { text: t('navigation.sales'), icon: <ShoppingCart />, path: '/sales' },
+  { text: t('navigation.purchases'), icon: <PurchaseIcon />, path: '/purchases' },
+  { text: t('navigation.expenses'), icon: <ExpenseIcon />, path: '/expenses' },
+  { text: t('navigation.stockTransactions'), icon: <StockTransactionsIcon />, path: '/stock-transactions' },
+  { text: t('navigation.customers'), icon: <People />, path: '/customers' },
+  { text: t('navigation.reports'), icon: <Assessment />, path: '/reports' },
+  { text: t('navigation.settings'), icon: <Settings />, path: '/settings' },
 ];
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
+  const { t } = useTranslation();
   const theme = useStyledTheme();
   const navigate = useNavigate();
   const location = useLocation();
@@ -150,6 +153,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [open, setOpen] = useState(true);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  const navigationItems = getNavigationItems(t);
 
   const handleDrawerToggle = () => {
     setOpen(!open);
@@ -278,14 +283,18 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             noWrap
             sx={{ flexGrow: 1 }}
           >
-            {navigationItems.find(item => item.path === location.pathname)?.text || 'Dashboard'}
+            {navigationItems.find(item => item.path === location.pathname)?.text || t('navigation.dashboard')}
           </Typography>
 
-          <IconButton color="inherit" sx={{ mr: 1 }}>
-            <Badge badgeContent={3} color="error">
-              <Notifications />
-            </Badge>
-          </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <LanguageSwitcher />
+
+            <IconButton color="inherit" sx={{ mr: 1 }}>
+              <Badge badgeContent={3} color="error">
+                <Notifications />
+              </Badge>
+            </IconButton>
+          </Box>
 
           <IconButton
             size="large"
@@ -348,14 +357,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               <ListItemIcon>
                 <AccountCircle fontSize="small" />
               </ListItemIcon>
-              <ListItemText>Profile</ListItemText>
+              <ListItemText>{t('settings.userProfile')}</ListItemText>
             </MenuItem>
 
             <MenuItem onClick={handleProfileMenuClose}>
               <ListItemIcon>
                 <Settings fontSize="small" />
               </ListItemIcon>
-              <ListItemText>Settings</ListItemText>
+              <ListItemText>{t('navigation.settings')}</ListItemText>
             </MenuItem>
 
             <Divider />
@@ -364,7 +373,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               <ListItemIcon>
                 <Logout fontSize="small" />
               </ListItemIcon>
-              <ListItemText>Logout</ListItemText>
+              <ListItemText>{t('auth.logout')}</ListItemText>
             </MenuItem>
           </Menu>
         </Toolbar>

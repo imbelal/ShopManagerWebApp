@@ -12,6 +12,7 @@ import {
   CircularProgress
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { productService } from '../services/productService';
 
 interface CategoryDialogProps {
@@ -25,6 +26,7 @@ const CategoryDialog: React.FC<CategoryDialogProps> = ({
   onClose,
   onCategoryCreated
 }) => {
+  const { t } = useTranslation();
   const [categoryName, setCategoryName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +35,7 @@ const CategoryDialog: React.FC<CategoryDialogProps> = ({
     e.preventDefault();
 
     if (!categoryName.trim()) {
-      setError('Category name is required');
+      setError(t('products.categoryDialog.categoryNameRequired'));
       return;
     }
 
@@ -48,10 +50,10 @@ const CategoryDialog: React.FC<CategoryDialogProps> = ({
         onCategoryCreated(newCategoryId, categoryName.trim());
         handleClose();
       } else {
-        setError(response.data.message || 'Failed to create category');
+        setError(response.data.message || t('products.categoryDialog.failedToCreateCategory'));
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create category');
+      setError(err.response?.data?.message || t('products.categoryDialog.failedToCreateCategory'));
     } finally {
       setLoading(false);
     }
@@ -74,7 +76,7 @@ const CategoryDialog: React.FC<CategoryDialogProps> = ({
       }}
     >
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6" component="div">Add New Category</Typography>
+        <Typography variant="h6" component="div">{t('products.categoryDialog.addNewCategory')}</Typography>
         <Button
           onClick={handleClose}
           disabled={loading}
@@ -95,14 +97,14 @@ const CategoryDialog: React.FC<CategoryDialogProps> = ({
           <TextField
             autoFocus
             fullWidth
-            label="Category Name"
+            label={t('products.categoryDialog.name')}
             value={categoryName}
             onChange={(e) => setCategoryName(e.target.value)}
             disabled={loading}
-            placeholder="Enter category name"
+            placeholder={t('products.categoryDialog.name')}
             sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1 } }}
             inputProps={{ maxLength: 100 }}
-            helperText={`${categoryName.length}/100 characters`}
+            helperText={`${categoryName.length}/100 ${t('common.characters')}`}
           />
         </DialogContent>
 
@@ -112,7 +114,7 @@ const CategoryDialog: React.FC<CategoryDialogProps> = ({
             disabled={loading}
             sx={{ borderRadius: 1 }}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             type="submit"
@@ -120,7 +122,7 @@ const CategoryDialog: React.FC<CategoryDialogProps> = ({
             disabled={loading || !categoryName.trim()}
             sx={{ borderRadius: 1 }}
           >
-            {loading ? <CircularProgress size={20} /> : 'Add Category'}
+            {loading ? <CircularProgress size={20} /> : t('products.categoryDialog.createCategory')}
           </Button>
         </DialogActions>
       </form>

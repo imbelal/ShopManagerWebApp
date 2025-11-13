@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   People as PeopleIcon,
 } from '@mui/icons-material';
@@ -16,11 +17,13 @@ const CustomerKpiCard: React.FC<CustomerKpiCardProps> = ({
   loading = false,
   onClick,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <KpiCard
-      title="Total Customers"
+      title={t('dashboard.totalCustomers')}
       value={(metrics.totalCustomers || 0).toLocaleString()}
-      subtitle={`${metrics.newCustomersThisMonth || 0} new this month`}
+      subtitle={`${metrics.newCustomersThisMonth || 0} ${t('dashboard.newThisMonth', 'new this month')}`}
       icon={<PeopleIcon />}
       loading={loading}
       color="secondary"

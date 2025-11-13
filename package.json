@@ -18,15 +18,18 @@
     "@mui/x-date-pickers": "^8.17.0",
     "axios": "^1.13.1",
     "date-fns": "^4.1.0",
+    "i18next": "^25.6.2",
     "jspdf": "^3.0.3",
     "jspdf-autotable": "^5.0.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-i18next": "^16.3.2",
     "react-router-dom": "^7.9.5",
     "recharts": "^3.3.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
+    "@types/i18next": "^13.0.0",
     "@types/jspdf": "^2.0.0",
     "@types/node": "^24.9.2",
     "@types/react": "^19.1.16",

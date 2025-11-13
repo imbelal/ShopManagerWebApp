@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Card,
@@ -33,6 +34,7 @@ import {
 } from '@mui/icons-material';
 import { productService, Product, ProductListRequest } from '../services/productService';
 import ProductForm from '../components/ProductForm';
+import { localizeNumber } from '../utils/numberLocalization';
 import {
   DataTable,
   StatusChip,
@@ -49,6 +51,8 @@ import usePagination, { usePaginationProps } from '../hooks/usePagination';
 interface ProductsPageProps {}
 
 const ProductsPage: React.FC<ProductsPageProps> = () => {
+  const { t, i18n } = useTranslation();
+  const currentLanguage = i18n.language;
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -98,11 +102,11 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
         setProducts(response.data.data.items);
         setTotalCount(response.data.data.totalCount);
       } else {
-        throw new Error(response.data.message || 'Failed to load products');
+        throw new Error(response.data.message || t('products.failedToLoadProducts'));
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to load products');
-      setSnackbar({ open: true, message: err.message || 'Failed to load products', severity: 'error' });
+      setError(err.message || t('products.failedToLoadProducts'));
+      setSnackbar({ open: true, message: err.message || t('products.failedToLoadProducts'), severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -128,15 +132,15 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
       setDeleting(true);
       const response = await productService.deleteProduct(selectedProduct.id);
       if (response.data.succeeded) {
-        setSnackbar({ open: true, message: 'Product deleted successfully', severity: 'success' });
+        setSnackbar({ open: true, message: t('products.productDeleted'), severity: 'success' });
         setDeleteDialogOpen(false);
         setSelectedProduct(null);
         loadProducts();
       } else {
-        throw new Error(response.data.message || 'Failed to delete product');
+        throw new Error(response.data.message || t('products.failedToDeleteProduct'));
       }
     } catch (err: any) {
-      setSnackbar({ open: true, message: err.message || 'Failed to delete product', severity: 'error' });
+      setSnackbar({ open: true, message: err.message || t('products.failedToDeleteProduct'), severity: 'error' });
     } finally {
       setDeleting(false);
     }
@@ -181,7 +185,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
   const handleSaveProduct = (savedProduct: Product) => {
     setSnackbar({
       open: true,
-      message: editProduct ? 'Product updated successfully' : 'Product created successfully',
+      message: editProduct ? t('products.productUpdated') : t('products.productCreatedSuccessfully'),
       severity: 'success'
     });
     loadProducts();
@@ -218,35 +222,35 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
     const unitValue = typeof unit === 'number' ? unit : parseInt(unit);
 
     const unitMap: { [key: number]: string } = {
-      0: 'Box',
-      1: 'Piece',
-      2: 'Square Feet',
-      3: 'Kilogram',
-      4: 'Gram',
-      5: 'Liter',
-      6: 'Milliliter',
-      7: 'Meter',
-      8: 'Centimeter',
-      9: 'Inch',
-      10: 'Yard',
-      11: 'Ton',
-      12: 'Pack',
-      13: 'Dozen',
-      14: 'Pair',
-      15: 'Roll',
-      16: 'Bundle',
-      17: 'Carton',
-      18: 'Bag',
-      19: 'Set',
-      20: 'Barrel',
-      21: 'Gallon',
-      22: 'Can',
-      23: 'Tube',
-      24: 'Packet',
-      25: 'Unit'
+      0: t('products.units.box'),
+      1: t('products.units.piece'),
+      2: t('products.units.squareFeet'),
+      3: t('products.units.kilogram'),
+      4: t('products.units.gram'),
+      5: t('products.units.liter'),
+      6: t('products.units.milliliter'),
+      7: t('products.units.meter'),
+      8: t('products.units.centimeter'),
+      9: t('products.units.inch'),
+      10: t('products.units.yard'),
+      11: t('products.units.ton'),
+      12: t('products.units.pack'),
+      13: t('products.units.dozen'),
+      14: t('products.units.pair'),
+      15: t('products.units.roll'),
+      16: t('products.units.bundle'),
+      17: t('products.units.carton'),
+      18: t('products.units.bag'),
+      19: t('products.units.set'),
+      20: t('products.units.barrel'),
+      21: t('products.units.gallon'),
+      22: t('products.units.can'),
+      23: t('products.units.tube'),
+      24: t('products.units.packet'),
+      25: t('products.units.unit')
     };
 
-    return unitMap[unitValue] || 'Unit';
+    return unitMap[unitValue] || t('products.units.unit');
   };
 
   // Get profit margin color
@@ -265,7 +269,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
   const columns = [
     {
       id: 'title',
-      label: 'Product',
+      label: t('products.name'),
       minWidth: 200,
       format: (value, product) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -286,24 +290,24 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
     },
     {
       id: 'categoryName',
-      label: 'Category',
+      label: t('products.category'),
       minWidth: 120
     },
     {
       id: 'size',
-      label: 'Size',
+      label: t('products.size'),
       minWidth: 80,
       format: (value) => value || '-'
     },
     {
       id: 'color',
-      label: 'Color',
+      label: t('products.color'),
       minWidth: 80,
       format: (value) => value || '-'
     },
     {
       id: 'sellingPrice',
-      label: 'Price',
+      label: t('products.price'),
       align: 'right' as const,
       minWidth: 100,
       format: (value) => (
@@ -314,16 +318,16 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
     },
     {
       id: 'stockQuantity',
-      label: 'Stock',
+      label: t('products.stock'),
       minWidth: 120,
       format: (value, product) => (
         <Box>
           <Typography variant="body2">
-            {value} {getUnitName(product.unit)}
+            {localizeNumber(value, currentLanguage)} {getUnitName(product.unit)}
           </Typography>
           <StatusChip
             status={value}
-            statusConfig={commonStatusConfigs.stockStatus}
+            statusConfig={commonStatusConfigs.stockStatus(t, value)}
             size="small"
             sx={{ mt: 0.5 }}
           />
@@ -332,7 +336,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
     },
     {
       id: 'profitMargin',
-      label: 'Margin',
+      label: t('products.margin'),
       minWidth: 80,
       align: 'center' as const,
       format: (value) => (
@@ -349,12 +353,12 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
     },
     {
       id: 'status',
-      label: 'Status',
+      label: t('products.status'),
       minWidth: 100,
       format: (value) => (
         <StatusChip
           status={value}
-          statusConfig={commonStatusConfigs.productStatus}
+          statusConfig={commonStatusConfigs.productStatus(t, value)}
         />
       )
     }
@@ -369,7 +373,12 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
       handleDeleteClick,
       {
         canEdit: () => true,
-        canDelete: () => true
+        canDelete: () => true,
+        translations: {
+          viewDetails: t('common.viewDetails'),
+          edit: t('common.edit'),
+          delete: t('common.delete')
+        }
       }
     );
   };
@@ -377,9 +386,9 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
   return (
     <Box sx={{ p: 3 }}>
       <PageHeader
-        title="Products"
+        title={t('products.title')}
         actionButton={{
-          label: "Add Product",
+          label: t('products.addProduct'),
           onClick: handleOpenAddProduct
         }}
         showRefresh={true}
@@ -388,14 +397,14 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
       />
 
       <FilterBar
-        searchPlaceholder="Search products by name, description, size, or color..."
+        searchPlaceholder={t('products.searchPlaceholder')}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         filterMinWidth={200}
         autocompleteFields={[
           {
             id: 'category',
-            label: 'Category',
+            label: t('products.category'),
             value: selectedCategory,
             options: categories.map((category) => ({ value: category.id, label: category.title })),
             onChange: (value) => {
@@ -404,35 +413,35 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
           },
           {
             id: 'unit',
-            label: 'Unit',
+            label: t('products.unit'),
             value: selectedUnit,
             options: [
-              { value: '0', label: 'Box' },
-              { value: '1', label: 'Piece' },
-              { value: '2', label: 'Square Feet' },
-              { value: '3', label: 'Kilogram' },
-              { value: '4', label: 'Gram' },
-              { value: '5', label: 'Liter' },
-              { value: '6', label: 'Milliliter' },
-              { value: '7', label: 'Meter' },
-              { value: '8', label: 'Centimeter' },
-              { value: '9', label: 'Inch' },
-              { value: '10', label: 'Yard' },
-              { value: '11', label: 'Ton' },
-              { value: '12', label: 'Pack' },
-              { value: '13', label: 'Dozen' },
-              { value: '14', label: 'Pair' },
-              { value: '15', label: 'Roll' },
-              { value: '16', label: 'Bundle' },
-              { value: '17', label: 'Carton' },
-              { value: '18', label: 'Bag' },
-              { value: '19', label: 'Set' },
-              { value: '20', label: 'Barrel' },
-              { value: '21', label: 'Gallon' },
-              { value: '22', label: 'Can' },
-              { value: '23', label: 'Tube' },
-              { value: '24', label: 'Packet' },
-              { value: '25', label: 'Unit' }
+              { value: '0', label: t('products.units.box') },
+              { value: '1', label: t('products.units.piece') },
+              { value: '2', label: t('products.units.squareFeet') },
+              { value: '3', label: t('products.units.kilogram') },
+              { value: '4', label: t('products.units.gram') },
+              { value: '5', label: t('products.units.liter') },
+              { value: '6', label: t('products.units.milliliter') },
+              { value: '7', label: t('products.units.meter') },
+              { value: '8', label: t('products.units.centimeter') },
+              { value: '9', label: t('products.units.inch') },
+              { value: '10', label: t('products.units.yard') },
+              { value: '11', label: t('products.units.ton') },
+              { value: '12', label: t('products.units.pack') },
+              { value: '13', label: t('products.units.dozen') },
+              { value: '14', label: t('products.units.pair') },
+              { value: '15', label: t('products.units.roll') },
+              { value: '16', label: t('products.units.bundle') },
+              { value: '17', label: t('products.units.carton') },
+              { value: '18', label: t('products.units.bag') },
+              { value: '19', label: t('products.units.set') },
+              { value: '20', label: t('products.units.barrel') },
+              { value: '21', label: t('products.units.gallon') },
+              { value: '22', label: t('products.units.can') },
+              { value: '23', label: t('products.units.tube') },
+              { value: '24', label: t('products.units.packet') },
+              { value: '25', label: t('products.units.unit') }
             ],
             onChange: (value) => {
               setSelectedUnit(value);
@@ -442,22 +451,22 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
         filters={[
           {
             id: 'sortBy',
-            label: 'Sort By',
+            label: t('products.sortBy'),
             value: sortBy,
             options: [
-              { value: 'title', label: 'Name' },
-              { value: 'price', label: 'Price' },
-              { value: 'stockQuantity', label: 'Stock' },
-              { value: 'createdDate', label: 'Created Date' }
+              { value: 'title', label: t('products.name') },
+              { value: 'price', label: t('products.price') },
+              { value: 'stockQuantity', label: t('products.stock') },
+              { value: 'createdDate', label: t('products.createdDate') }
             ]
           },
           {
             id: 'sortOrder',
-            label: 'Order',
+            label: t('products.order'),
             value: sortOrder,
             options: [
-              { value: 'asc', label: 'Ascending' },
-              { value: 'desc', label: 'Descending' }
+              { value: 'asc', label: t('products.ascending') },
+              { value: 'desc', label: t('products.descending') }
             ]
           }
         ]}
@@ -483,10 +492,10 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
         error={error}
         emptyState={{
           icon: '📦',
-          title: 'No products found',
-          description: searchTerm ? 'Try adjusting your search terms or filters' : 'Get started by adding your first product',
+          title: t('products.noProductsFound'),
+          description: searchTerm ? t('products.tryAdjustingSearch') : t('products.getStarted'),
           action: {
-            label: 'Add Product',
+            label: t('products.addProduct'),
             onClick: handleOpenAddProduct
           }
         }}
@@ -494,7 +503,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
         getRowId={(product) => product.id}
         pagination={usePaginationProps(pagination, paginationActions, totalCount)}
         errorAction={{
-          label: 'Retry',
+          label: t('products.retry'),
           onClick: handleRefresh
         }}
       />
@@ -513,7 +522,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
         {selectedProduct && (
           <>
             <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="h6" component="div">Product Details</Typography>
+              <Typography variant="h6" component="div">{t('products.productDetails')}</Typography>
               <IconButton onClick={() => {
           setViewDialogOpen(false);
           setSelectedProduct(null);
@@ -526,7 +535,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                 {/* Product Photos */}
                 <Grid sx={{ xs: 12, md: 6 }}>
                   <Typography variant="subtitle1" sx={{ fontWeight: 600, marginBottom: 2, color: '#1a1a1a' }}>
-                    Product Photos
+                    {t('products.productImages')}
                   </Typography>
                   {selectedProduct.productPhotos && selectedProduct.productPhotos.length > 0 ? (
                     <Box>
@@ -534,7 +543,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                       {selectedProduct.productPhotos.find(photo => photo.isPrimary) && (
                         <Box sx={{ marginBottom: 2 }}>
                           <Typography variant="body2" sx={{ marginBottom: 1, color: '#666' }}>
-                            Primary Photo:
+                            {t('products.primaryPhoto')}
                           </Typography>
                           <img
                             src={selectedProduct.productPhotos.find(photo => photo.isPrimary)?.blobUrl}
@@ -554,7 +563,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                       {selectedProduct.productPhotos.filter(photo => !photo.isPrimary).length > 0 && (
                         <Box>
                           <Typography variant="body2" sx={{ marginBottom: 1, color: '#666' }}>
-                            Other Photos:
+                            {t('products.otherPhotos')}
                           </Typography>
                           <Grid container spacing={1}>
                             {selectedProduct.productPhotos
@@ -593,7 +602,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                       }}
                     >
                       <Typography variant="body2" color="text.secondary">
-                        No photos available
+                        {t('products.noPhotosAvailable')}
                       </Typography>
                     </Box>
                   )}
@@ -602,12 +611,12 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                 {/* Product Information */}
                 <Grid sx={{ xs: 12, md: 6 }}>
                   <Typography variant="subtitle1" sx={{ fontWeight: 600, marginBottom: 2, color: '#1a1a1a' }}>
-                    Product Information
+                    {t('products.productInformation')}
                   </Typography>
 
                   <Box sx={{ marginBottom: 3 }}>
                     <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
-                      Product Name
+                      {t('products.productName')}
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 500 }}>
                       {selectedProduct.title}
@@ -616,10 +625,10 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
 
                   <Box sx={{ marginBottom: 3 }}>
                     <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
-                      Description
+                      {t('products.description')}
                     </Typography>
                     <Typography variant="body1">
-                      {selectedProduct.description || 'No description available'}
+                      {selectedProduct.description || t('products.noDescriptionAvailable')}
                     </Typography>
                   </Box>
 
@@ -627,7 +636,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                     <Grid sx={{ xs: 6 }}>
                       <Box sx={{ marginBottom: 2 }}>
                         <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
-                          Category
+                          {t('products.category')}
                         </Typography>
                         <Typography variant="body1" sx={{ fontWeight: 500 }}>
                           {selectedProduct.categoryName}
@@ -637,7 +646,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                     <Grid sx={{ xs: 6 }}>
                       <Box sx={{ marginBottom: 2 }}>
                         <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
-                          Unit
+                          {t('products.unit')}
                         </Typography>
                         <Typography variant="body1" sx={{ fontWeight: 500 }}>
                           {selectedProduct.unit}
@@ -650,20 +659,20 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                     <Grid sx={{ xs: 6 }}>
                       <Box sx={{ marginBottom: 2 }}>
                         <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
-                          Size
+                          {t('products.size')}
                         </Typography>
                         <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                          {selectedProduct.size || 'N/A'}
+                          {selectedProduct.size || t('products.notAvailable')}
                         </Typography>
                       </Box>
                     </Grid>
                     <Grid sx={{ xs: 6 }}>
                       <Box sx={{ marginBottom: 2 }}>
                         <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
-                          Color
+                          {t('products.color')}
                         </Typography>
                         <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                          {selectedProduct.color || 'N/A'}
+                          {selectedProduct.color || t('products.notAvailable')}
                         </Typography>
                       </Box>
                     </Grid>
@@ -673,7 +682,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                     <Grid sx={{ xs: 6 }}>
                       <Box sx={{ marginBottom: 2 }}>
                         <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
-                          Selling Price
+                          {t('products.sellingPrice')}
                         </Typography>
                         <Typography variant="body1" sx={{ fontWeight: 500, color: '#2e7d32' }}>
                           <CurrencyDisplay amount={selectedProduct.sellingPrice || 0} />
@@ -683,7 +692,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                     <Grid sx={{ xs: 6 }}>
                       <Box sx={{ marginBottom: 2 }}>
                         <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
-                          Cost Price
+                          {t('products.costPrice')}
                         </Typography>
                         <Typography variant="body1" sx={{ fontWeight: 500 }}>
                           <CurrencyDisplay amount={selectedProduct.costPrice || 0} />
@@ -696,21 +705,21 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                     <Grid sx={{ xs: 6 }}>
                       <Box sx={{ marginBottom: 2 }}>
                         <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
-                          Stock Quantity
+                          {t('products.stock')}
                         </Typography>
                         <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                          {selectedProduct.stockQuantity} {selectedProduct.unit}
+                          {localizeNumber(selectedProduct.stockQuantity, currentLanguage)} {getUnitName(selectedProduct.unit)}
                         </Typography>
                       </Box>
                     </Grid>
                     <Grid sx={{ xs: 6 }}>
                       <Box sx={{ marginBottom: 2 }}>
                         <Typography variant="body2" sx={{ color: '#666', marginBottom: 0.5 }}>
-                          Status
+                          {t('products.status')}
                         </Typography>
                         <StatusChip
                           status={selectedProduct.status}
-                          statusConfig={commonStatusConfigs.productStatus}
+                          statusConfig={commonStatusConfigs.productStatus(t, selectedProduct.status)}
                         />
                       </Box>
                     </Grid>
@@ -720,7 +729,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                   {selectedProduct.productTags && selectedProduct.productTags.length > 0 && (
                     <Box sx={{ marginTop: 2 }}>
                       <Typography variant="body2" sx={{ color: '#666', marginBottom: 1 }}>
-                        Tags
+                        {t('products.tags')}
                       </Typography>
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                         {selectedProduct.productTags.map((tag, index) => (
@@ -780,7 +789,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
       </Snackbar>
 
       {/* Floating Action Button for Refresh */}
-      <Tooltip title="Refresh">
+      <Tooltip title={t('products.refresh')}>
         <Fab
           color="primary"
           size="small"

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Container,
   Paper,
@@ -85,6 +86,7 @@ const StyledButton = styled(Button)(({ theme }) => ({
 }));
 
 const LoginPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { login, isLoading, error, isAuthenticated } = useAuth();
   const theme = useTheme();
@@ -126,13 +128,13 @@ const LoginPage: React.FC = () => {
     const errors: typeof fieldErrors = {};
 
     if (!formData.username.trim()) {
-      errors.username = 'Username is required';
+      errors.username = t('validation.required');
     }
 
     if (!formData.password.trim()) {
-      errors.password = 'Password is required';
+      errors.password = t('validation.required');
     } else if (formData.password.length < 6) {
-      errors.password = 'Password must be at least 6 characters';
+      errors.password = t('validation.minLength', { min: 6 });
     }
 
     setFieldErrors(errors);
@@ -191,7 +193,7 @@ const LoginPage: React.FC = () => {
           align="center"
           sx={{ mb: 4 }}
         >
-          Sign in to manage your shop
+          {t('auth.loginToContinue')}
         </Typography>
 
         {error && (
@@ -218,7 +220,7 @@ const LoginPage: React.FC = () => {
             fullWidth
             id="username"
             name="username"
-            label="Username"
+            label={t('auth.email')}
             value={formData.username}
             onChange={handleChange}
             error={!!fieldErrors.username}
@@ -234,7 +236,7 @@ const LoginPage: React.FC = () => {
             fullWidth
             id="password"
             name="password"
-            label="Password"
+            label={t('auth.password')}
             type={showPassword ? 'text' : 'password'}
             value={formData.password}
             onChange={handleChange}
@@ -274,13 +276,13 @@ const LoginPage: React.FC = () => {
             sx={{ mt: 3, mb: 2 }}
             startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <LoginIcon />}
           >
-            {isLoading ? 'Signing in...' : 'Sign In'}
+            {isLoading ? t('common.loading') : t('auth.login')}
           </StyledButton>
         </Box>
 
         <Box sx={{ mt: 3, textAlign: 'center' }}>
           <Typography variant="caption" color="text.secondary">
-            Forgot your password? Contact your administrator
+            {t('auth.forgotPassword')} - {t('messages.contactAdmin')}
           </Typography>
         </Box>
       </StyledPaper>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Card,
@@ -38,12 +39,15 @@ interface LowStockTableProps {
 const LowStockTable: React.FC<LowStockTableProps> = ({
   data = [],
   loading = false,
-  title = "Low Stock Alerts",
+  title,
   onReorder,
   onViewDetails,
   maxRows = 10,
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
+
+  const tableTitle = title || t('dashboard.lowStockAlerts');
 
   const getUrgencyColor = (urgency: string): 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' => {
     if (urgency?.includes('Critical')) return 'error';
@@ -65,7 +69,7 @@ const LowStockTable: React.FC<LowStockTableProps> = ({
       <Card elevation={0}>
         <CardContent sx={{ padding: theme.spacing(2), '&:last-child': { pb: 2 } }}>
           <Typography variant="h6" fontWeight={600} gutterBottom>
-            {title}
+            {tableTitle}
           </Typography>
           <Box display="flex" justifyContent="center" alignItems="center" py={4}>
             <CircularProgress />
@@ -79,7 +83,7 @@ const LowStockTable: React.FC<LowStockTableProps> = ({
     <Card elevation={0}>
       <CardContent sx={{ padding: theme.spacing(2), '&:last-child': { pb: 2 } }}>
         <Typography variant="h6" fontWeight={600} gutterBottom>
-          {title}
+          {tableTitle}
         </Typography>
 
         {displayData.length === 0 ? (
@@ -105,22 +109,22 @@ const LowStockTable: React.FC<LowStockTableProps> = ({
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ fontWeight: 600, color: 'text.primary', borderBottom: `2px solid ${theme.palette.divider}` }}>
-                    Product
+                    {t('dashboard.tableHeaders.product')}
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600, color: 'text.primary', borderBottom: `2px solid ${theme.palette.divider}` }}>
-                    Category
+                    {t('dashboard.tableHeaders.category')}
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600, color: 'text.primary', borderBottom: `2px solid ${theme.palette.divider}` }}>
-                    Stock Level
+                    {t('dashboard.tableHeaders.stockLevel')}
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600, color: 'text.primary', borderBottom: `2px solid ${theme.palette.divider}` }}>
-                    Urgency
+                    {t('dashboard.tableHeaders.urgency')}
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600, color: 'text.primary', borderBottom: `2px solid ${theme.palette.divider}` }}>
-                    Last Month Sales
+                    {t('dashboard.tableHeaders.lastMonthSales')}
                   </TableCell>
                   <TableCell align="center" sx={{ fontWeight: 600, color: 'text.primary', borderBottom: `2px solid ${theme.palette.divider}` }}>
-                    Actions
+                    {t('dashboard.tableHeaders.actions')}
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -219,7 +223,7 @@ const LowStockTable: React.FC<LowStockTableProps> = ({
                     <TableCell align="center">
                       <Box display="flex" gap={1} justifyContent="center">
                         {onReorder && (
-                          <Tooltip title="Quick Reorder">
+                          <Tooltip title={t('dashboard.tableHeaders.quickReorder')}>
                             <IconButton
                               size="small"
                               onClick={() => onReorder(product)}
@@ -236,7 +240,7 @@ const LowStockTable: React.FC<LowStockTableProps> = ({
                           </Tooltip>
                         )}
                         {onViewDetails && (
-                          <Tooltip title="View Details">
+                          <Tooltip title={t('dashboard.tableHeaders.viewDetails')}>
                             <IconButton
                               size="small"
                               onClick={() => onViewDetails(product)}

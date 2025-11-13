@@ -17,7 +17,6 @@ import {
   Alert,
   Tooltip,
   TableCellProps,
-  Pagination,
   FormControl,
   InputLabel,
   Select,
@@ -26,8 +25,11 @@ import {
 import {
   MoreVert as MoreVertIcon
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import ContextMenu, { ContextAction, ContextMenuProps } from './ContextMenu';
 import EmptyState from './EmptyState';
+import LocalizedPagination from './LocalizedPagination';
+import { localizeNumber } from '../../utils/numberLocalization';
 
 export interface TableColumn<T = any> {
   id: keyof T;
@@ -93,6 +95,8 @@ const DataTable = <T extends Record<string, any>>({
   sx,
   errorAction
 }: DataTableProps<T>) => {
+  const { t, i18n } = useTranslation();
+  const currentLanguage = i18n.language;
   const [contextMenuAnchorEl, setContextMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedRow, setSelectedRow] = useState<T | null>(null);
 
@@ -183,7 +187,7 @@ const DataTable = <T extends Record<string, any>>({
               ))}
               {actions && (
                 <TableCell align="center" sx={{ fontWeight: 600 }}>
-                  Actions
+                  {t('common.actions')}
                 </TableCell>
               )}
             </TableRow>
@@ -222,7 +226,7 @@ const DataTable = <T extends Record<string, any>>({
                   {actions && (
                     <TableCell align="center">
                       {rowActions.length > 0 && (
-                        <Tooltip title="Actions">
+                        <Tooltip title={t('common.actions')}>
                           <IconButton
                             size="small"
                             onClick={(e) => handleMenuClick(e, row)}
@@ -257,30 +261,32 @@ const DataTable = <T extends Record<string, any>>({
           }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Typography variant="body2" color="text.secondary">
-                Showing {data.length} of {pagination.totalCount} items
+                {t('products.showingOfItems', {
+                  from: localizeNumber(data.length, currentLanguage),
+                  to: localizeNumber(pagination.totalCount, currentLanguage)
+                })}
               </Typography>
               <FormControl size="small" sx={{ minWidth: 120 }}>
-                <InputLabel>Page Size</InputLabel>
+                <InputLabel>{t('products.pageSize')}</InputLabel>
                 <Select
                   value={pagination.rowsPerPage.toString()}
-                  label="Page Size"
+                  label={t('products.pageSize')}
                   onChange={pagination.onRowsPerPageChange}
                   sx={{ borderRadius: 1 }}
                 >
                   {(pagination.rowsPerPageOptions || [5, 10, 25, 50, 100]).map((option) => (
                     <MenuItem key={option} value={option.toString()}>
-                      {option}
+                      {localizeNumber(option, currentLanguage)}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
             </Box>
 
-            <Pagination
+            <LocalizedPagination
               count={pagination.totalPages || calculateTotalPages()}
               page={pagination.page + 1} // Convert from 0-based to 1-based for display
               onChange={(event, value) => pagination.onPageChange(event, value - 1)} // Convert back to 0-based
-              color="primary"
               showFirstButton
               showLastButton
               boundaryCount={2}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Dialog,
@@ -49,6 +50,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
   onSave,
   editProduct
 }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -146,23 +148,23 @@ const ProductForm: React.FC<ProductFormProps> = ({
     const errors: Record<string, string> = {};
 
     if (!formData.title.trim()) {
-      errors.title = 'Product title is required';
+      errors.title = t('products.validation.productTitleRequired');
     }
 
     if (!formData.description.trim()) {
-      errors.description = 'Description is required';
+      errors.description = t('products.validation.descriptionRequired');
     }
 
     if (!formData.categoryId) {
-      errors.categoryId = 'Category is required';
+      errors.categoryId = t('products.validation.categoryRequired');
     }
 
     if (!formData.unit || formData.unit === 0) {
-      errors.unit = 'Unit is required';
+      errors.unit = t('products.validation.unitRequired');
     }
 
     if (!formData.sellingPrice || parseFloat(formData.sellingPrice) <= 0) {
-      errors.sellingPrice = 'Selling price must be greater than 0';
+      errors.sellingPrice = t('products.validation.sellingPricePositive');
     }
 
     setFormErrors(errors);
@@ -310,7 +312,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
           } catch (uploadError: any) {
             console.error('Image upload failed:', uploadError);
             // Don't fail the entire operation if image upload fails, just log the error
-            setError('Product saved but image upload failed: ' + (uploadError.message || 'Unknown error'));
+            setError(t('products.productSavedButImageUploadFailed') + ': ' + (uploadError.message || 'Unknown error'));
           }
         }
 
@@ -318,10 +320,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
         onClose();
         resetForm();
       } else {
-        throw new Error(response.data.message || 'Failed to save product');
+        throw new Error(response.data.message || t('products.failedToSaveProduct'));
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to save product');
+      setError(err.message || t('products.failedToSaveProduct'));
     } finally {
       setLoading(false);
     }
@@ -330,65 +332,65 @@ const ProductForm: React.FC<ProductFormProps> = ({
   // Get unit name from ProductUnit enum value
   const getUnitName = (unitValue: number) => {
     const unitMap: { [key: number]: string } = {
-      0: 'Box',
-      1: 'Piece',
-      2: 'Square Feet',
-      3: 'Kilogram',
-      4: 'Gram',
-      5: 'Liter',
-      6: 'Milliliter',
-      7: 'Meter',
-      8: 'Centimeter',
-      9: 'Inch',
-      10: 'Yard',
-      11: 'Ton',
-      12: 'Pack',
-      13: 'Dozen',
-      14: 'Pair',
-      15: 'Roll',
-      16: 'Bundle',
-      17: 'Carton',
-      18: 'Bag',
-      19: 'Set',
-      20: 'Barrel',
-      21: 'Gallon',
-      22: 'Can',
-      23: 'Tube',
-      24: 'Packet',
-      25: 'Unit'
+      0: t('products.units.box'),
+      1: t('products.units.piece'),
+      2: t('products.units.squareFeet'),
+      3: t('products.units.kilogram'),
+      4: t('products.units.gram'),
+      5: t('products.units.liter'),
+      6: t('products.units.milliliter'),
+      7: t('products.units.meter'),
+      8: t('products.units.centimeter'),
+      9: t('products.units.inch'),
+      10: t('products.units.yard'),
+      11: t('products.units.ton'),
+      12: t('products.units.pack'),
+      13: t('products.units.dozen'),
+      14: t('products.units.pair'),
+      15: t('products.units.roll'),
+      16: t('products.units.bundle'),
+      17: t('products.units.carton'),
+      18: t('products.units.bag'),
+      19: t('products.units.set'),
+      20: t('products.units.barrel'),
+      21: t('products.units.gallon'),
+      22: t('products.units.can'),
+      23: t('products.units.tube'),
+      24: t('products.units.packet'),
+      25: t('products.units.unit')
     };
 
-    return unitMap[unitValue] || 'Unit';
+    return unitMap[unitValue] || t('products.units.unit');
   };
 
   // Common units for products - using the enum values that match backend
   const commonUnits = [
-    { value: 0, label: 'Box' },
-    { value: 1, label: 'Piece' },
-    { value: 2, label: 'Square Feet' },
-    { value: 3, label: 'Kilogram' },
-    { value: 4, label: 'Gram' },
-    { value: 5, label: 'Liter' },
-    { value: 6, label: 'Milliliter' },
-    { value: 7, label: 'Meter' },
-    { value: 8, label: 'Centimeter' },
-    { value: 9, label: 'Inch' },
-    { value: 10, label: 'Yard' },
-    { value: 11, label: 'Ton' },
-    { value: 12, label: 'Pack' },
-    { value: 13, label: 'Dozen' },
-    { value: 14, label: 'Pair' },
-    { value: 15, label: 'Roll' },
-    { value: 16, label: 'Bundle' },
-    { value: 17, label: 'Carton' },
-    { value: 18, label: 'Bag' },
-    { value: 19, label: 'Set' },
-    { value: 20, label: 'Barrel' },
-    { value: 21, label: 'Gallon' },
-    { value: 22, label: 'Can' },
-    { value: 23, label: 'Tube' },
-    { value: 24, label: 'Packet' },
-    { value: 25, label: 'Unit' }
+    { value: 0, label: t('products.units.box') },
+    { value: 1, label: t('products.units.piece') },
+    { value: 2, label: t('products.units.squareFeet') },
+    { value: 3, label: t('products.units.kilogram') },
+    { value: 4, label: t('products.units.gram') },
+    { value: 5, label: t('products.units.liter') },
+    { value: 6, label: t('products.units.milliliter') },
+    { value: 7, label: t('products.units.meter') },
+    { value: 8, label: t('products.units.centimeter') },
+    { value: 9, label: t('products.units.inch') },
+    { value: 10, label: t('products.units.yard') },
+    { value: 11, label: t('products.units.ton') },
+    { value: 12, label: t('products.units.pack') },
+    { value: 13, label: t('products.units.dozen') },
+    { value: 14, label: t('products.units.pair') },
+    { value: 15, label: t('products.units.roll') },
+    { value: 16, label: t('products.units.bundle') },
+    { value: 17, label: t('products.units.carton') },
+    { value: 18, label: t('products.units.bag') },
+    { value: 19, label: t('products.units.set') },
+    { value: 20, label: t('products.units.barrel') },
+    { value: 21, label: t('products.units.gallon') },
+    { value: 22, label: t('products.units.can') },
+    { value: 23, label: t('products.units.tube') },
+    { value: 24, label: t('products.units.packet') },
+    { value: 25, label: t('products.units.unit') }
   ];
 
   return (
@@ -404,7 +406,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
     >
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span>
-          {editProduct ? 'Edit Product' : 'Add New Product'}
+          {editProduct ? t('products.editProduct') : t('products.addNewProduct')}
         </span>
         <IconButton onClick={onClose}>
           <CloseIcon />
@@ -424,7 +426,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             <Grid sx={{ xs: 12, width: '100%', marginBottom: 2 }}>
               <TextField
                 fullWidth
-                label="Product Title"
+                label={t('products.form.productTitle')}
                 value={formData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
                 error={!!formErrors.title}
@@ -439,7 +441,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 fullWidth
                 multiline
                 rows={3}
-                label="Description"
+                label={t('products.form.description')}
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 error={!!formErrors.description}
@@ -467,7 +469,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Category"
+                        label={t('products.form.category')}
                         required
                         error={!!formErrors.categoryId}
                         helperText={formErrors.categoryId}
@@ -475,7 +477,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                       />
                     )}
                   />
-                  <Tooltip title="Add new category">
+                  <Tooltip title={t('products.addNewCategory')}>
                     <IconButton
                       onClick={() => setCategoryDialogOpen(true)}
                       sx={{
@@ -510,7 +512,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Unit"
+                      label={t('products.form.unit')}
                       required
                       error={!!formErrors.unit}
                       helperText={formErrors.unit}
@@ -522,7 +524,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               <Grid sx={{ xs: 4, minWidth: 200 }}>
                 <TextField
                   fullWidth
-                  label="Selling Price"
+                  label={t('products.form.sellingPrice')}
                   type="number"
                   value={formData.sellingPrice}
                   onChange={(e) => handleInputChange('sellingPrice', e.target.value)}
@@ -542,20 +544,20 @@ const ProductForm: React.FC<ProductFormProps> = ({
               <Grid sx={{ xs: 6, minWidth: 200 }}>
                 <TextField
                   fullWidth
-                  label="Size"
+                  label={t('products.form.size')}
                   value={formData.size}
                   onChange={(e) => handleInputChange('size', e.target.value)}
-                  placeholder="e.g., M, L, XL"
+                  placeholder={t('products.placeholders.size')}
                   sx={{ minWidth: 200 }}
                 />
               </Grid>
               <Grid sx={{ xs: 6, minWidth: 200 }}>
                 <TextField
                   fullWidth
-                  label="Color"
+                  label={t('products.form.color')}
                   value={formData.color}
                   onChange={(e) => handleInputChange('color', e.target.value)}
-                  placeholder="e.g., Red, Blue"
+                  placeholder={t('products.placeholders.color')}
                   sx={{ minWidth: 200 }}
                 />
               </Grid>
@@ -564,7 +566,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             {/* Product Images */}
             <Grid sx={{ xs: 12, minWidth: 200 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, mt: 1 }}>
-                Product Images
+                {t('products.form.productImages')}
               </Typography>
 
               <Box sx={{ mb: 2 }}>
@@ -582,7 +584,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     component="span"
                     startIcon={<CloudUploadIcon />}
                   >
-                    Upload Images
+                    {t('products.form.uploadImages')}
                   </Button>
                 </label>
               </Box>
@@ -616,7 +618,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                         </IconButton>
                         {photo.isPrimary && (
                           <Chip
-                            label="Primary"
+                            label={t('products.primary')}
                             size="small"
                             color="primary"
                             sx={{
@@ -673,7 +675,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                         </IconButton>
                         {(!editProduct || existingPhotos.length === 0) && index === 0 && (
                           <Chip
-                            label="Primary"
+                            label={t('products.primary')}
                             size="small"
                             color="primary"
                             sx={{
@@ -700,7 +702,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             onClick={onClose}
             disabled={loading}
           >
-            Cancel
+            {t('products.form.cancel')}
           </Button>
           <Button
             type="submit"
@@ -716,7 +718,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               }
             }}
           >
-            {editProduct ? 'Update Product' : 'Add Product'}
+            {editProduct ? t('products.form.updateProduct') : t('products.form.addProduct')}
           </Button>
         </DialogActions>
       </form>

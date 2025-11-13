@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   AttachMoney as MoneyIcon,
 } from '@mui/icons-material';
@@ -16,6 +17,8 @@ const RevenueKpiCard: React.FC<RevenueKpiCardProps> = ({
   loading = false,
   onClick,
 }) => {
+  const { t } = useTranslation();
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -27,13 +30,13 @@ const RevenueKpiCard: React.FC<RevenueKpiCardProps> = ({
 
   return (
     <KpiCard
-      title="Total Revenue"
+      title={t('dashboard.totalRevenue')}
       value={formatCurrency(metrics.totalRevenue || 0)}
-      subtitle={`${formatCurrency(metrics.currentMonthRevenue || 0)} this month`}
+      subtitle={`${formatCurrency(metrics.currentMonthRevenue || 0)} ${t('dashboard.thisMonth')}`}
       icon={<MoneyIcon />}
       trend={{
         value: metrics.revenueGrowth || 0,
-        label: "vs last month",
+        label: t('dashboard.vsLastMonth'),
       }}
       loading={loading}
       color="success"
