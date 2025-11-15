@@ -20,6 +20,7 @@ import {
   CardContent,
   Chip
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { salesService, Payment, AddPaymentRequest } from '../services/salesService';
 import { handleApiError } from '../services/apiClient';
 
@@ -44,6 +45,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
   remainingAmount,
   onPaymentAdded
 }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -58,11 +60,11 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
 
   // Payment method options
   const paymentMethods = [
-    { value: 'cash', label: 'Cash' },
-    { value: 'card', label: 'Credit/Debit Card' },
-    { value: 'bank', label: 'Bank Transfer' },
-    { value: 'check', label: 'Check' },
-    { value: 'online', label: 'Online Payment' }
+    { value: 'cash', label: t('paymentDialog.paymentMethods.cash') },
+    { value: 'card', label: t('paymentDialog.paymentMethods.card') },
+    { value: 'bank', label: t('paymentDialog.paymentMethods.bank') },
+    { value: 'check', label: t('paymentDialog.paymentMethods.check') },
+    { value: 'online', label: t('paymentDialog.paymentMethods.online') }
   ];
 
   // Load existing payments
@@ -95,15 +97,15 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
     const errors: string[] = [];
 
     if (!paymentData.amount || paymentData.amount <= 0) {
-      errors.push('Payment amount is required');
+      errors.push(t('paymentDialog.validation.amountRequired'));
     }
 
     if (paymentData.amount > remainingAmount) {
-      errors.push(`Payment amount cannot exceed remaining balance of ${formatCurrency(remainingAmount)}`);
+      errors.push(t('paymentDialog.validation.amountExceedsBalance', { amount: formatCurrency(remainingAmount) }));
     }
 
     if (!paymentData.paymentMethod) {
-      errors.push('Payment method is required');
+      errors.push(t('paymentDialog.validation.methodRequired'));
     }
 
     if (errors.length > 0) {
@@ -136,7 +138,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
       const response = await salesService.addPayment(addPaymentData);
 
       if (response.data.succeeded) {
-        setSuccess('Payment added successfully!');
+        setSuccess(t('paymentDialog.paymentAdded'));
 
         // Reload payments list
         await loadPayments();
@@ -197,7 +199,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
     >
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6" component="div">
-          Add Payment - {salesNumber}
+          {t('paymentDialog.title', { salesNumber })}
         </Typography>
       </DialogTitle>
 
@@ -219,12 +221,12 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
           <Card sx={{ mb: 3, backgroundColor: 'grey.50' }}>
             <CardContent>
               <Typography variant="subtitle2" gutterBottom>
-                Sale Summary
+                {t('paymentDialog.saleSummary')}
               </Typography>
               <Grid container spacing={2}>
                 <Grid item xs={4}>
                   <Typography variant="body2" color="text.secondary">
-                    Grand Total
+                    {t('paymentDialog.grandTotal')}
                   </Typography>
                   <Typography variant="h6">
                     {formatCurrency(grandTotal)}
@@ -232,7 +234,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
                 </Grid>
                 <Grid item xs={4}>
                   <Typography variant="body2" color="text.secondary">
-                    Already Paid
+                    {t('paymentDialog.alreadyPaid')}
                   </Typography>
                   <Typography variant="h6" color="success.main">
                     {formatCurrency(totalPaid)}
@@ -240,7 +242,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
                 </Grid>
                 <Grid item xs={4}>
                   <Typography variant="body2" color="text.secondary">
-                    Remaining Balance
+                    {t('paymentDialog.remainingBalance')}
                   </Typography>
                   <Typography
                     variant="h6"
@@ -255,28 +257,28 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
 
           {/* Payment Form */}
           <Typography variant="subtitle2" gutterBottom>
-            Payment Details
+            {t('paymentDialog.paymentDetails')}
           </Typography>
 
           <Grid container spacing={2} sx={{ mb: 3 }}>
             <Grid item xs={12} sm={6} sx={{ minWidth: 250 }}>
               <TextField
                 fullWidth
-                label="Payment Amount"
+                label={t('paymentDialog.paymentAmount')}
                 type="number"
                 value={paymentData.amount}
                 onChange={(e) => handleInputChange('amount', parseFloat(e.target.value) || 0)}
                 inputProps={{ min: 0, max: remainingAmount, step: 0.01 }}
                 required
-                helperText={`Max: ${formatCurrency(remainingAmount)}`}
+                helperText={t('paymentDialog.maxPayment', { amount: formatCurrency(remainingAmount) })}
               />
             </Grid>
             <Grid item xs={12} sm={6} sx={{ minWidth: 250 }}>
               <FormControl fullWidth required>
-                <InputLabel>Payment Method</InputLabel>
+                <InputLabel>{t('paymentDialog.paymentMethod')}</InputLabel>
                 <Select
                   value={paymentData.paymentMethod}
-                  label="Payment Method"
+                  label={t('paymentDialog.paymentMethod')}
                   onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
                 >
                   {paymentMethods.map((method) => (
@@ -290,12 +292,12 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
             <Grid item xs={12} sx={{ minWidth: 250 }}>
               <TextField
                 fullWidth
-                label="Remark (Optional)"
+                label={t('paymentDialog.remarkOptional')}
                 multiline
                 rows={2}
                 value={paymentData.remark}
                 onChange={(e) => handleInputChange('remark', e.target.value)}
-                placeholder="Add any notes about this payment..."
+                placeholder={t('paymentDialog.remarkPlaceholder')}
               />
             </Grid>
           </Grid>
@@ -305,12 +307,12 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
             <Card sx={{ mb: 3, backgroundColor: 'primary.50' }}>
               <CardContent>
                 <Typography variant="subtitle2" gutterBottom>
-                  Updated Totals After This Payment
+                  {t('paymentDialog.updatedTotals')}
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={4}>
                     <Typography variant="body2" color="text.secondary">
-                      New Total Paid
+                      {t('paymentDialog.newTotalPaid')}
                     </Typography>
                     <Typography variant="h6" color="success.main">
                       {formatCurrency(newTotalPaid)}
@@ -318,7 +320,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
                   </Grid>
                   <Grid item xs={4}>
                     <Typography variant="body2" color="text.secondary">
-                      New Balance
+                      {t('paymentDialog.newBalance')}
                     </Typography>
                     <Typography
                       variant="h6"
@@ -329,10 +331,10 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
                   </Grid>
                   <Grid item xs={4}>
                     <Typography variant="body2" color="text.secondary">
-                      Payment Status
+                      {t('paymentDialog.paymentStatus')}
                     </Typography>
                     <Chip
-                      label={newRemainingAmount <= 0 ? 'Fully Paid' : 'Partially Paid'}
+                      label={newRemainingAmount <= 0 ? t('paymentDialog.fullyPaid') : t('paymentDialog.partiallyPaid')}
                       color={newRemainingAmount <= 0 ? 'success' : 'warning'}
                       size="small"
                     />
@@ -347,7 +349,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
             <>
               <Divider sx={{ my: 3 }} />
               <Typography variant="subtitle2" gutterBottom>
-                Previous Payments ({existingPayments.length})
+                {t('paymentDialog.previousPayments', { count: existingPayments.length })}
               </Typography>
               {existingPayments.map((payment, index) => (
                 <Card key={payment.id} sx={{ mb: 1 }}>
@@ -355,7 +357,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
                     <Grid container spacing={2} alignItems="center">
                       <Grid item xs={3}>
                         <Typography variant="body2" color="text.secondary">
-                          Amount
+                          {t('paymentDialog.amount')}
                         </Typography>
                         <Typography variant="subtitle1" fontWeight="bold">
                           {formatCurrency(payment.amount)}
@@ -363,7 +365,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
                       </Grid>
                       <Grid item xs={3}>
                         <Typography variant="body2" color="text.secondary">
-                          Method
+                          {t('paymentDialog.method')}
                         </Typography>
                         <Chip
                           label={payment.paymentMethod}
@@ -373,7 +375,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
                       </Grid>
                       <Grid item xs={3}>
                         <Typography variant="body2" color="text.secondary">
-                          Date
+                          {t('paymentDialog.date')}
                         </Typography>
                         <Typography variant="body2">
                           {new Date(payment.paymentDate).toLocaleDateString()}
@@ -383,7 +385,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
                         {payment.remark && (
                           <>
                             <Typography variant="body2" color="text.secondary">
-                              Remark
+                              {t('paymentDialog.remark')}
                             </Typography>
                             <Typography variant="body2" noWrap>
                               {payment.remark}
@@ -401,7 +403,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
 
         <DialogActions sx={{ px: 3, pb: 3 }}>
           <Button onClick={onClose} disabled={loading}>
-            Cancel
+            {t('paymentDialog.cancel')}
           </Button>
           <Button
             type="submit"
@@ -409,7 +411,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
             disabled={loading || remainingAmount <= 0}
             startIcon={loading ? <CircularProgress size={20} /> : null}
           >
-            {loading ? 'Adding Payment...' : 'Add Payment'}
+            {loading ? t('paymentDialog.addingPayment') : t('paymentDialog.addPayment')}
           </Button>
         </DialogActions>
       </form>

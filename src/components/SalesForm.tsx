@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogTitle,
@@ -65,6 +66,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
   onSave,
   editSale
 }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -279,7 +281,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
   // Create new customer
   const handleCreateCustomer = async () => {
     if (!newCustomer.firstName?.trim() || !newCustomer.lastName?.trim()) {
-      setError('Customer first name and last name are required');
+      setError(t('salesForm.customerNameRequired'));
       return;
     }
 
@@ -325,7 +327,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
         }, 1000);
 
       } else {
-        setError(response.data.message || 'Failed to create customer');
+        setError(response.data.message || t('salesForm.failedToCreateCustomer'));
         isCreatingCustomerRef.current = false;
       }
     } catch (err: any) {
@@ -339,11 +341,11 @@ const SalesForm: React.FC<SalesFormProps> = ({
     const errors: Record<string, string> = {};
 
     if (!formData.customerId) {
-      errors.customerId = 'Customer is required';
+      errors.customerId = t('salesForm.customerRequired');
     }
 
     if (salesItems.length === 0) {
-      errors.items = 'At least one item is required';
+      errors.items = t('salesForm.atLeastOneItemRequired');
     }
 
     if (Object.keys(errors).length > 0) {
@@ -388,7 +390,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
         const response = await salesService.createSale(salesData);
         if (response.data.succeeded) {
           onSave(response.data.data);
-          setSuccess('Sale created successfully!');
+          setSuccess(t('salesForm.saleCreatedSuccessfully'));
           // Reset form after successful sale creation
           resetForm();
           // Close dialog after a brief delay to show success
@@ -426,7 +428,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
       >
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6" component="div">
-            {editSale ? 'Edit Sale' : 'New Sale'}
+            {editSale ? t('salesForm.editSale') : t('salesForm.newSale')}
           </Typography>
           <IconButton onClick={onClose}>
             <CloseIcon />
@@ -465,7 +467,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Customer"
+                      label={t('sales.customer')}
                       required
                       sx={{ minWidth: 200 }}
                     />
@@ -479,14 +481,14 @@ const SalesForm: React.FC<SalesFormProps> = ({
                   onClick={() => setCustomerDialogOpen(true)}
                   sx={{ height: '56px', borderRadius: 1 }}
                 >
-                  New Customer
+                  {t('salesForm.newCustomer')}
                 </Button>
               </Grid>
             </Grid>
 
             {/* Sales Items */}
             <Typography variant="h6" sx={{ mb: 2, color: '#1a1a1a' }}>
-              Sales Items
+              {t('salesForm.salesItems')}
             </Typography>
 
             {/* Items List */}
@@ -495,11 +497,11 @@ const SalesForm: React.FC<SalesFormProps> = ({
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Product</TableCell>
-                      <TableCell align="right">Quantity</TableCell>
-                      <TableCell align="right">Unit Price</TableCell>
-                      <TableCell align="right">Total</TableCell>
-                      <TableCell align="center">Actions</TableCell>
+                      <TableCell>{t('salesForm.tableColumns.product')}</TableCell>
+                      <TableCell align="right">{t('salesForm.tableColumns.quantity')}</TableCell>
+                      <TableCell align="right">{t('salesForm.tableColumns.unitPrice')}</TableCell>
+                      <TableCell align="right">{t('salesForm.tableColumns.total')}</TableCell>
+                      <TableCell align="center">{t('common.actions')}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -533,7 +535,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
             <Card sx={{ mb: 3, borderRadius: 1 }}>
               <CardContent>
                 <Typography variant="subtitle2" sx={{ mb: 2 }}>
-                  Add Item
+                  {t('salesForm.addItem')}
                 </Typography>
                 <Grid container spacing={2} alignItems="center">
                   <Grid sx={{ xs: 4, minWidth: 250 }}>
@@ -557,7 +559,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
                             <Typography>{option.label}</Typography>
                             {option.stock > 0 && (
                               <Chip
-                                label={`${option.stock} in stock`}
+                                label={t('salesForm.inStock', { stock: option.stock })}
                                 size="small"
                                 sx={{ ml: 1 }}
                               />
@@ -568,7 +570,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          label="Product"
+                          label={t('salesForm.product')}
                           sx={{ minWidth: 200 }}
                         />
                       )}
@@ -577,7 +579,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
                   <Grid sx={{ xs: 2 }}>
                     <TextField
                       fullWidth
-                      label="Quantity"
+                      label={t('salesForm.quantity')}
                       type="number"
                       value={newItem.quantity}
                       onChange={(e) => handleNewItemChange('quantity', parseInt(e.target.value) || 0)}
@@ -588,7 +590,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
                   <Grid sx={{ xs: 3 }}>
                     <TextField
                       fullWidth
-                      label="Unit Price"
+                      label={t('salesForm.unitPrice')}
                       type="number"
                       value={newItem.unitPrice}
                       onChange={(e) => handleNewItemChange('unitPrice', parseFloat(e.target.value) || 0)}
@@ -604,7 +606,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
                       disabled={!newItem.productId || newItem.quantity <= 0 || newItem.unitPrice <= 0}
                       sx={{ height: '56px', borderRadius: 1 }}
                     >
-                      Add Item
+                      {t('salesForm.addItemButton')}
                     </Button>
                   </Grid>
                 </Grid>
@@ -616,29 +618,29 @@ const SalesForm: React.FC<SalesFormProps> = ({
               <Grid sx={{ xs: 3 }}>
                 <TextField
                   fullWidth
-                  label="Discount %"
+                  label={t('salesForm.discount')}
                   type="number"
                   value={formData.discountPercentage}
                   onChange={(e) => handleInputChange('discountPercentage', parseFloat(e.target.value) || 0)}
                   inputProps={{ min: 0, max: 100 }}
-                  helperText={`${formatCurrency(discountAmount)} discount`}
+                  helperText={t('salesForm.discountHelper', { amount: formatCurrency(discountAmount) })}
                 />
               </Grid>
               <Grid sx={{ xs: 3 }}>
                 <TextField
                   fullWidth
-                  label="Tax %"
+                  label={t('salesForm.tax')}
                   type="number"
                   value={formData.taxPercentage}
                   onChange={(e) => handleInputChange('taxPercentage', parseFloat(e.target.value) || 0)}
                   inputProps={{ min: 0, max: 100 }}
-                  helperText={`${formatCurrency(taxAmount)} tax`}
+                  helperText={t('salesForm.taxHelper', { amount: formatCurrency(taxAmount) })}
                 />
               </Grid>
               <Grid sx={{ xs: 3 }}>
                 <TextField
                   fullWidth
-                  label="Total Paid"
+                  label={t('salesForm.totalPaid')}
                   type="number"
                   value={formData.totalPaid}
                   onChange={(e) => handleInputChange('totalPaid', parseFloat(e.target.value) || 0)}
@@ -648,7 +650,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
               <Grid sx={{ xs: 3 }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', pt: 1 }}>
                   <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Grand Total: {formatCurrency(grandTotal)}
+                    {t('salesForm.grandTotal', { amount: formatCurrency(grandTotal) })}
                   </Typography>
                   <Typography
                     variant="h6"
@@ -657,7 +659,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
                       fontWeight: 600
                     }}
                   >
-                    Balance: {formatCurrency(remainingAmount)}
+                    {t('salesForm.balance', { amount: formatCurrency(remainingAmount) })}
                   </Typography>
                 </Box>
               </Grid>
@@ -666,18 +668,18 @@ const SalesForm: React.FC<SalesFormProps> = ({
             {/* Remark */}
             <TextField
               fullWidth
-              label="Remark"
+              label={t('salesForm.remark')}
               multiline
               rows={3}
               value={formData.remark}
               onChange={(e) => handleInputChange('remark', e.target.value)}
-              placeholder="Add any notes or special instructions..."
+              placeholder={t('salesForm.remarkPlaceholder')}
             />
           </DialogContent>
 
           <DialogActions sx={{ px: 3, pb: 3 }}>
             <Button onClick={onClose} disabled={loading}>
-              Cancel
+              {t('salesForm.cancel')}
             </Button>
             <Button
               type="submit"
@@ -685,7 +687,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
               disabled={loading}
               startIcon={loading ? <CircularProgress size={20} /> : null}
             >
-              {editSale ? 'Update Sale' : 'Create Sale'}
+              {editSale ? t('salesForm.updateSale') : t('salesForm.createSale')}
             </Button>
           </DialogActions>
         </form>
@@ -699,13 +701,13 @@ const SalesForm: React.FC<SalesFormProps> = ({
         fullWidth
         PaperProps={{ sx: { borderRadius: 1 } }}
       >
-        <DialogTitle>Add New Customer</DialogTitle>
+        <DialogTitle>{t('salesForm.newCustomerDialog.title')}</DialogTitle>
         <DialogContent sx={{ p: 3 }}>
           <Grid container spacing={2}>
             <Grid sx={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label="First Name"
+                label={t('salesForm.newCustomerDialog.firstName')}
                 value={newCustomer.firstName || ''}
                 onChange={(e) => setNewCustomer(prev => ({ ...prev, firstName: e.target.value }))}
                 required
@@ -714,7 +716,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
             <Grid sx={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label="Last Name"
+                label={t('salesForm.newCustomerDialog.lastName')}
                 value={newCustomer.lastName || ''}
                 onChange={(e) => setNewCustomer(prev => ({ ...prev, lastName: e.target.value }))}
                 required
@@ -723,7 +725,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
             <Grid sx={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label="Email"
+                label={t('salesForm.newCustomerDialog.email')}
                 type="email"
                 value={newCustomer.email || ''}
                 onChange={(e) => setNewCustomer(prev => ({ ...prev, email: e.target.value }))}
@@ -732,7 +734,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
             <Grid sx={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label="Phone"
+                label={t('salesForm.newCustomerDialog.phone')}
                 value={newCustomer.contactNo || ''}
                 onChange={(e) => setNewCustomer(prev => ({ ...prev, contactNo: e.target.value }))}
               />
@@ -740,7 +742,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
             <Grid sx={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label="Address"
+                label={t('salesForm.newCustomerDialog.address')}
                 multiline
                 rows={2}
                 value={newCustomer.address || ''}
@@ -750,7 +752,7 @@ const SalesForm: React.FC<SalesFormProps> = ({
             <Grid sx={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label="Remark"
+                label={t('salesForm.newCustomerDialog.remark')}
                 multiline
                 rows={2}
                 value={newCustomer.remark || ''}
@@ -761,14 +763,14 @@ const SalesForm: React.FC<SalesFormProps> = ({
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
           <Button onClick={() => setCustomerDialogOpen(false)}>
-            Cancel
+            {t('salesForm.cancel')}
           </Button>
           <Button
             onClick={handleCreateCustomer}
             variant="contained"
             disabled={!newCustomer.firstName?.trim() || !newCustomer.lastName?.trim()}
           >
-            Create Customer
+            {t('salesForm.newCustomerDialog.create')}
           </Button>
         </DialogActions>
       </Dialog>

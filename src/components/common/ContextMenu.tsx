@@ -183,7 +183,8 @@ export const createSalesActions = (
   onDelete?: (sale: any) => void,
   onAddPayment?: (sale: any) => void,
   onCancel?: (sale: any) => void,
-  onDownloadPdf?: (sale: any) => void
+  onDownloadPdf?: (sale: any) => void,
+  t?: (key: string) => string
 ): ContextAction[] => {
   const canEdit = sale.status !== 2 && sale.status !== 3; // Not Paid and Not Cancelled
   const canDelete = sale.status !== 2 && sale.status !== 3; // Not Paid and Not Cancelled
@@ -193,7 +194,7 @@ export const createSalesActions = (
   const actions: ContextAction[] = [
     {
       id: 'view',
-      label: 'View Details',
+      label: t ? t('sales.actions.viewDetails') : 'View Details',
       icon: <ViewIcon sx={{ fontSize: 16 }} />,
       onClick: () => onView?.(sale)
     }
@@ -202,7 +203,7 @@ export const createSalesActions = (
   if (onEdit) {
     actions.push({
       id: 'edit',
-      label: 'Edit Sale',
+      label: t ? t('sales.actions.editSale') : 'Edit Sale',
       icon: <EditIcon sx={{ fontSize: 16 }} />,
       onClick: () => onEdit?.(sale),
       disabled: !canEdit
@@ -212,7 +213,7 @@ export const createSalesActions = (
   if (onDownloadPdf) {
     actions.push({
       id: 'pdf',
-      label: 'Download PDF',
+      label: t ? t('sales.actions.downloadPdf') : 'Download PDF',
       icon: <PdfIcon sx={{ fontSize: 16 }} />,
       onClick: () => onDownloadPdf?.(sale)
     });
@@ -221,7 +222,7 @@ export const createSalesActions = (
   if (onAddPayment) {
     actions.push({
       id: 'payment',
-      label: 'Add Payment',
+      label: t ? t('sales.actions.addPayment') : 'Add Payment',
       icon: <PaymentIcon sx={{ fontSize: 16 }} />,
       onClick: () => onAddPayment?.(sale),
       disabled: !canAddPayment
@@ -231,7 +232,7 @@ export const createSalesActions = (
   if (onCancel) {
     actions.push({
       id: 'cancel',
-      label: 'Cancel Sale',
+      label: t ? t('sales.actions.cancelSale') : 'Cancel Sale',
       icon: <CancelIcon sx={{ fontSize: 16 }} />,
       onClick: () => onCancel?.(sale),
       disabled: !canCancel,
@@ -242,7 +243,7 @@ export const createSalesActions = (
   if (onDelete) {
     actions.push({
       id: 'delete',
-      label: 'Delete',
+      label: t ? t('sales.actions.delete') : 'Delete',
       icon: <DeleteIcon sx={{ fontSize: 16 }} />,
       onClick: () => onDelete?.(sale),
       disabled: !canDelete,

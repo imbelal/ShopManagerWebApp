@@ -59,20 +59,20 @@ export default StatusChip;
 // Predefined status configurations
 export const commonStatusConfigs = {
   // Generic active/inactive
-  active: (t: TFunction, status: string | number): StatusConfig => ({
+  active: (t: TFunction) => (_status: string | number): StatusConfig => ({
     label: t('products.active'),
     color: 'success',
     icon: <CheckCircleIcon sx={{ fontSize: 16 }} />
   }),
 
-  inactive: (t: TFunction, status: string | number): StatusConfig => ({
+  inactive: (t: TFunction) => (_status: string | number): StatusConfig => ({
     label: t('products.inactive'),
     color: 'warning',
     icon: <PendingIcon sx={{ fontSize: 16 }} />
   }),
 
   // Product status
-  productStatus: (t: TFunction, status: string | number): StatusConfig => {
+  productStatus: (t: TFunction) => (status: string | number): StatusConfig => {
     const statusValue = typeof status === 'number' ? status : parseInt(status);
     switch (statusValue) {
       case 1: // Active
@@ -97,30 +97,37 @@ export const commonStatusConfigs = {
   },
 
   // Sales status
-  salesStatus: (t: TFunction, status: string | number): StatusConfig => {
+  salesStatus: (t: TFunction) => (status: string | number): StatusConfig => {
     const statusValue = typeof status === 'number' ? status : parseInt(status);
+
     switch (statusValue) {
-      case 1: // Pending
+      case 0: // Pending
         return {
-          label: t('products.pending'),
+          label: t('sales.pending'),
           color: 'warning',
+          icon: <PendingIcon sx={{ fontSize: 16 }} />
+        };
+      case 1: // PartiallyPaid
+        return {
+          label: t('sales.partiallyPaid'),
+          color: 'info',
           icon: <PendingIcon sx={{ fontSize: 16 }} />
         };
       case 2: // Paid
         return {
-          label: t('products.paid'),
+          label: t('sales.paid'),
           color: 'success',
           icon: <CheckCircleIcon sx={{ fontSize: 16 }} />
         };
       case 3: // Cancelled
         return {
-          label: t('products.cancelled'),
+          label: t('sales.cancelled'),
           color: 'error',
           icon: <BlockedIcon sx={{ fontSize: 16 }} />
         };
       default:
         return {
-          label: t('products.unknown'),
+          label: t('common.unknown'),
           color: 'default',
           icon: <PendingIcon sx={{ fontSize: 16 }} />
         };
@@ -128,7 +135,7 @@ export const commonStatusConfigs = {
   },
 
   // Stock status
-  stockStatus: (t: TFunction, quantity: number): StatusConfig => ({
+  stockStatus: (t: TFunction) => (quantity: number): StatusConfig => ({
     label: quantity > 0 ? t('products.inStock') : t('products.outOfStock'),
     color: quantity > 0 ? 'success' : 'error',
     icon: quantity > 0 ? <CheckCircleIcon sx={{ fontSize: 16 }} /> : <BlockedIcon sx={{ fontSize: 16 }} />
