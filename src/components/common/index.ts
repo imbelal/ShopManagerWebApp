@@ -12,7 +12,7 @@ export { formatCurrency } from './CurrencyDisplay';
 
 export { default as ContextMenu } from './ContextMenu';
 export type { ContextMenuProps, ContextAction } from './ContextMenu';
-export { createStandardActions, createSalesActions } from './ContextMenu';
+export { createStandardActions, createSalesActions, createPurchaseActions } from './ContextMenu';
 
 export { default as EmptyState } from './EmptyState';
 export type { EmptyStateProps } from './EmptyState';

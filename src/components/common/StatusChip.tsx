@@ -139,5 +139,37 @@ export const commonStatusConfigs = {
     label: quantity > 0 ? t('products.inStock') : t('products.outOfStock'),
     color: quantity > 0 ? 'success' : 'error',
     icon: quantity > 0 ? <CheckCircleIcon sx={{ fontSize: 16 }} /> : <BlockedIcon sx={{ fontSize: 16 }} />
-  })
+  }),
+
+  // Purchase status
+  purchaseStatus: (t: TFunction) => (status: string | number): StatusConfig => {
+    const statusValue = typeof status === 'number' ? status : parseInt(status);
+
+    switch (statusValue) {
+      case 0: // Pending
+        return {
+          label: t('purchases.pending'),
+          color: 'warning',
+          icon: <PendingIcon sx={{ fontSize: 16 }} />
+        };
+      case 1: // Completed
+        return {
+          label: t('purchases.completed'),
+          color: 'success',
+          icon: <CheckCircleIcon sx={{ fontSize: 16 }} />
+        };
+      case 2: // Cancelled
+        return {
+          label: t('purchases.cancelled'),
+          color: 'error',
+          icon: <BlockedIcon sx={{ fontSize: 16 }} />
+        };
+      default:
+        return {
+          label: t('common.unknown'),
+          color: 'default',
+          icon: <PendingIcon sx={{ fontSize: 16 }} />
+        };
+    }
+  }
 };

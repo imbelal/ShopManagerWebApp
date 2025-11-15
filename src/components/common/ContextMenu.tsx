@@ -254,4 +254,60 @@ export const createSalesActions = (
   return actions;
 };
 
+export const createPurchaseActions = (
+  purchase: any,
+  onView?: (purchase: any) => void,
+  onEdit?: (purchase: any) => void,
+  onDelete?: (purchase: any) => void,
+  onCancel?: (purchase: any) => void,
+  t?: (key: string) => string
+): ContextAction[] => {
+  const canEdit = purchase.status !== 1 && purchase.status !== 2; // Not Completed and Not Cancelled
+  const canDelete = purchase.status !== 1 && purchase.status !== 2; // Not Completed and Not Cancelled
+  const canCancel = purchase.status !== 2; // Not Cancelled
+
+  const actions: ContextAction[] = [
+    {
+      id: 'view',
+      label: t ? t('purchases.actions.viewDetails') : 'View Details',
+      icon: <ViewIcon sx={{ fontSize: 16 }} />,
+      onClick: () => onView?.(purchase)
+    }
+  ];
+
+  if (onEdit) {
+    actions.push({
+      id: 'edit',
+      label: t ? t('purchases.actions.editPurchase') : 'Edit Purchase',
+      icon: <EditIcon sx={{ fontSize: 16 }} />,
+      onClick: () => onEdit?.(purchase),
+      disabled: !canEdit
+    });
+  }
+
+  if (onCancel) {
+    actions.push({
+      id: 'cancel',
+      label: t ? t('purchases.actions.cancel') : 'Cancel Purchase',
+      icon: <CancelIcon sx={{ fontSize: 16 }} />,
+      onClick: () => onCancel?.(purchase),
+      disabled: !canCancel,
+      color: 'warning'
+    });
+  }
+
+  if (onDelete) {
+    actions.push({
+      id: 'delete',
+      label: t ? t('purchases.actions.delete') : 'Delete',
+      icon: <DeleteIcon sx={{ fontSize: 16 }} />,
+      onClick: () => onDelete?.(purchase),
+      disabled: !canDelete,
+      color: 'error'
+    });
+  }
+
+  return actions;
+};
+
 export default ContextMenu;

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Dialog,
@@ -60,6 +61,8 @@ import ConfirmDeleteDialog from '../components/common/ConfirmDeleteDialog';
 import usePagination, { usePaginationProps } from '../hooks/usePagination';
 
 const SalesPage: React.FC = () => {
+  const { t, i18n } = useTranslation();
+  const currentLanguage = i18n.language;
   const [sales, setSales] = useState<Sales[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false);
@@ -113,7 +116,7 @@ const SalesPage: React.FC = () => {
         setSales(response.data.data.items);
         setTotalCount(response.data.data.totalCount);
       } else {
-        setError(response.data.message || 'Failed to load sales');
+        setError(response.data.message || t('sales.failedToLoadSales'));
       }
     } catch (err: any) {
       setError(handleApiError(err));
@@ -180,7 +183,7 @@ const SalesPage: React.FC = () => {
     if (selectedSale.status === 2) {
       setSnackbar({
         open: true,
-        message: 'Cannot delete paid sales',
+        message: t('sales.cannotDeletePaidSales'),
         severity: 'warning'
       });
       setDeleteDialogOpen(false);
@@ -192,7 +195,7 @@ const SalesPage: React.FC = () => {
     if (selectedSale.status === 3) {
       setSnackbar({
         open: true,
-        message: 'Cannot delete cancelled sales',
+        message: t('sales.cannotDeleteCancelledSales'),
         severity: 'warning'
       });
       setDeleteDialogOpen(false);
@@ -206,7 +209,7 @@ const SalesPage: React.FC = () => {
       if (response.data.succeeded) {
         setSnackbar({
           open: true,
-          message: 'Sale deleted successfully',
+          message: t('sales.saleDeleted'),
           severity: 'success'
         });
         setDeleteDialogOpen(false);
@@ -215,7 +218,7 @@ const SalesPage: React.FC = () => {
       } else {
         setSnackbar({
           open: true,
-          message: response.data.message || 'Failed to delete sale',
+          message: response.data.message || t('sales.failedToDeleteSale'),
           severity: 'error'
         });
       }
@@ -239,14 +242,14 @@ const SalesPage: React.FC = () => {
       if (response.data.succeeded) {
         setSnackbar({
           open: true,
-          message: 'Sale cancelled successfully',
+          message: t('sales.saleCancelled'),
           severity: 'success'
         });
         loadSales();
       } else {
         setSnackbar({
           open: true,
-          message: response.data.message || 'Failed to cancel sale',
+          message: response.data.message || t('sales.failedToCancelSale'),
           severity: 'error'
         });
       }
@@ -267,7 +270,7 @@ const SalesPage: React.FC = () => {
     if (sale.status === 3) {
       setSnackbar({
         open: true,
-        message: 'Cannot add payments to cancelled sales',
+        message: t('sales.cannotAddPaymentsToCancelledSales'),
         severity: 'warning'
       });
       return;
@@ -297,7 +300,7 @@ const SalesPage: React.FC = () => {
     loadSales();
     setSnackbar({
       open: true,
-      message: 'Payment added successfully',
+      message: t('sales.paymentAdded'),
       severity: 'success'
     });
   };
@@ -310,7 +313,7 @@ const SalesPage: React.FC = () => {
       await salesService.generateSalesPdf(sale.id);
       setSnackbar({
         open: true,
-        message: 'PDF downloaded successfully',
+        message: t('sales.pdfDownloaded'),
         severity: 'success'
       });
     } catch (err: any) {
@@ -353,7 +356,7 @@ const SalesPage: React.FC = () => {
     if (sale.status === 2) {
       setSnackbar({
         open: true,
-        message: 'Cannot edit paid sales',
+        message: t('sales.cannotEditPaidSales'),
         severity: 'warning'
       });
       return;
@@ -362,7 +365,7 @@ const SalesPage: React.FC = () => {
     if (sale.status === 3) {
       setSnackbar({
         open: true,
-        message: 'Cannot edit cancelled sales',
+        message: t('sales.cannotEditCancelledSales'),
         severity: 'warning'
       });
       return;
@@ -378,7 +381,7 @@ const SalesPage: React.FC = () => {
     await loadSales(); // Refresh the sales list
     setSnackbar({
       open: true,
-      message: 'Sale saved successfully',
+      message: t('sales.saleSaved'),
       severity: 'success'
     });
   };
@@ -401,11 +404,11 @@ const SalesPage: React.FC = () => {
     }).format(amount);
   };
 
-  // Define table columns
-  const columns = [
+  // Define table columns with useMemo to react to language changes
+  const columns = useMemo(() => [
     {
       id: 'salesNumber',
-      label: 'Sales #',
+      label: t('sales.tableColumns.salesNumber'),
       minWidth: 120,
       format: (value) => (
         <Typography variant="body2" sx={{ fontWeight: 500 }}>
@@ -415,18 +418,18 @@ const SalesPage: React.FC = () => {
     },
     {
       id: 'customerName',
-      label: 'Customer',
+      label: t('sales.customer'),
       minWidth: 150
     },
     {
       id: 'createdDate',
-      label: 'Date',
+      label: t('sales.date'),
       minWidth: 120,
       format: (value) => new Date(value).toLocaleDateString()
     },
     {
       id: 'grandTotal',
-      label: 'Total',
+      label: t('sales.total'),
       align: 'right' as const,
       minWidth: 100,
       format: (value) => (
@@ -437,7 +440,7 @@ const SalesPage: React.FC = () => {
     },
     {
       id: 'totalPaid',
-      label: 'Paid',
+      label: t('sales.tableColumns.paid'),
       align: 'right' as const,
       minWidth: 100,
       format: (value, sale) => (
@@ -450,7 +453,7 @@ const SalesPage: React.FC = () => {
     },
     {
       id: 'remainingAmount',
-      label: 'Balance',
+      label: t('sales.tableColumns.balance'),
       align: 'right' as const,
       minWidth: 100,
       format: (value) => (
@@ -463,18 +466,18 @@ const SalesPage: React.FC = () => {
     },
     {
       id: 'status',
-      label: 'Status',
+      label: t('sales.status'),
       minWidth: 100,
       format: (value) => (
         <StatusChip
           status={value}
-          statusConfig={commonStatusConfigs.salesStatus}
+          statusConfig={commonStatusConfigs.salesStatus(t)}
         />
       )
     },
     {
       id: 'salesProfit',
-      label: 'Profit',
+      label: t('sales.profit'),
       align: 'right' as const,
       minWidth: 100,
       format: (value) => (
@@ -486,7 +489,7 @@ const SalesPage: React.FC = () => {
         </Typography>
       )
     }
-  ];
+  ], [t, currentLanguage]);
 
   // Define row actions
   const getRowActions = (sale) => {
@@ -497,17 +500,18 @@ const SalesPage: React.FC = () => {
       handleDeleteSaleClick,
       handleAddPayment,
       handleCancelSale,
-      handleDownloadPdf
+      handleDownloadPdf,
+      t
     );
   };
 
   return (
     <Box sx={{ p: 3 }}>
       <PageHeader
-        title="Sales"
-        subtitle="Manage your sales transactions"
+        title={t('sales.title')}
+        subtitle={t('sales.subtitle')}
         actionButton={{
-          label: "New Sale",
+          label: t('sales.addSale'),
           onClick: handleNewSale
         }}
         showRefresh={true}
@@ -516,7 +520,7 @@ const SalesPage: React.FC = () => {
       />
 
       <FilterBar
-        searchPlaceholder="Search by sales number or customer name..."
+        searchPlaceholder={t('sales.searchPlaceholder')}
         searchTerm={searchTerm}
         onSearchChange={(value) => {
           setSearchTerm(value);
@@ -526,7 +530,7 @@ const SalesPage: React.FC = () => {
         autocompleteFields={[
           {
             id: 'customer',
-            label: 'Customer',
+            label: t('sales.customer'),
             value: selectedCustomer,
             options: customers.map((customer) => ({
               value: customer.id,
@@ -552,10 +556,10 @@ const SalesPage: React.FC = () => {
         error={error}
         emptyState={{
           icon: '💰',
-          title: 'No sales found',
-          description: searchTerm ? 'Try adjusting your search terms or filters' : 'Get started by creating your first sale',
+          title: t('sales.noSalesFound'),
+          description: searchTerm ? t('sales.tryAdjustingSearch') : t('sales.getStarted'),
           action: {
-            label: 'New Sale',
+            label: t('sales.addSale'),
             onClick: handleNewSale
           }
         }}
@@ -563,7 +567,7 @@ const SalesPage: React.FC = () => {
         getRowId={(sale) => sale.id}
         pagination={usePaginationProps(pagination, paginationActions, totalCount)}
         errorAction={{
-          label: 'Retry',
+          label: t('common.retry'),
           onClick: handleRefresh
         }}
       />
@@ -594,7 +598,7 @@ const SalesPage: React.FC = () => {
             }}>
               <Box>
                 <Typography variant="h5" component="div" sx={{ fontWeight: 600 }}>
-                  Sale Details
+                  {t('sales.saleDetails')}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                   {selectedSale.salesNumber}
@@ -603,7 +607,7 @@ const SalesPage: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <StatusChip
                   status={selectedSale.status}
-                  statusConfig={commonStatusConfigs.salesStatus}
+                  statusConfig={commonStatusConfigs.salesStatus(t)}
                   sx={{ fontWeight: 500 }}
                 />
                 <Button
@@ -616,7 +620,7 @@ const SalesPage: React.FC = () => {
                   }}
                   startIcon={<CloseIcon />}
                 >
-                  Close
+                  {t('common.close')}
                 </Button>
               </Box>
             </DialogTitle>
@@ -627,10 +631,10 @@ const SalesPage: React.FC = () => {
                   onChange={(e, newValue) => setViewTabValue(newValue)}
                   sx={{ px: 3 }}
                 >
-                  <Tab label="Overview" />
-                  <Tab label="Items" />
-                  <Tab label="Payments" />
-                  <Tab label="Customer" />
+                  <Tab label={t('sales.tabs.overview')} />
+                  <Tab label={t('sales.tabs.items')} />
+                  <Tab label={t('sales.tabs.payments')} />
+                  <Tab label={t('sales.tabs.customer')} />
                 </Tabs>
               </Box>
 
@@ -648,19 +652,19 @@ const SalesPage: React.FC = () => {
                         <Card sx={{ height: '100%', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
                           <CardContent>
                             <Typography variant="h6" sx={{ mb: 2, color: 'white' }}>
-                              Sale Summary
+                              {t('sales.saleSummary')}
                             </Typography>
                             <Grid container spacing={2}>
                               <Grid sx={{ xs: 12 }}>
-                                <Typography variant="body2" sx={{ opacity: 0.9 }}>Date</Typography>
+                                <Typography variant="body2" sx={{ opacity: 0.9 }}>{t('sales.date')}</Typography>
                                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
                                   {formatDate(selectedSale.createdDate)}
                                 </Typography>
                               </Grid>
                               <Grid sx={{ xs: 12 }}>
-                                <Typography variant="body2" sx={{ opacity: 0.9 }}>Remark</Typography>
+                                <Typography variant="body2" sx={{ opacity: 0.9 }}>{t('sales.remark')}</Typography>
                                 <Typography variant="body1">
-                                  {selectedSale.remark || 'No remarks'}
+                                  {selectedSale.remark || t('sales.noRemarks')}
                                 </Typography>
                               </Grid>
                             </Grid>
@@ -674,41 +678,41 @@ const SalesPage: React.FC = () => {
                           <CardContent>
                             <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                               <ReceiptIcon color="primary" />
-                              Financial Summary
+                              {t('sales.financialSummary')}
                             </Typography>
                             <Grid container spacing={2}>
                               <Grid sx={{ xs: 6 }}>
-                                <Typography variant="body2" color="text.secondary">Total Price</Typography>
+                                <Typography variant="body2" color="text.secondary">{t('sales.totalPrice')}</Typography>
                                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
                                   {formatCurrency(selectedSale.totalPrice)}
                                 </Typography>
                               </Grid>
                               <Grid sx={{ xs: 6 }}>
-                                <Typography variant="body2" color="text.secondary">Discount</Typography>
+                                <Typography variant="body2" color="text.secondary">{t('sales.discount')}</Typography>
                                 <Typography variant="body1" sx={{ fontWeight: 500, color: 'error.main' }}>
                                   -{formatCurrency(selectedSale.discountAmount)}
                                 </Typography>
                               </Grid>
                               <Grid sx={{ xs: 6 }}>
-                                <Typography variant="body2" color="text.secondary">Tax Amount</Typography>
+                                <Typography variant="body2" color="text.secondary">{t('sales.taxAmount')}</Typography>
                                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
                                   {formatCurrency(selectedSale.taxAmount)}
                                 </Typography>
                               </Grid>
                               <Grid sx={{ xs: 6 }}>
-                                <Typography variant="body2" color="text.secondary">Grand Total</Typography>
+                                <Typography variant="body2" color="text.secondary">{t('sales.grandTotal')}</Typography>
                                 <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
                                   {formatCurrency(selectedSale.grandTotal)}
                                 </Typography>
                               </Grid>
                               <Grid sx={{ xs: 6 }}>
-                                <Typography variant="body2" color="text.secondary">Total Paid</Typography>
+                                <Typography variant="body2" color="text.secondary">{t('sales.totalPaid')}</Typography>
                                 <Typography variant="body1" sx={{ fontWeight: 500, color: 'success.main' }}>
                                   {formatCurrency(selectedSale.totalPaid)}
                                 </Typography>
                               </Grid>
                               <Grid sx={{ xs: 6 }}>
-                                <Typography variant="body2" color="text.secondary">Remaining</Typography>
+                                <Typography variant="body2" color="text.secondary">{t('sales.remaining')}</Typography>
                                 <Typography variant="h6" sx={{
                                   fontWeight: 600,
                                   color: selectedSale.remainingAmount > 0 ? 'error.main' : 'success.main'
@@ -727,12 +731,12 @@ const SalesPage: React.FC = () => {
                           <CardContent>
                             <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                               <TimelineIcon color="success" />
-                              Profit Analysis
+                              {t('sales.profitAnalysis')}
                             </Typography>
                             <Grid container spacing={3}>
                               <Grid sx={{ xs: 12, md: 4 }}>
                                 <Box sx={{ textAlign: 'center', p: 2, borderRadius: 2, bgcolor: 'grey.50' }}>
-                                  <Typography variant="body2" color="text.secondary">Total Cost</Typography>
+                                  <Typography variant="body2" color="text.secondary">{t('sales.totalCost')}</Typography>
                                   <Typography variant="h5" sx={{ fontWeight: 600, mt: 1 }}>
                                     {formatCurrency(selectedSale.salesTotalCost)}
                                   </Typography>
@@ -740,7 +744,7 @@ const SalesPage: React.FC = () => {
                               </Grid>
                               <Grid sx={{ xs: 12, md: 4 }}>
                                 <Box sx={{ textAlign: 'center', p: 2, borderRadius: 2, bgcolor: selectedSale.salesProfit >= 0 ? 'success.50' : 'error.50' }}>
-                                  <Typography variant="body2" color="text.secondary">Profit</Typography>
+                                  <Typography variant="body2" color="text.secondary">{t('sales.profit')}</Typography>
                                   <Typography variant="h5" sx={{
                                     fontWeight: 600,
                                     mt: 1,
@@ -752,7 +756,7 @@ const SalesPage: React.FC = () => {
                               </Grid>
                               <Grid sx={{ xs: 12, md: 4 }}>
                                 <Box sx={{ textAlign: 'center', p: 2, borderRadius: 2, bgcolor: selectedSale.salesProfitMargin >= 0 ? 'success.50' : 'error.50' }}>
-                                  <Typography variant="body2" color="text.secondary">Profit Margin</Typography>
+                                  <Typography variant="body2" color="text.secondary">{t('sales.profitMargin')}</Typography>
                                   <Typography variant="h5" sx={{
                                     fontWeight: 600,
                                     mt: 1,
@@ -776,16 +780,16 @@ const SalesPage: React.FC = () => {
                 <Box sx={{ p: 3 }}>
                   <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                     <ShoppingBasketIcon color="primary" />
-                    Sales Items ({selectedSale.salesItems.length})
+                    {t('sales.salesItems')} ({selectedSale.salesItems.length})
                   </Typography>
                   <TableContainer component={Paper}>
                     <Table>
                       <TableHead>
                         <TableRow>
-                          <TableCell sx={{ fontWeight: 600 }}>Product</TableCell>
-                          <TableCell align="right" sx={{ fontWeight: 600 }}>Quantity</TableCell>
-                          <TableCell align="right" sx={{ fontWeight: 600 }}>Unit Price</TableCell>
-                          <TableCell align="right" sx={{ fontWeight: 600 }}>Total</TableCell>
+                          <TableCell sx={{ fontWeight: 600 }}>{t('sales.tableColumns.product')}</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 600 }}>{t('sales.quantity')}</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 600 }}>{t('sales.unitPrice')}</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 600 }}>{t('sales.total')}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -810,7 +814,7 @@ const SalesPage: React.FC = () => {
                 <Box sx={{ p: 3 }}>
                   <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                     <PaymentIcon color="primary" />
-                    Payment History ({viewPayments.length})
+                    {t('sales.paymentHistory')} ({viewPayments.length})
                   </Typography>
                   {viewPayments.length > 0 ? (
                     <List>
@@ -819,13 +823,13 @@ const SalesPage: React.FC = () => {
                           <CardContent>
                             <Grid container spacing={2} alignItems="center">
                               <Grid sx={{ xs: 12, md: 3 }}>
-                                <Typography variant="body2" color="text.secondary">Amount</Typography>
+                                <Typography variant="body2" color="text.secondary">{t('sales.amount')}</Typography>
                                 <Typography variant="h6" sx={{ fontWeight: 600, color: 'success.main' }}>
                                   {formatCurrency(payment.amount)}
                                 </Typography>
                               </Grid>
                               <Grid sx={{ xs: 12, md: 3 }}>
-                                <Typography variant="body2" color="text.secondary">Method</Typography>
+                                <Typography variant="body2" color="text.secondary">{t('sales.method')}</Typography>
                                 <Chip
                                   label={payment.paymentMethod}
                                   color={salesService.getPaymentMethodColor(payment.paymentMethod)}
@@ -834,7 +838,7 @@ const SalesPage: React.FC = () => {
                                 />
                               </Grid>
                               <Grid sx={{ xs: 12, md: 3 }}>
-                                <Typography variant="body2" color="text.secondary">Date</Typography>
+                                <Typography variant="body2" color="text.secondary">{t('sales.date')}</Typography>
                                 <Typography variant="body1">
                                   {new Date(payment.paymentDate).toLocaleDateString()} at {new Date(payment.paymentDate).toLocaleTimeString()}
                                 </Typography>
@@ -842,7 +846,7 @@ const SalesPage: React.FC = () => {
                               <Grid sx={{ xs: 12, md: 3 }}>
                                 {payment.remark && (
                                   <>
-                                    <Typography variant="body2" color="text.secondary">Remark</Typography>
+                                    <Typography variant="body2" color="text.secondary">{t('sales.remark')}</Typography>
                                     <Typography variant="body2">{payment.remark}</Typography>
                                   </>
                                 )}
@@ -854,8 +858,8 @@ const SalesPage: React.FC = () => {
                     </List>
                   ) : (
                     <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
-                      <Typography variant="h6">No payments recorded</Typography>
-                      <Typography variant="body2">This sale has no payment history yet.</Typography>
+                      <Typography variant="h6">{t('sales.noPaymentsRecorded')}</Typography>
+                      <Typography variant="body2">{t('sales.noPaymentHistory')}</Typography>
                     </Box>
                   )}
                 </Box>
@@ -866,7 +870,7 @@ const SalesPage: React.FC = () => {
                 <Box sx={{ p: 3 }}>
                   <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                     <PersonIcon color="primary" />
-                    Customer Information
+                    {t('sales.customerInformation')}
                   </Typography>
                   {viewCustomer ? (
                     <Card>
@@ -881,7 +885,7 @@ const SalesPage: React.FC = () => {
                                   </Avatar>
                                 </ListItemAvatar>
                                 <ListItemText
-                                  primary="Name"
+                                  primary={t('sales.name')}
                                   secondary={`${viewCustomer.firstName} ${viewCustomer.lastName}`}
                                   primaryTypographyProps={{ fontWeight: 600 }}
                                 />
@@ -893,7 +897,7 @@ const SalesPage: React.FC = () => {
                                   </Avatar>
                                 </ListItemAvatar>
                                 <ListItemText
-                                  primary="Email"
+                                  primary={t('sales.email')}
                                   secondary={viewCustomer.email}
                                 />
                               </ListItem>
@@ -904,7 +908,7 @@ const SalesPage: React.FC = () => {
                                   </Avatar>
                                 </ListItemAvatar>
                                 <ListItemText
-                                  primary="Contact"
+                                  primary={t('sales.contact')}
                                   secondary={viewCustomer.contactNo}
                                 />
                               </ListItem>
@@ -919,14 +923,14 @@ const SalesPage: React.FC = () => {
                                   </Avatar>
                                 </ListItemAvatar>
                                 <ListItemText
-                                  primary="Address"
-                                  secondary={viewCustomer.address || 'No address provided'}
+                                  primary={t('sales.address')}
+                                  secondary={viewCustomer.address || t('sales.noAddressProvided')}
                                 />
                               </ListItem>
                               {viewCustomer.remark && (
                                 <ListItem>
                                   <ListItemText
-                                    primary="Remarks"
+                                    primary={t('sales.remarks')}
                                     secondary={viewCustomer.remark}
                                   />
                                 </ListItem>
@@ -938,8 +942,8 @@ const SalesPage: React.FC = () => {
                     </Card>
                   ) : (
                     <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
-                      <Typography variant="h6">Customer information not available</Typography>
-                      <Typography variant="body2">Unable to load customer details.</Typography>
+                      <Typography variant="h6">{t('sales.customerInfoNotAvailable')}</Typography>
+                      <Typography variant="body2">{t('sales.unableToLoadCustomerDetails')}</Typography>
                     </Box>
                   )}
                 </Box>
@@ -955,9 +959,9 @@ const SalesPage: React.FC = () => {
         onClose={() => { setDeleteDialogOpen(false); setSelectedSale(null); }}
         onConfirm={handleDeleteSale}
         entityName={`Sale #${selectedSale?.salesNumber || ''}`}
-        entityType="Sale"
+        entityType="sale"
         loading={deleting}
-        warning="Cannot delete paid or cancelled sales"
+        warning={t('sales.cannotDeletePaidOrCancelledSales')}
       />
 
       {/* Sales Form Dialog */}

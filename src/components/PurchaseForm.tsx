@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogTitle,
@@ -71,6 +72,7 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
   onPurchaseAdded,
   onPurchaseUpdated
 }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -199,26 +201,26 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
     const errors: string[] = [];
 
     if (!formData.supplierId) {
-      errors.push('Supplier is required');
+      errors.push(t('purchaseForm.validation.supplierRequired'));
     }
 
     if (!formData.purchaseDate) {
-      errors.push('Purchase date is required');
+      errors.push(t('purchaseForm.validation.purchaseDateRequired'));
     }
 
     if (purchaseItems.length === 0) {
-      errors.push('At least one purchase item is required');
+      errors.push(t('purchaseForm.validation.atLeastOneItemRequired'));
     }
 
     purchaseItems.forEach((item, index) => {
       if (!item.productId) {
-        errors.push(`Product is required for item ${index + 1}`);
+        errors.push(t('purchaseForm.validation.productRequired', { index: index + 1 }));
       }
       if (!item.quantity || item.quantity <= 0) {
-        errors.push(`Valid quantity is required for item ${index + 1}`);
+        errors.push(t('purchaseForm.validation.validQuantityRequired', { index: index + 1 }));
       }
       if (!item.costPerUnit || item.costPerUnit <= 0) {
-        errors.push(`Valid cost per unit is required for item ${index + 1}`);
+        errors.push(t('purchaseForm.validation.validCostPerUnitRequired', { index: index + 1 }));
       }
     });
 
@@ -275,7 +277,7 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
       }
 
       if (response.data.succeeded) {
-        setSuccess(editPurchase ? 'Purchase updated successfully!' : 'Purchase created successfully!');
+        setSuccess(editPurchase ? t('purchaseForm.validation.purchaseUpdatedSuccessfully') : t('purchaseForm.validation.purchaseCreatedSuccessfully'));
 
         // Clear messages and close dialog
         setTimeout(() => {
@@ -291,7 +293,7 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
           }
         }, 1500);
       } else {
-        setError(response.data.message || 'Failed to save purchase');
+        setError(response.data.message || t('purchaseForm.validation.failedToSavePurchase'));
       }
     } catch (err: any) {
       setError(handleApiError(err));
@@ -319,7 +321,7 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
     >
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6">
-          {editPurchase ? 'Edit Purchase' : 'Create New Purchase'}
+          {editPurchase ? t('purchaseForm.editPurchase') : t('purchaseForm.createNewPurchase')}
         </Typography>
       </DialogTitle>
 
@@ -339,7 +341,7 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
 
           {/* Purchase Information */}
           <Typography variant="h6" sx={{ mb: 2, color: '#1a1a1a' }}>
-            Purchase Information
+            {t('purchaseForm.purchaseInformation')}
           </Typography>
           <Grid container spacing={2} sx={{ mb: 3 }}>
             <Grid sx={{ xs: 12, sm: 6, minWidth: 200 }}>
@@ -358,7 +360,7 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Supplier"
+                    label={t('purchaseForm.supplier')}
                     required
                     sx={{ minWidth: 200 }}
                   />
@@ -375,7 +377,7 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
             <Grid sx={{ xs: 12, sm: 6, minWidth: 200 }}>
               <TextField
                 fullWidth
-                label="Purchase Date"
+                label={t('purchaseForm.purchaseDate')}
                 type="date"
                 value={formData.purchaseDate}
                 onChange={(e) => handleInputChange('purchaseDate', e.target.value)}
@@ -386,12 +388,12 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
             <Grid sx={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label="Remarks (Optional)"
+                label={t('purchaseForm.remarksOptional')}
                 multiline
                 rows={2}
                 value={formData.remark}
                 onChange={(e) => handleInputChange('remark', e.target.value)}
-                placeholder="Add any notes about this purchase..."
+                placeholder={t('purchaseForm.remarksPlaceholder')}
               />
             </Grid>
           </Grid>
@@ -400,7 +402,7 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
 
           {/* Purchase Items */}
           <Typography variant="h6" sx={{ mb: 2, color: '#1a1a1a' }}>
-            Purchase Items
+            {t('purchaseForm.purchaseItems')}
           </Typography>
 
           {/* Items List */}
@@ -409,11 +411,11 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Product</TableCell>
-                    <TableCell align="right">Quantity</TableCell>
-                    <TableCell align="right">Cost per Unit</TableCell>
-                    <TableCell align="right">Total Cost</TableCell>
-                    <TableCell align="center">Actions</TableCell>
+                    <TableCell>{t('purchaseForm.product')}</TableCell>
+                    <TableCell align="right">{t('purchaseForm.quantity')}</TableCell>
+                    <TableCell align="right">{t('purchaseForm.costPerUnit')}</TableCell>
+                    <TableCell align="right">{t('purchaseForm.totalCost')}</TableCell>
+                    <TableCell align="center">{t('purchaseForm.actions')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -447,7 +449,7 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
           <Card sx={{ mb: 3, borderRadius: 1 }}>
             <CardContent>
               <Typography variant="subtitle2" sx={{ mb: 2 }}>
-                Add Item
+                {t('purchaseForm.addItem')}
               </Typography>
               <Grid container spacing={2} alignItems="center">
                 <Grid sx={{ xs: 4, minWidth: 200 }}>
@@ -471,7 +473,7 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
                           <Typography>{option.label}</Typography>
                           {option.stock > 0 && (
                             <Chip
-                              label={`${option.stock} in stock`}
+                              label={`${option.stock} ${t('purchaseForm.itemsInStock')}`}
                               size="small"
                               sx={{ ml: 1 }}
                             />
@@ -482,7 +484,7 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Product"
+                        label={t('purchaseForm.product')}
                         sx={{ minWidth: 200 }}
                       />
                     )}
@@ -491,7 +493,7 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
                 <Grid sx={{ xs: 2 }}>
                   <TextField
                     fullWidth
-                    label="Quantity"
+                    label={t('purchaseForm.quantity')}
                     type="number"
                     value={newItem.quantity}
                     onChange={(e) => handleNewItemChange('quantity', parseInt(e.target.value) || 0)}
@@ -502,7 +504,7 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
                 <Grid sx={{ xs: 3 }}>
                   <TextField
                     fullWidth
-                    label="Cost per Unit"
+                    label={t('purchaseForm.costPerUnit')}
                     type="number"
                     value={newItem.costPerUnit}
                     onChange={(e) => handleNewItemChange('costPerUnit', parseFloat(e.target.value) || 0)}
@@ -518,7 +520,7 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
                     disabled={!newItem.productId || newItem.quantity <= 0 || newItem.costPerUnit <= 0}
                     sx={{ height: '56px', borderRadius: 1 }}
                   >
-                    Add Item
+                    {t('purchaseForm.addItem')}
                   </Button>
                 </Grid>
               </Grid>
@@ -528,7 +530,7 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
           {/* Total Summary */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, backgroundColor: 'primary.50', borderRadius: 1 }}>
             <Typography variant="h6">
-              Total Cost:
+              {t('purchaseForm.totalCostDisplay')}
             </Typography>
             <Typography variant="h6" color="primary.main">
               {formatCurrency(calculateTotalCost())}
@@ -538,7 +540,7 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
 
         <DialogActions sx={{ px: 3, pb: 3 }}>
           <Button onClick={onClose} disabled={loading} startIcon={<CancelIcon />}>
-            Cancel
+            {t('purchaseForm.cancel')}
           </Button>
           <Button
             type="submit"
@@ -546,7 +548,7 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
             disabled={loading}
             startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}
           >
-            {loading ? 'Saving...' : (editPurchase ? 'Update Purchase' : 'Create Purchase')}
+            {loading ? t('purchaseForm.saving') : (editPurchase ? t('purchaseForm.updatePurchase') : t('purchaseForm.createPurchase'))}
           </Button>
         </DialogActions>
       </form>

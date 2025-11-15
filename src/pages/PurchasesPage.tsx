@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -52,8 +53,9 @@ import {
   DataTable,
   StatusChip,
   CurrencyDisplay,
-  createStandardActions,
-  EmptyState
+  createPurchaseActions,
+  EmptyState,
+  commonStatusConfigs
 } from '../components/common';
 import PageHeader from '../components/common/PageHeader';
 import FilterBar from '../components/common/FilterBar';
@@ -61,6 +63,8 @@ import ConfirmDeleteDialog from '../components/common/ConfirmDeleteDialog';
 import usePagination, { usePaginationProps } from '../hooks/usePagination';
 
 const PurchasesPage: React.FC = () => {
+  const { t, i18n } = useTranslation();
+  const currentLanguage = i18n.language;
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -131,7 +135,7 @@ const PurchasesPage: React.FC = () => {
         setPurchases(response.data.data.items);
         setTotalCount(response.data.data.totalCount);
       } else {
-        setError(response.data.message || 'Failed to load purchases');
+        setError(response.data.message || t('purchases.failedToLoadPurchases'));
       }
     } catch (err: any) {
       setError(handleApiError(err));
@@ -195,10 +199,10 @@ const PurchasesPage: React.FC = () => {
       setLoading(true);
       const response = await purchasesService.cancelPurchase(purchase.id);
       if (response.data.succeeded) {
-        showSnackbar('Purchase cancelled successfully', 'success');
+        showSnackbar(t('purchases.purchaseCancelled'), 'success');
         loadPurchases();
       } else {
-        setError(response.data.message || 'Failed to cancel purchase');
+        setError(response.data.message || t('purchases.failedToCancelPurchase'));
       }
     } catch (err: any) {
       setError(handleApiError(err));
@@ -213,12 +217,12 @@ const PurchasesPage: React.FC = () => {
         setDeleting(true);
         const response = await purchasesService.deletePurchase(purchaseToDelete.id);
         if (response.data.succeeded) {
-          showSnackbar('Purchase deleted successfully', 'success');
+          showSnackbar(t('purchases.purchaseDeleted'), 'success');
           setDeleteDialogOpen(false);
           setPurchaseToDelete(null);
           loadPurchases();
         } else {
-          setError(response.data.message || 'Failed to delete purchase');
+          setError(response.data.message || t('purchases.failedToDeletePurchase'));
         }
       } catch (err: any) {
         setError(handleApiError(err));
@@ -270,134 +274,80 @@ const PurchasesPage: React.FC = () => {
     }).format(amount);
   };
 
-  // Purchase status configuration for StatusChip
-  const getPurchaseStatusConfig = (status: PurchaseStatus) => {
-    switch (status) {
-      case PurchaseStatus.Pending:
-        return {
-          label: 'Pending',
-          color: 'warning' as const,
-        };
-      case PurchaseStatus.Completed:
-        return {
-          label: 'Completed',
-          color: 'success' as const,
-        };
-      case PurchaseStatus.Cancelled:
-        return {
-          label: 'Cancelled',
-          color: 'error' as const,
-        };
-      default:
-        return {
-          label: 'Unknown',
-          color: 'default' as const,
-        };
-    }
-  };
+  
 
-
-  // Define table columns matching original structure
-  const columns = [
+  // Define table columns with translation support
+  const columns = useMemo(() => [
     {
       id: 'purchaseDate',
-      label: 'Purchase Date',
+      label: t('purchases.tableColumns.purchaseDate'),
       minWidth: 120,
       format: (value) => new Date(value).toLocaleDateString()
     },
     {
       id: 'supplierName',
-      label: 'Supplier',
+      label: t('purchases.supplier'),
       minWidth: 150
     },
     {
       id: 'purchaseItems',
-      label: 'Items',
+      label: t('purchases.items'),
       minWidth: 80,
       format: (value) => (
         <Typography variant="body2">
-          {value.length} items
+          {value.length} {t('purchases.items')}
         </Typography>
       )
     },
     {
       id: 'totalCost',
-      label: 'Total Cost',
+      label: t('purchases.totalCost'),
       align: 'right' as const,
       minWidth: 120,
       format: (value) => (
         <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-          {formatCurrency(value)}
+          <CurrencyDisplay amount={value} />
         </Typography>
       )
     },
     {
       id: 'status',
-      label: 'Status',
+      label: t('purchases.status'),
       minWidth: 100,
       format: (value) => (
         <StatusChip
           status={value}
-          statusConfig={getPurchaseStatusConfig}
-          size="small"
+          statusConfig={commonStatusConfigs.purchaseStatus(t)}
         />
       )
     },
     {
       id: 'createdBy',
-      label: 'Created By',
+      label: t('purchases.tableColumns.createdBy'),
       minWidth: 120
     }
-  ];
+  ], [t, currentLanguage]);
 
   // Define row actions
   const getRowActions = (purchase) => {
-    return createStandardActions(
+    return createPurchaseActions(
       purchase,
       handleView,
       handleEdit,
       handleDeleteClick,
-      {
-        canEdit: canEditPurchase,
-        canDelete: canDeletePurchase
-      }
+      handleCancel,
+      t
     );
   };
 
-  // Helper functions for purchase status
-  const getPurchaseStatusText = (status: PurchaseStatus): string => {
-    switch (status) {
-      case PurchaseStatus.Pending:
-        return 'Pending';
-      case PurchaseStatus.Completed:
-        return 'Completed';
-      case PurchaseStatus.Cancelled:
-        return 'Cancelled';
-      default:
-        return 'Unknown';
-    }
-  };
-
-  const getPurchaseStatusColor = (status: PurchaseStatus): 'default' | 'error' | 'warning' | 'info' | 'success' => {
-    switch (status) {
-      case PurchaseStatus.Pending:
-        return 'warning';
-      case PurchaseStatus.Completed:
-        return 'success';
-      case PurchaseStatus.Cancelled:
-        return 'error';
-      default:
-        return 'default';
-    }
-  };
-
+  
   return (
     <Box sx={{ p: 3 }}>
       <PageHeader
-        title="Purchases Management"
-        subtitle="Track and manage your purchase orders"
+        title={t('purchases.management')}
+        subtitle={t('purchases.subtitle')}
         actionButton={{
-          label: "Add Purchase",
+          label: t('purchases.addPurchase'),
           onClick: () => {
             setEditPurchase(null);
             setPurchaseFormOpen(true);
@@ -416,7 +366,7 @@ const PurchasesPage: React.FC = () => {
       )}
 
       <FilterBar
-        searchPlaceholder="Search purchases..."
+        searchPlaceholder={t('purchases.searchPlaceholder')}
         searchTerm={searchTerm}
         onSearchChange={(value) => {
           setSearchTerm(value);
@@ -426,19 +376,19 @@ const PurchasesPage: React.FC = () => {
         filters={[
           {
             id: 'status',
-            label: 'Status',
+            label: t('purchases.status'),
             value: selectedStatus,
             options: [
-              { value: '0', label: 'Pending' },
-              { value: '1', label: 'Completed' },
-              { value: '2', label: 'Cancelled' }
+              { value: '0', label: t('purchases.pending') },
+              { value: '1', label: t('purchases.completed') },
+              { value: '2', label: t('purchases.cancelled') }
             ]
           }
         ]}
         autocompleteFields={[
           {
             id: 'supplier',
-            label: 'Supplier',
+            label: t('purchases.supplier'),
             value: selectedSupplier,
             options: suppliers.map((supplier) => ({ value: supplier.id, label: supplier.name })),
             onChange: (value) => {
@@ -466,12 +416,12 @@ const PurchasesPage: React.FC = () => {
         error={error}
         emptyState={{
           icon: '📦',
-          title: 'No purchases found',
+          title: t('purchases.noPurchasesFound'),
           description: searchTerm || selectedSupplier || selectedStatus
-            ? 'Try adjusting your search terms or filters'
-            : 'Get started by creating your first purchase',
+            ? t('purchases.tryAdjustingSearch')
+            : t('purchases.getStarted'),
           action: {
-            label: 'New Purchase',
+            label: t('purchases.newPurchase'),
             onClick: () => setPurchaseFormOpen(true)
           }
         }}
@@ -479,7 +429,7 @@ const PurchasesPage: React.FC = () => {
         getRowId={(purchase) => purchase.id}
         pagination={usePaginationProps(pagination, paginationActions, totalCount)}
         errorAction={{
-          label: 'Retry',
+          label: t('common.retry'),
           onClick: handleRefresh
         }}
       />
@@ -509,7 +459,7 @@ const PurchasesPage: React.FC = () => {
             }}>
               <Box>
                 <Typography variant="h5" component="div" sx={{ fontWeight: 600 }}>
-                  Purchase Details
+                  {t('purchases.purchaseDetails')}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                   ID: {purchaseToView.id.substring(0, 8)}...
@@ -518,7 +468,7 @@ const PurchasesPage: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <StatusChip
                   status={purchaseToView.status}
-                  statusConfig={getPurchaseStatusConfig}
+                  statusConfig={commonStatusConfigs.purchaseStatus(t)}
                   size="small"
                   sx={{ fontWeight: 500 }}
                 />
@@ -531,9 +481,9 @@ const PurchasesPage: React.FC = () => {
             {/* Tabs */}
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
               <Tabs value={viewTabValue} onChange={(e, newValue) => setViewTabValue(newValue)}>
-                <Tab label="Overview" />
-                <Tab label={`Items (${purchaseToView.purchaseItems.length})`} />
-                <Tab label="Supplier" />
+                <Tab label={t('purchases.tabs.overview')} />
+                <Tab label={`${t('purchases.tabs.items')} (${purchaseToView.purchaseItems.length})`} />
+                <Tab label={t('purchases.tabs.supplier')} />
               </Tabs>
             </Box>
 
@@ -551,23 +501,23 @@ const PurchasesPage: React.FC = () => {
                       <Card sx={{ height: '100%', background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white' }}>
                         <CardContent>
                           <Typography variant="h6" sx={{ mb: 2, color: 'white' }}>
-                            Purchase Summary
+                            {t('purchases.purchaseSummary')}
                           </Typography>
                           <Grid container spacing={2}>
                             <Grid sx={{ xs: 12 }}>
-                              <Typography variant="body2" sx={{ opacity: 0.9 }}>Purchase Date</Typography>
+                              <Typography variant="body2" sx={{ opacity: 0.9 }}>{t('purchases.purchaseDate')}</Typography>
                               <Typography variant="body1" sx={{ fontWeight: 500 }}>
                                 {new Date(purchaseToView.purchaseDate).toLocaleDateString()}
                               </Typography>
                             </Grid>
                             <Grid sx={{ xs: 12 }}>
-                              <Typography variant="body2" sx={{ opacity: 0.9 }}>Created By</Typography>
+                              <Typography variant="body2" sx={{ opacity: 0.9 }}>{t('purchases.createdBy')}</Typography>
                               <Typography variant="body1" sx={{ fontWeight: 500 }}>
                                 {purchaseToView.createdBy}
                               </Typography>
                             </Grid>
                             <Grid sx={{ xs: 12 }}>
-                              <Typography variant="body2" sx={{ opacity: 0.9 }}>Supplier</Typography>
+                              <Typography variant="body2" sx={{ opacity: 0.9 }}>{t('purchases.supplier')}</Typography>
                               <Typography variant="body1" sx={{ fontWeight: 500 }}>
                                 {purchaseToView.supplierName}
                               </Typography>
@@ -583,26 +533,26 @@ const PurchasesPage: React.FC = () => {
                         <CardContent>
                           <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                             <ReceiptIcon color="primary" />
-                            Financial Summary
+                            {t('purchases.financialSummary')}
                           </Typography>
                           <Grid container spacing={2}>
                             <Grid sx={{ xs: 12 }}>
-                              <Typography variant="body2" color="text.secondary">Total Cost</Typography>
+                              <Typography variant="body2" color="text.secondary">{t('purchases.totalCost')}</Typography>
                               <Typography variant="h5" sx={{ fontWeight: 600, color: 'primary.main' }}>
-                                {formatCurrency(purchaseToView.totalCost)}
+                                <CurrencyDisplay amount={purchaseToView.totalCost} />
                               </Typography>
                             </Grid>
                             <Grid sx={{ xs: 6 }}>
-                              <Typography variant="body2" color="text.secondary">Items</Typography>
+                              <Typography variant="body2" color="text.secondary">{t('purchases.items')}</Typography>
                               <Typography variant="h6" sx={{ fontWeight: 500 }}>
                                 {purchaseToView.purchaseItems.length}
                               </Typography>
                             </Grid>
                             <Grid sx={{ xs: 6 }}>
-                              <Typography variant="body2" color="text.secondary">Status</Typography>
-                              <Chip
-                                label={purchasesService.formatPurchaseStatus(purchaseToView.status)}
-                                color={purchasesService.getPurchaseStatusColor(purchaseToView.status)}
+                              <Typography variant="body2" color="text.secondary">{t('purchases.status')}</Typography>
+                              <StatusChip
+                                status={purchaseToView.status}
+                                statusConfig={commonStatusConfigs.purchaseStatus(t)}
                                 size="small"
                               />
                             </Grid>
@@ -618,7 +568,7 @@ const PurchasesPage: React.FC = () => {
                           <CardContent>
                             <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                               <TimelineIcon color="primary" />
-                              Remarks
+                              {t('purchases.remarks')}
                             </Typography>
                             <Typography variant="body1">
                               {purchaseToView.remark}
@@ -637,16 +587,16 @@ const PurchasesPage: React.FC = () => {
               <Box sx={{ p: 3 }}>
                 <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                   <ShoppingBasketIcon color="primary" />
-                  Purchase Items ({purchaseToView.purchaseItems.length})
+                  {t('purchases.purchaseItems')} ({purchaseToView.purchaseItems.length})
                 </Typography>
                 <TableContainer component={Paper}>
                   <Table>
                     <TableHead>
                       <TableRow>
-                        <TableCell sx={{ fontWeight: 600 }}>Product</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 600 }}>Quantity</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 600 }}>Cost per Unit</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 600 }}>Total Cost</TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>{t('purchases.itemsTableColumns.product')}</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 600 }}>{t('purchases.itemsTableColumns.quantity')}</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 600 }}>{t('purchases.itemsTableColumns.costPerUnit')}</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 600 }}>{t('purchases.itemsTableColumns.totalCost')}</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -654,9 +604,11 @@ const PurchasesPage: React.FC = () => {
                         <TableRow key={item.id}>
                           <TableCell>{item.productName}</TableCell>
                           <TableCell align="right">{item.quantity}</TableCell>
-                          <TableCell align="right">{formatCurrency(item.costPerUnit)}</TableCell>
+                          <TableCell align="right">
+                            <CurrencyDisplay amount={item.costPerUnit} />
+                          </TableCell>
                           <TableCell align="right" sx={{ fontWeight: 500 }}>
-                            {formatCurrency(item.totalCost)}
+                            <CurrencyDisplay amount={item.totalCost} />
                           </TableCell>
                         </TableRow>
                       ))}
@@ -671,7 +623,7 @@ const PurchasesPage: React.FC = () => {
               <Box sx={{ p: 3 }}>
                 <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                   <BusinessIcon color="primary" />
-                  Supplier Information
+                  {t('purchases.supplierInformation')}
                 </Typography>
                 {viewSupplier ? (
                   <Card>
@@ -686,7 +638,7 @@ const PurchasesPage: React.FC = () => {
                                 </Avatar>
                               </ListItemAvatar>
                               <ListItemText
-                                primary="Company Name"
+                                primary={t('purchases.companyName')}
                                 secondary={viewSupplier.name}
                                 primaryTypographyProps={{ fontWeight: 600 }}
                               />
@@ -698,7 +650,7 @@ const PurchasesPage: React.FC = () => {
                                 </Avatar>
                               </ListItemAvatar>
                               <ListItemText
-                                primary="Email"
+                                primary={t('sales.email')}
                                 secondary={viewSupplier.email}
                               />
                             </ListItem>
@@ -709,7 +661,7 @@ const PurchasesPage: React.FC = () => {
                                 </Avatar>
                               </ListItemAvatar>
                               <ListItemText
-                                primary="Contact"
+                                primary={t('purchases.contact')}
                                 secondary={viewSupplier.contactNo}
                               />
                             </ListItem>
@@ -724,7 +676,7 @@ const PurchasesPage: React.FC = () => {
                                 </Avatar>
                               </ListItemAvatar>
                               <ListItemText
-                                primary="Address"
+                                primary={t('purchases.address')}
                                 secondary={viewSupplier.address}
                               />
                             </ListItem>
@@ -735,10 +687,10 @@ const PurchasesPage: React.FC = () => {
                                 </Avatar>
                               </ListItemAvatar>
                               <ListItemText
-                                primary="Status"
+                                primary={t('purchases.status')}
                                 secondary={
                                   <Chip
-                                    label={viewSupplier.isActive ? 'Active' : 'Inactive'}
+                                    label={viewSupplier.isActive ? t('products.active') : t('products.inactive')}
                                     color={viewSupplier.isActive ? 'success' : 'error'}
                                     size="small"
                                   />
@@ -752,8 +704,8 @@ const PurchasesPage: React.FC = () => {
                   </Card>
                 ) : (
                   <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
-                    <Typography variant="h6">Supplier information not available</Typography>
-                    <Typography variant="body2">Unable to load supplier details for this purchase.</Typography>
+                    <Typography variant="h6">{t('purchases.supplierInfoNotAvailable')}</Typography>
+                    <Typography variant="body2">{t('purchases.unableToLoadSupplierDetails')}</Typography>
                   </Box>
                 )}
               </Box>
