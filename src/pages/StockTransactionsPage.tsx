@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Grid,
@@ -65,6 +66,7 @@ import FilterBar from '../components/common/FilterBar';
 import usePagination, { usePaginationProps } from '../hooks/usePagination';
 
 const StockTransactionsPage: React.FC = () => {
+  const { t } = useTranslation();
   const theme = useTheme();
 
   // State for transactions list
@@ -146,7 +148,7 @@ const StockTransactionsPage: React.FC = () => {
           setTotalPages(data.totalPages);
                   }
       } else {
-        setError(response.data.message || 'Failed to load stock transactions');
+        setError(response.data.message || t('stockTransactions.failedToLoadTransactions'));
       }
     } catch (err: any) {
       setError(handleApiError(err));
@@ -246,7 +248,7 @@ const StockTransactionsPage: React.FC = () => {
           setTotalPages(data.totalPages);
                   }
       } else {
-        setError(response.data.message || 'Failed to load stock transactions');
+        setError(response.data.message || t('stockTransactions.failedToLoadTransactions'));
       }
     } catch (err: any) {
       setError(handleApiError(err));
@@ -358,26 +360,60 @@ const StockTransactionsPage: React.FC = () => {
     }
   };
 
+  // Translate transaction type names
+  const getTransactionTypeTranslation = (typeName: string): string => {
+    switch (typeName?.toLowerCase()) {
+      case 'stock in':
+        return t('stockTransactions.transactionTypes.stockIn');
+      case 'stock out':
+        return t('stockTransactions.transactionTypes.stockOut');
+      default:
+        return typeName || '';
+    }
+  };
+
+  // Translate reference type names
+  const getReferenceTypeTranslation = (refTypeName: string): string => {
+    switch (refTypeName?.toLowerCase()) {
+      case 'purchase':
+        return t('stockTransactions.referenceTypes.purchase');
+      case 'sale':
+        return t('stockTransactions.referenceTypes.sale');
+      case 'sales return':
+        return t('stockTransactions.referenceTypes.salesReturn');
+      case 'adjustment':
+        return t('stockTransactions.referenceTypes.adjustment');
+      case 'sales cancellation':
+      case 'salescancellation':
+        return t('stockTransactions.referenceTypes.salesCancellation');
+      case 'purchase cancellation':
+      case 'purchasecancellation':
+        return t('stockTransactions.referenceTypes.purchaseCancellation');
+      default:
+        return refTypeName || '';
+    }
+  };
+
   // Define table columns matching original structure
   const columns = [
     {
       id: 'transactionDate',
-      label: 'Date',
+      label: t('stockTransactions.tableColumns.date'),
       minWidth: 120,
       format: (value) => new Date(value).toLocaleDateString()
     },
     {
       id: 'productName',
-      label: 'Product',
+      label: t('stockTransactions.tableColumns.product'),
       minWidth: 200
     },
     {
       id: 'type',
-      label: 'Type',
+      label: t('stockTransactions.tableColumns.type'),
       minWidth: 80,
       format: (value) => (
         <Chip
-          label={value === StockTransactionType.IN ? 'IN' : 'OUT'}
+          label={getTransactionTypeTranslation(value === StockTransactionType.IN ? 'Stock In' : 'Stock Out')}
           color={value === StockTransactionType.IN ? 'success' : 'error'}
           size="small"
           sx={{ fontWeight: 500 }}
@@ -386,12 +422,13 @@ const StockTransactionsPage: React.FC = () => {
     },
     {
       id: 'refTypeName',
-      label: 'Reference',
-      minWidth: 120
+      label: t('stockTransactions.tableColumns.reference'),
+      minWidth: 120,
+      format: (value) => getReferenceTypeTranslation(value)
     },
     {
       id: 'quantity',
-      label: 'Quantity',
+      label: t('stockTransactions.tableColumns.quantity'),
       align: 'right' as const,
       minWidth: 100,
       format: (value, row) => (
@@ -405,7 +442,7 @@ const StockTransactionsPage: React.FC = () => {
     },
     {
       id: 'unitCost',
-      label: 'Unit Cost',
+      label: t('stockTransactions.tableColumns.unitCost'),
       align: 'right' as const,
       minWidth: 100,
       format: (value) => (
@@ -416,7 +453,7 @@ const StockTransactionsPage: React.FC = () => {
     },
     {
       id: 'totalCost',
-      label: 'Total Cost',
+      label: t('stockTransactions.tableColumns.totalCost'),
       align: 'right' as const,
       minWidth: 120,
       format: (value) => (
@@ -427,7 +464,7 @@ const StockTransactionsPage: React.FC = () => {
     },
     {
       id: 'createdBy',
-      label: 'Created By',
+      label: t('stockTransactions.tableColumns.createdBy'),
       minWidth: 120
     }
   ];
@@ -441,7 +478,12 @@ const StockTransactionsPage: React.FC = () => {
       undefined, // No delete action for stock transactions
       {
         canEdit: () => false,
-        canDelete: () => false
+        canDelete: () => false,
+        translations: {
+          viewDetails: t('stockTransactions.actions.viewDetails'),
+          edit: t('stockTransactions.actions.edit'),
+          delete: t('stockTransactions.actions.delete')
+        }
       }
     );
   };
@@ -449,10 +491,10 @@ const StockTransactionsPage: React.FC = () => {
   return (
     <Box sx={{ flexGrow: 1, p: 3 }}>
       <PageHeader
-        title="Stock Transactions"
-        subtitle="Track and manage your inventory movements"
+        title={t('stockTransactions.title')}
+        subtitle={t('stockTransactions.subtitle')}
         actionButton={{
-          label: "Create Adjustment",
+          label: t('stockTransactions.createAdjustment'),
           onClick: handleCreateAdjustment
         }}
         showRefresh={true}
@@ -469,27 +511,27 @@ const StockTransactionsPage: React.FC = () => {
         filters={[
           {
             id: 'type',
-            label: 'Transaction Type',
+            label: t('stockTransactions.filters.transactionType'),
             value: filters.type,
             options: stockTransactionsService.getTransactionTypeOptions().map((option) => ({
               value: option.value.toString(),
-              label: option.label
+              label: getTransactionTypeTranslation(option.label)
             }))
           },
           {
             id: 'refType',
-            label: 'Reference Type',
+            label: t('stockTransactions.filters.referenceType'),
             value: filters.refType,
             options: stockTransactionsService.getReferenceTypeOptions().map((option) => ({
               value: option.value.toString(),
-              label: option.label
+              label: getReferenceTypeTranslation(option.label)
             }))
           }
         ]}
         autocompleteFields={[
           {
             id: 'productId',
-            label: 'Product',
+            label: t('stockTransactions.filters.product'),
             value: filters.productId,
             options: products?.map((product) => ({ value: product.id, label: product.title })) || [],
             onChange: (value) => handleFilterChange('productId', value)
@@ -498,14 +540,14 @@ const StockTransactionsPage: React.FC = () => {
         dateFields={[
           {
             id: 'fromDate',
-            label: 'From Date',
+            label: t('stockTransactions.filters.fromDate'),
             value: filters.fromDate,
             onChange: (value) => handleFilterChange('fromDate', value),
             type: 'date'
           },
           {
             id: 'toDate',
-            label: 'To Date',
+            label: t('stockTransactions.filters.toDate'),
             value: filters.toDate,
             onChange: (value) => handleFilterChange('toDate', value),
             type: 'date'
@@ -534,12 +576,12 @@ const StockTransactionsPage: React.FC = () => {
         error={error}
         emptyState={{
           icon: '📈',
-          title: 'No stock transactions found',
+          title: t('stockTransactions.noTransactionsFound'),
           description: filters.productId || filters.type || filters.refType || filters.fromDate || filters.toDate
-            ? 'Try adjusting your search terms or filters'
-            : 'Stock transactions will appear here when inventory changes occur',
+            ? t('stockTransactions.tryAdjustingSearch')
+            : t('stockTransactions.getStarted'),
           action: {
-            label: 'Create Adjustment',
+            label: t('stockTransactions.createAdjustment'),
             onClick: handleCreateAdjustment
           }
         }}
@@ -547,7 +589,7 @@ const StockTransactionsPage: React.FC = () => {
         getRowId={(transaction) => transaction.id}
         pagination={usePaginationProps(pagination, paginationActions, totalCount, totalPages, [5, 10, 20, 25, 50, 100])}
         errorAction={{
-          label: 'Retry',
+          label: t('stockTransactions.retry'),
           onClick: loadTransactions
         }}
         sx={{
@@ -575,7 +617,7 @@ const StockTransactionsPage: React.FC = () => {
           <Box display="flex" alignItems="center" gap={1}>
             <ReceiptIcon color="primary" />
             <Typography variant="h5" fontWeight={600}>
-              Transaction Details
+              {t('stockTransactions.transactionDetails')}
             </Typography>
           </Box>
         </DialogTitle>
@@ -588,19 +630,19 @@ const StockTransactionsPage: React.FC = () => {
         >
           <Tab
             icon={<InfoIcon />}
-            label="Overview"
+            label={t('stockTransactions.overview')}
             iconPosition="start"
             sx={{ minHeight: 48 }}
           />
           <Tab
             icon={<ProductIcon />}
-            label="Product Details"
+            label={t('stockTransactions.productDetails')}
             iconPosition="start"
             sx={{ minHeight: 48 }}
           />
           <Tab
             icon={<TimelineIcon />}
-            label="Reference & Origin"
+            label={t('stockTransactions.referenceOrigin')}
             iconPosition="start"
             sx={{ minHeight: 48 }}
           />
@@ -616,12 +658,12 @@ const StockTransactionsPage: React.FC = () => {
                     <Grid sx={{ xs: 12, md: 6 }}>
                       <Card elevation={1} sx={{ p: 2, mb: 2 }}>
                         <Typography variant="h6" gutterBottom color="primary" fontWeight={600}>
-                          Transaction Information
+                          {t('stockTransactions.transactionInformation')}
                         </Typography>
                         <Grid container spacing={2}>
                           <Grid sx={{ xs: 12 }}>
                             <Typography variant="body2" color="text.secondary">
-                              Transaction ID
+                              {t('stockTransactions.transactionId')}
                             </Typography>
                             <Typography variant="body1" sx={{ fontFamily: 'monospace', mb: 1 }}>
                               {selectedTransaction.id?.substring(0, 8).toUpperCase() || 'N/A'}
@@ -629,7 +671,7 @@ const StockTransactionsPage: React.FC = () => {
                           </Grid>
                           <Grid sx={{ xs: 12 }}>
                             <Typography variant="body2" color="text.secondary">
-                              Transaction Date
+                              {t('stockTransactions.transactionDate')}
                             </Typography>
                             <Typography variant="body1" sx={{ mb: 1 }}>
                               {formatDate(selectedTransaction.transactionDate)}
@@ -637,10 +679,10 @@ const StockTransactionsPage: React.FC = () => {
                           </Grid>
                           <Grid sx={{ xs: 12 }}>
                             <Typography variant="body2" color="text.secondary">
-                              Transaction Type
+                              {t('stockTransactions.transactionType')}
                             </Typography>
                             <Chip
-                              label={selectedTransaction.typeName}
+                              label={getTransactionTypeTranslation(selectedTransaction.typeName)}
                               color={getTransactionTypeColor(selectedTransaction.type) as any}
                               size="small"
                               sx={{ fontWeight: 500 }}
@@ -653,20 +695,20 @@ const StockTransactionsPage: React.FC = () => {
                     <Grid sx={{ xs: 12, md: 6 }}>
                       <Card elevation={1} sx={{ p: 2, mb: 2 }}>
                         <Typography variant="h6" gutterBottom color="primary" fontWeight={600}>
-                          Financial Information
+                          {t('stockTransactions.financialInformation')}
                         </Typography>
                         <Grid container spacing={2}>
                           <Grid sx={{ xs: 12 }}>
                             <Typography variant="body2" color="text.secondary">
-                              Quantity
+                              {t('stockTransactions.quantity')}
                             </Typography>
                             <Typography variant="h6" color="primary.main">
-                              {selectedTransaction.quantity.toLocaleString()} units
+                              {selectedTransaction.quantity.toLocaleString()} {t('stockTransactions.units')}
                             </Typography>
                           </Grid>
                           <Grid sx={{ xs: 12 }}>
                             <Typography variant="body2" color="text.secondary">
-                              Unit Cost
+                              {t('stockTransactions.unitCost')}
                             </Typography>
                             <Typography variant="h6" color="primary.main">
                               {formatCurrency(selectedTransaction.unitCost)}
@@ -674,7 +716,7 @@ const StockTransactionsPage: React.FC = () => {
                           </Grid>
                           <Grid sx={{ xs: 12 }}>
                             <Typography variant="body2" color="text.secondary">
-                              Total Cost
+                              {t('stockTransactions.totalCost')}
                             </Typography>
                             <Typography variant="h5" color="primary.main" fontWeight={600}>
                               {formatCurrency(selectedTransaction.totalCost)}
@@ -687,15 +729,15 @@ const StockTransactionsPage: React.FC = () => {
                     <Grid sx={{ xs: 12 }}>
                       <Card elevation={1} sx={{ p: 2 }}>
                         <Typography variant="h6" gutterBottom color="primary" fontWeight={600}>
-                          Reference Information
+                          {t('stockTransactions.referenceInformation')}
                         </Typography>
                         <Grid container spacing={2}>
                           <Grid sx={{ xs: 12, md: 6 }}>
                             <Typography variant="body2" color="text.secondary">
-                              Reference Type
+                              {t('stockTransactions.referenceType')}
                             </Typography>
                             <Chip
-                              label={selectedTransaction.refTypeName}
+                              label={getReferenceTypeTranslation(selectedTransaction.refTypeName)}
                               color={getReferenceTypeColor(selectedTransaction.refType) as any}
                               size="small"
                               variant="outlined"
@@ -704,7 +746,7 @@ const StockTransactionsPage: React.FC = () => {
                           </Grid>
                           <Grid sx={{ xs: 12, md: 6 }}>
                             <Typography variant="body2" color="text.secondary">
-                              Reference ID
+                              {t('stockTransactions.referenceId')}
                             </Typography>
                             <Typography variant="body1">
                               {selectedTransaction.refId || 'N/A'}
@@ -722,14 +764,14 @@ const StockTransactionsPage: React.FC = () => {
                 <Box>
                   <Card elevation={1} sx={{ p: 3 }}>
                     <Typography variant="h6" gutterBottom color="primary" fontWeight={600} sx={{ mb: 3 }}>
-                      Product Information
+                      {t('stockTransactions.productInformation')}
                     </Typography>
 
                     <Grid container spacing={3}>
                       <Grid sx={{ xs: 12, md: 8 }}>
                         <Box sx={{ mb: 3 }}>
                           <Typography variant="body2" color="text.secondary" gutterBottom>
-                            Product Name
+                            {t('stockTransactions.productName')}
                           </Typography>
                           <Typography variant="h5" fontWeight={500} sx={{ mb: 2 }}>
                             {selectedTransaction.productName}
@@ -739,7 +781,7 @@ const StockTransactionsPage: React.FC = () => {
                         <Grid container spacing={3}>
                           <Grid sx={{ xs: 12, md: 6 }}>
                             <Typography variant="body2" color="text.secondary" gutterBottom>
-                              Product ID
+                              {t('stockTransactions.productId')}
                             </Typography>
                             <Typography variant="body1" sx={{ fontFamily: 'monospace', mb: 2 }}>
                               {selectedTransaction.productId?.substring(0, 8).toUpperCase() || 'N/A'}
@@ -747,11 +789,11 @@ const StockTransactionsPage: React.FC = () => {
                           </Grid>
                           <Grid sx={{ xs: 12, md: 6 }}>
                             <Typography variant="body2" color="text.secondary" gutterBottom>
-                              Stock Impact
+                              {t('stockTransactions.stockImpact')}
                             </Typography>
                             <Typography variant="body1" sx={{ mb: 2 }}>
                               <Chip
-                                label={`${selectedTransaction.type === StockTransactionType.IN ? '+' : '-'}${selectedTransaction.quantity} units`}
+                                label={`${selectedTransaction.type === StockTransactionType.IN ? '+' : '-'}${selectedTransaction.quantity} ${t('stockTransactions.units')}`}
                                 color={selectedTransaction.type === StockTransactionType.IN ? 'success' : 'error'}
                                 size="small"
                                 sx={{ fontWeight: 500 }}
@@ -765,10 +807,10 @@ const StockTransactionsPage: React.FC = () => {
                         <Box sx={{ textAlign: 'center', py: 2 }}>
                           <ProductIcon sx={{ fontSize: 64, color: 'primary.main', mb: 1 }} />
                           <Typography variant="h6" gutterBottom>
-                            Product Transaction
+                            {t('stockTransactions.productTransaction')}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            This transaction affects product inventory levels
+                            {t('stockTransactions.productTransactionDescription')}
                           </Typography>
                         </Box>
                       </Grid>
@@ -782,7 +824,7 @@ const StockTransactionsPage: React.FC = () => {
                 <Box>
                   <Card elevation={1} sx={{ p: 3 }}>
                     <Typography variant="h6" gutterBottom color="primary" fontWeight={600} sx={{ mb: 3 }}>
-                      Transaction Origin & Audit Trail
+                      {t('stockTransactions.transactionOriginAudit')}
                     </Typography>
 
                     <List>
@@ -793,7 +835,7 @@ const StockTransactionsPage: React.FC = () => {
                         <ListItemText
                           primary={
                             <Typography variant="h6" fontWeight={600}>
-                              Transaction Created
+                              {t('stockTransactions.transactionCreated')}
                             </Typography>
                           }
                           secondary={
@@ -802,7 +844,7 @@ const StockTransactionsPage: React.FC = () => {
                                 {formatDate(selectedTransaction.createdDate)}
                               </Typography>
                               <Typography variant="body1">
-                                Stock transaction recorded in the system
+                                {t('stockTransactions.transactionRecorded')}
                               </Typography>
                             </Box>
                           }
@@ -816,7 +858,7 @@ const StockTransactionsPage: React.FC = () => {
                         <ListItemText
                           primary={
                             <Typography variant="h6" fontWeight={600}>
-                              Created By
+                              {t('stockTransactions.createdBy')}
                             </Typography>
                           }
                           secondary={
@@ -839,21 +881,21 @@ const StockTransactionsPage: React.FC = () => {
                         <ListItemText
                           primary={
                             <Typography variant="h6" fontWeight={600}>
-                              Reference Information
+                              {t('stockTransactions.referenceInformation')}
                             </Typography>
                           }
                           secondary={
                             <Box>
                               <Typography variant="body1">
-                                Type: {selectedTransaction.refTypeName}
+                                {t('stockTransactions.type')}: {getReferenceTypeTranslation(selectedTransaction.refTypeName)}
                               </Typography>
                               {selectedTransaction.refId && (
                                 <Typography variant="body1">
-                                  ID: {selectedTransaction.refId}
+                                  {t('stockTransactions.id')}: {selectedTransaction.refId}
                                 </Typography>
                               )}
                               <Typography variant="body2" color="text.secondary">
-                                Related document or transaction reference
+                                {t('stockTransactions.relatedDocument')}
                               </Typography>
                             </Box>
                           }
@@ -864,12 +906,12 @@ const StockTransactionsPage: React.FC = () => {
 
                   <Card elevation={1} sx={{ p: 3, mt: 2 }}>
                     <Typography variant="h6" gutterBottom color="primary" fontWeight={600}>
-                      Technical Details
+                      {t('stockTransactions.technicalDetails')}
                     </Typography>
                     <Grid container spacing={2}>
                       <Grid sx={{ xs: 12, md: 6 }}>
                         <Typography variant="body2" color="text.secondary">
-                          Transaction Type Enum
+                          {t('stockTransactions.transactionTypeEnum')}
                         </Typography>
                         <Typography variant="body1" sx={{ fontFamily: 'monospace', mb: 1 }}>
                           {selectedTransaction.type}
@@ -877,7 +919,7 @@ const StockTransactionsPage: React.FC = () => {
                       </Grid>
                       <Grid sx={{ xs: 12, md: 6 }}>
                         <Typography variant="body2" color="text.secondary">
-                          Reference Type Enum
+                          {t('stockTransactions.referenceTypeEnum')}
                         </Typography>
                         <Typography variant="body1" sx={{ fontFamily: 'monospace', mb: 1 }}>
                           {selectedTransaction.refType}
@@ -891,7 +933,7 @@ const StockTransactionsPage: React.FC = () => {
           ) : (
             <Box sx={{ textAlign: 'center', py: 4 }}>
               <Typography variant="body1" color="text.secondary">
-                No transaction details available.
+                {t('stockTransactions.noTransactionDetails')}
               </Typography>
             </Box>
           )}
@@ -906,7 +948,7 @@ const StockTransactionsPage: React.FC = () => {
             }}
             variant="outlined"
           >
-            Close
+            {t('stockTransactions.close')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -919,7 +961,7 @@ const StockTransactionsPage: React.FC = () => {
         fullWidth
         PaperProps={{ sx: { borderRadius: 2 } }}
       >
-        <DialogTitle>Create Stock Adjustment</DialogTitle>
+        <DialogTitle>{t('stockTransactions.createStockAdjustment')}</DialogTitle>
         <form onSubmit={handleCreateAdjustmentSubmit}>
           <DialogContent sx={{ pt: 1 }}>
             {adjustmentError && (
@@ -949,7 +991,7 @@ const StockTransactionsPage: React.FC = () => {
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Product"
+                      label={t('stockTransactions.product')}
                       required
                       sx={{ minWidth: 200 }}
                     />
@@ -959,15 +1001,15 @@ const StockTransactionsPage: React.FC = () => {
 
               <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
                 <FormControl fullWidth required sx={{ minWidth: 200 }}>
-                  <InputLabel>Adjustment Type</InputLabel>
+                  <InputLabel>{t('stockTransactions.adjustmentType')}</InputLabel>
                   <Select
                     value={adjustmentForm.type}
-                    label="Adjustment Type"
+                    label={t('stockTransactions.adjustmentType')}
                     onChange={(e) => handleAdjustmentFormChange('type', e.target.value as StockTransactionType)}
                   >
                     {stockTransactionsService.getTransactionTypeOptions().map((option) => (
                       <MenuItem key={option.value} value={option.value}>
-                        {option.label}
+                        {getTransactionTypeTranslation(option.label)}
                       </MenuItem>
                     ))}
                   </Select>
@@ -977,7 +1019,7 @@ const StockTransactionsPage: React.FC = () => {
               <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
                 <TextField
                   fullWidth
-                  label="Quantity"
+                  label={t('stockTransactions.quantity')}
                   type="number"
                   value={adjustmentForm.quantity}
                   onChange={(e) => handleAdjustmentFormChange('quantity', parseInt(e.target.value) || 0)}
@@ -991,13 +1033,13 @@ const StockTransactionsPage: React.FC = () => {
               <Grid sx={{ xs: 12 }}>
                 <TextField
                   fullWidth
-                  label="Reason"
+                  label={t('stockTransactions.reason')}
                   multiline
                   rows={3}
                   value={adjustmentForm.reason}
                   onChange={(e) => handleAdjustmentFormChange('reason', e.target.value)}
                   required
-                  placeholder="Describe the reason for this adjustment..."
+                  placeholder={t('stockTransactions.adjustmentReasonPlaceholder')}
                   sx={{ minWidth: 200 }}
                 />
               </Grid>
@@ -1005,7 +1047,7 @@ const StockTransactionsPage: React.FC = () => {
           </DialogContent>
           <DialogActions sx={{ px: 3, pb: 3 }}>
             <Button onClick={() => setAdjustmentDialogOpen(false)} disabled={adjustmentLoading}>
-              Cancel
+              {t('stockTransactions.cancel')}
             </Button>
             <Button
               type="submit"
@@ -1013,7 +1055,7 @@ const StockTransactionsPage: React.FC = () => {
               disabled={adjustmentLoading}
               startIcon={adjustmentLoading ? <CircularProgress size={20} /> : null}
             >
-              {adjustmentLoading ? 'Creating...' : 'Create Adjustment'}
+              {adjustmentLoading ? t('stockTransactions.creating') : t('stockTransactions.createAdjustment')}
             </Button>
           </DialogActions>
         </form>
