@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Card,
@@ -23,6 +24,7 @@ import {
 } from '@mui/material';
 import DataTable, { TableColumn, ContextAction } from '../components/common/DataTable';
 import FilterBar from '../components/common/FilterBar';
+import { StatusChip, commonStatusConfigs } from '../components/common';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -51,6 +53,7 @@ import {
 } from '../utils/expenseUtils';
 
 const ExpensesPage: React.FC = () => {
+  const { t } = useTranslation();
   // State management
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(false);
@@ -84,11 +87,11 @@ const ExpensesPage: React.FC = () => {
   // Pagination hook
   const [paginationState, paginationActions] = usePagination(1, 10);
 
-  // Table columns definition
-  const columns: TableColumn<Expense>[] = [
+  // Table columns definition with translation support
+  const columns: TableColumn<Expense>[] = useMemo(() => [
     {
       id: 'title',
-      label: 'Title',
+      label: t('expenses.tableColumns.title'),
       minWidth: 200,
       format: (value, row) => (
         <Box>
@@ -105,11 +108,11 @@ const ExpensesPage: React.FC = () => {
     },
     {
       id: 'expenseTypeName',
-      label: 'Type',
+      label: t('expenses.tableColumns.type'),
       minWidth: 120,
-      format: (value) => (
+      format: (value, row) => (
         <Chip
-          label={value}
+          label={getExpenseTypeTranslation(value, row.expenseType)}
           size="small"
           variant="outlined"
           sx={{ fontSize: '0.7rem' }}
@@ -118,7 +121,7 @@ const ExpensesPage: React.FC = () => {
     },
     {
       id: 'amount',
-      label: 'Amount',
+      label: t('expenses.tableColumns.amount'),
       minWidth: 100,
       align: 'right',
       format: (value) => (
@@ -129,30 +132,29 @@ const ExpensesPage: React.FC = () => {
     },
     {
       id: 'expenseDate',
-      label: 'Date',
+      label: t('expenses.tableColumns.date'),
       minWidth: 100,
       format: (value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     },
     {
       id: 'statusName',
-      label: 'Status',
+      label: t('expenses.tableColumns.status'),
       minWidth: 100,
       format: (value, row) => (
-        <Chip
-          label={value}
-          color={getStatusColor(row.status) as any}
+        <StatusChip
+          status={row.status}
+          statusConfig={commonStatusConfigs.expenseStatus(t)}
           size="small"
-          sx={{ fontWeight: 500 }}
         />
       )
     },
     {
-      id: 'paymentMethodName',
-      label: 'Payment Method',
+      id: 'paymentMethod',
+      label: t('expenses.tableColumns.paymentMethod'),
       minWidth: 120,
-      format: (value) => (
+      format: (value, row) => (
         <Chip
-          label={value}
+          label={getPaymentMethodTranslation(row.paymentMethod)}
           size="small"
           variant="outlined"
           sx={{ fontSize: '0.7rem' }}
@@ -161,7 +163,7 @@ const ExpensesPage: React.FC = () => {
     },
     {
       id: 'receiptNumber',
-      label: 'Receipt',
+      label: t('expenses.tableColumns.receipt'),
       minWidth: 100,
       format: (value) => value ? (
         <Chip
@@ -178,7 +180,7 @@ const ExpensesPage: React.FC = () => {
     },
     {
       id: 'createdByUserName',
-      label: 'Created By',
+      label: t('expenses.tableColumns.createdBy'),
       minWidth: 120,
       format: (value) => (
         <Typography variant="caption">
@@ -186,7 +188,7 @@ const ExpensesPage: React.FC = () => {
         </Typography>
       )
     }
-  ];
+  ], [t]);
 
   // Load expenses
   const loadExpenses = async () => {
@@ -209,7 +211,7 @@ const ExpensesPage: React.FC = () => {
       const pageTotal = items.reduce((sum, expense) => sum + expense.amount, 0);
       setTotalAmount(pageTotal);
     } catch (err: any) {
-      setError(err.message || 'Failed to load expenses');
+      setError(err.message || t('expenses.failedToLoadExpenses'));
     } finally {
       setLoading(false);
     }
@@ -312,7 +314,7 @@ const ExpensesPage: React.FC = () => {
         setDeleteDialogOpen(false);
         setExpenseToDelete(null);
       } catch (err: any) {
-        setError(err.message || 'Failed to delete expense');
+        setError(err.message || t('expenses.failedToDeleteExpense'));
       }
     }
   };
@@ -323,7 +325,7 @@ const ExpensesPage: React.FC = () => {
       await expensesService.approveExpense(expense.id);
       loadExpenses();
     } catch (err: any) {
-      setError(err.message || 'Failed to approve expense');
+      setError(err.message || t('expenses.failedToApproveExpense'));
     }
   };
 
@@ -343,7 +345,7 @@ const ExpensesPage: React.FC = () => {
         setExpenseToReject(null);
         setRejectionReason('');
       } catch (err: any) {
-        setError(err.message || 'Failed to reject expense');
+        setError(err.message || t('expenses.failedToRejectExpense'));
       }
     }
   };
@@ -354,7 +356,7 @@ const ExpensesPage: React.FC = () => {
       await expensesService.markAsPaid(expense.id);
       loadExpenses();
     } catch (err: any) {
-      setError(err.message || 'Failed to mark expense as paid');
+      setError(err.message || t('expenses.failedToMarkAsPaid'));
     }
   };
 
@@ -370,15 +372,6 @@ const ExpensesPage: React.FC = () => {
 
   const handleExpenseUpdated = () => {
     loadExpenses();
-  };
-
-  // Get status color
-  const getStatusColor = (status: number): string => {
-    try {
-      return expensesService?.getStatusColor?.(status) || '#666666';
-    } catch {
-      return '#666666';
-    }
   };
 
   // Format date
@@ -403,8 +396,8 @@ const ExpensesPage: React.FC = () => {
       // Create a descriptive message for the download
       const hasDateFilter = filters.startDate || filters.endDate;
       const message = hasDateFilter
-        ? 'Generating PDF for filtered expenses...'
-        : 'Generating PDF for all expenses...';
+        ? t('expenses.generatingPdfFiltered')
+        : t('expenses.generatingPdfAll');
 
       setSnackbar({
         open: true,
@@ -419,17 +412,133 @@ const ExpensesPage: React.FC = () => {
 
       setSnackbar({
         open: true,
-        message: 'PDF downloaded successfully!',
+        message: t('expenses.pdfDownloadedSuccessfully'),
         severity: 'success'
       });
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.message || 'Failed to generate PDF',
+        message: error.message || t('expenses.failedToGeneratePdf'),
         severity: 'error'
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Helper function to translate expense types
+  const getExpenseTypeTranslation = (expenseTypeName: string, expenseType: number): string => {
+    // Map expense type values to translation keys - completely override the English name
+    switch (expenseType) {
+      case 1: return t('expenseTypes.rent'); // ExpenseType.Rent
+      case 2: return t('expenseTypes.salary'); // ExpenseType.Salary
+      case 3: return t('expenseTypes.utilities'); // ExpenseType.Utilities
+      case 4: return t('expenseTypes.foodAndBeverages'); // ExpenseType.Food
+      case 5: return t('expenseTypes.maintenance'); // ExpenseType.Maintenance
+      case 6: return t('expenseTypes.officeSupplies'); // ExpenseType.Supplies
+      case 7: return t('expenseTypes.transportation'); // ExpenseType.Transportation
+      case 8: return t('expenseTypes.marketing'); // ExpenseType.Marketing
+      case 9: return t('expenseTypes.insurance'); // ExpenseType.Insurance
+      case 10: return t('expenseTypes.taxes'); // ExpenseType.Taxes
+      case 11: return t('expenseTypes.legal'); // ExpenseType.Legal
+      case 12: return t('expenseTypes.training'); // ExpenseType.Training
+      case 13: return t('expenseTypes.entertainment'); // ExpenseType.Entertainment
+      case 14: return t('expenseTypes.communication'); // Communication (fallback to other)
+      case 15: return t('expenseTypes.software'); // ExpenseType.Software
+      case 16: return t('expenseTypes.equipment'); // ExpenseType.Equipment
+      case 17: return t('expenseTypes.other'); // ExpenseType.Cleaning (fallback to other)
+      case 18: return t('expenseTypes.other'); // ExpenseType.Security (fallback to other)
+      case 19: return t('expenseTypes.bankFees'); // ExpenseType.BankCharges
+      case 20: return t('expenseTypes.other'); // ExpenseType.Other
+      default:
+        // For unknown types, try to extract keywords and translate
+        const lowerName = expenseTypeName.toLowerCase();
+        if (lowerName.includes('food') || lowerName.includes('beverage')) {
+          return t('expenseTypes.foodAndBeverages');
+        } else if (lowerName.includes('transport')) {
+          return t('expenseTypes.transportation');
+        } else if (lowerName.includes('office') || lowerName.includes('supplie')) {
+          return t('expenseTypes.officeSupplies');
+        } else if (lowerName.includes('marketing')) {
+          return t('expenseTypes.marketing');
+        } else if (lowerName.includes('software') || lowerName.includes('subscription')) {
+          return t('expenseTypes.software');
+        } else if (lowerName.includes('travel')) {
+          return t('expenseTypes.travel');
+        } else if (lowerName.includes('equipment') || lowerName.includes('tool')) {
+          return t('expenseTypes.equipment');
+        } else if (lowerName.includes('legal') || lowerName.includes('professional')) {
+          return t('expenseTypes.legal');
+        } else if (lowerName.includes('bank') || lowerName.includes('fee')) {
+          return t('expenseTypes.bankFees');
+        } else if (lowerName.includes('rent')) {
+          return t('expenseTypes.rent');
+        } else if (lowerName.includes('salary')) {
+          return t('expenseTypes.salary');
+        } else if (lowerName.includes('utility')) {
+          return t('expenseTypes.utilities');
+        } else if (lowerName.includes('insurance')) {
+          return t('expenseTypes.insurance');
+        } else if (lowerName.includes('tax')) {
+          return t('expenseTypes.taxes');
+        } else if (lowerName.includes('maintenance')) {
+          return t('expenseTypes.maintenance');
+        } else if (lowerName.includes('training')) {
+          return t('expenseTypes.training');
+        } else if (lowerName.includes('entertainment')) {
+          return t('expenseTypes.entertainment');
+        } else if (lowerName.includes('depreciation')) {
+          return t('expenseTypes.depreciation');
+        }
+        return expenseTypeName; // Fallback to original if no match
+    }
+  };
+
+  // Helper function to translate expense type options for filters
+  const getTranslatedExpenseTypeOptions = () => {
+    return getExpenseTypeOptions().map(option => ({
+      value: (option && option.value != null) ? option.value.toString() : '',
+      label: getExpenseTypeTranslation(option?.label || '', (option && option.value != null) ? parseInt(option.value.toString()) : 0)
+    }));
+  };
+
+  // Helper function to translate status options for filters
+  const getTranslatedStatusOptions = () => {
+    return [
+      { value: '0', label: t('expenses.status.pending') }, // Pending
+      { value: '1', label: t('expenses.status.approved') }, // Approved
+      { value: '2', label: t('expenses.status.rejected') }, // Rejected
+      { value: '3', label: t('expenses.status.paid') }, // Paid
+      { value: '4', label: t('expenses.status.overdue') } // Overdue
+    ];
+  };
+
+  // Helper function to translate payment method options for filters
+  const getTranslatedPaymentMethodOptions = () => {
+    return getPaymentMethodOptions()
+      .map(option => ({
+        value: (option && option.value != null) ? option.value.toString() : '',
+        label: getPaymentMethodTranslation((option && option.value != null) ? parseInt(option.value.toString()) : 0)
+      }))
+      .filter(option => {
+        // Filter out unknown options (those that return 'Unknown')
+        const paymentValue = parseInt(option.value);
+        return paymentValue >= 1 && paymentValue <= 8; // Only show valid payment methods (1-8)
+      });
+  };
+
+  // Helper function to translate payment methods
+  const getPaymentMethodTranslation = (paymentMethodValue: number): string => {
+    switch (paymentMethodValue) {
+      case 1: return t('expenses.paymentMethods.cash'); // PaymentMethod.Cash
+      case 2: return t('expenses.paymentMethods.bank'); // PaymentMethod.BankTransfer
+      case 3: return t('expenses.paymentMethods.mobilePayment'); // PaymentMethod.Mobile
+      case 4: return t('expenses.paymentMethods.creditCard'); // PaymentMethod.CreditCard
+      case 5: return t('expenses.paymentMethods.debitCard'); // PaymentMethod.DebitCard
+      case 6: return t('expenses.paymentMethods.check'); // PaymentMethod.Check
+      case 7: return t('expenses.paymentMethods.online'); // PaymentMethod.Online
+      case 8: return t('expenses.paymentMethods.other'); // PaymentMethod.Other
+      default: return t('common.unknown');
     }
   };
 
@@ -438,7 +547,7 @@ const ExpensesPage: React.FC = () => {
     const actions: ContextAction[] = [
       {
         id: 'view',
-        label: 'View Details',
+        label: t('expenses.actions.viewDetails'),
         icon: <ViewIcon fontSize="small" />,
         onClick: () => handleViewExpense(expense)
       }
@@ -448,7 +557,7 @@ const ExpensesPage: React.FC = () => {
     if (expensesService.canEditExpense(expense.status)) {
       actions.push({
         id: 'edit',
-        label: 'Edit',
+        label: t('expenses.actions.edit'),
         icon: <EditIcon fontSize="small" color="primary" />,
         onClick: () => handleEditExpense(expense)
       });
@@ -459,13 +568,13 @@ const ExpensesPage: React.FC = () => {
       actions.push(
         {
           id: 'approve',
-          label: 'Approve',
+          label: t('expenses.actions.approve'),
           icon: <ApproveIcon fontSize="small" color="success" />,
           onClick: () => handleApproveExpense(expense)
         },
         {
           id: 'reject',
-          label: 'Reject',
+          label: t('expenses.actions.reject'),
           icon: <RejectIcon fontSize="small" color="error" />,
           onClick: () => handleRejectExpense(expense)
         }
@@ -476,7 +585,7 @@ const ExpensesPage: React.FC = () => {
     if (expense.status === ExpenseStatus.Approved) {
       actions.push({
         id: 'mark-paid',
-        label: 'Mark as Paid',
+        label: t('expenses.actions.markAsPaid'),
         icon: <PaidIcon fontSize="small" color="success" />,
         onClick: () => handleMarkAsPaid(expense)
       });
@@ -486,7 +595,7 @@ const ExpensesPage: React.FC = () => {
     if (expensesService.canEditExpense(expense.status)) {
       actions.push({
         id: 'delete',
-        label: 'Delete',
+        label: t('expenses.actions.delete'),
         icon: <DeleteIcon fontSize="small" color="error" />,
         onClick: () => handleDeleteExpense(expense),
         divider: true
@@ -505,10 +614,10 @@ const ExpensesPage: React.FC = () => {
       <Box sx={{ width: '100%' }}>
         {/* Page Header */}
         <PageHeader
-          title="Expenses Management"
-          subtitle="Track and manage your business expenses"
+          title={t('expenses.management')}
+          subtitle={t('expenses.subtitle')}
           actionButton={{
-            label: 'Add Expense',
+            label: t('expenses.addExpense'),
             icon: <AddIcon />,
             onClick: handleCreateExpense,
             variant: 'contained',
@@ -525,58 +634,40 @@ const ExpensesPage: React.FC = () => {
 
         {/* Filters Section */}
         <FilterBar
-          searchPlaceholder="Search expenses..."
+          searchPlaceholder={t('expenses.searchPlaceholder')}
           searchTerm={filters?.search || ''}
           onSearchChange={(value) => handleFilterChange('search', value)}
           filters={[
             {
               id: 'expenseType',
-              label: 'Type',
+              label: t('expenses.filter.type'),
               value: (filters && filters.expenseType != null) ? filters.expenseType.toString() : '',
-              options: [
-                { value: '', label: 'All Types' },
-                ...(expenseTypeOptions || []).map(option => ({
-                  value: (option && option.value != null) ? option.value.toString() : '',
-                  label: option?.label || ''
-                }))
-              ]
+              options: getTranslatedExpenseTypeOptions()
             },
             {
               id: 'status',
-              label: 'Status',
+              label: t('expenses.filter.status'),
               value: (filters && filters.status != null) ? filters.status.toString() : '',
-              options: [
-                { value: '', label: 'All Statuses' },
-                ...(statusOptions || []).map(option => ({
-                  value: (option && option.value != null) ? option.value.toString() : '',
-                  label: option?.label || ''
-                }))
-              ]
+              options: getTranslatedStatusOptions()
             },
             {
               id: 'paymentMethod',
-              label: 'Payment Method',
+              label: t('expenses.filter.paymentMethod'),
               value: (filters && filters.paymentMethod != null) ? filters.paymentMethod.toString() : '',
-              options: [
-                { value: '', label: 'All Methods' },
-                ...(paymentMethodOptions || []).map(option => ({
-                  value: (option && option.value != null) ? option.value.toString() : '',
-                  label: option?.label || ''
-                }))
-              ]
+              options: getTranslatedPaymentMethodOptions()
             }
           ]}
           dateFields={[
             {
               id: 'fromDate',
-              label: 'From Date',
+              label: t('expenses.fromDate'),
               value: (filters && filters.startDate) ? new Date(filters.startDate).toISOString().split('T')[0] : '',
               onChange: (value) => handleFilterChange('fromDate', value),
               type: 'date'
             },
             {
               id: 'toDate',
-              label: 'To Date',
+              label: t('expenses.toDate'),
               value: (filters && filters.endDate) ? new Date(filters.endDate).toISOString().split('T')[0] : '',
               onChange: (value) => handleFilterChange('toDate', value),
               type: 'date'
@@ -596,7 +687,7 @@ const ExpensesPage: React.FC = () => {
               onClick={loadExpenses}
               sx={{ borderRadius: 1 }}
             >
-              Refresh
+              {t('expenses.refresh')}
             </Button>
             <Button
               variant="contained"
@@ -605,7 +696,7 @@ const ExpensesPage: React.FC = () => {
               disabled={loading}
               sx={{ borderRadius: 1 }}
             >
-              Download PDF
+              {t('expenses.downloadPdf')}
             </Button>
           </Box>
         </FilterBar>
@@ -619,7 +710,7 @@ const ExpensesPage: React.FC = () => {
             <Card>
               <CardContent>
                 <Typography color="textSecondary" gutterBottom>
-                  Total Expenses
+                  {t('expenses.totalExpenses')}
                 </Typography>
                 <Typography variant="h4">
                   {totalExpenses}
@@ -631,7 +722,7 @@ const ExpensesPage: React.FC = () => {
             <Card>
               <CardContent>
                 <Typography color="textSecondary" gutterBottom>
-                  Total Amount
+                  {t('expenses.totalAmount')}
                 </Typography>
                 <Typography variant="h4">
                   {safeFormatCurrency(totalAmount)}
@@ -701,20 +792,17 @@ const ExpensesPage: React.FC = () => {
               }}>
                 <Box>
                   <Typography variant="h5" component="div" sx={{ fontWeight: 600 }}>
-                    Expense Details
+                    {t('expenses.expenseDetails')}
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                     {selectedExpense.title}
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Chip
-                    label={selectedExpense.statusName}
-                    sx={{
-                      backgroundColor: getStatusColor(selectedExpense.status),
-                      color: 'white',
-                      fontWeight: 500
-                    }}
+                  <StatusChip
+                    status={selectedExpense.status}
+                    statusConfig={commonStatusConfigs.expenseStatus(t)}
+                    sx={{ fontWeight: 500 }}
                   />
                   <Button
                     onClick={() => {
@@ -724,7 +812,7 @@ const ExpensesPage: React.FC = () => {
                     }}
                     startIcon={<CloseIcon />}
                   >
-                    Close
+                    {t('expenses.close')}
                   </Button>
                 </Box>
               </DialogTitle>
@@ -735,8 +823,8 @@ const ExpensesPage: React.FC = () => {
                     onChange={(e, newValue) => setViewTabValue(newValue)}
                     sx={{ px: 3 }}
                   >
-                    <Tab label="Overview" />
-                    <Tab label="Details" />
+                    <Tab label={t('expenses.tabs.overview')} />
+                    <Tab label={t('expenses.tabs.details')} />
                   </Tabs>
                 </Box>
 
@@ -754,25 +842,25 @@ const ExpensesPage: React.FC = () => {
                           <Card sx={{ height: '100%', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
                             <CardContent>
                               <Typography variant="h6" sx={{ mb: 2, color: 'white' }}>
-                                Expense Summary
+                                {t('expenses.expenseSummary')}
                               </Typography>
                               <Grid container spacing={2}>
                                 <Grid item xs={12}>
-                                  <Typography variant="body2" sx={{ opacity: 0.9 }}>Date</Typography>
+                                  <Typography variant="body2" sx={{ opacity: 0.9 }}>{t('expenses.date')}</Typography>
                                   <Typography variant="body1" sx={{ fontWeight: 500 }}>
                                     {formatDate(selectedExpense.expenseDate)}
                                   </Typography>
                                 </Grid>
                                 <Grid item xs={12}>
-                                  <Typography variant="body2" sx={{ opacity: 0.9 }}>Category</Typography>
+                                  <Typography variant="body2" sx={{ opacity: 0.9 }}>{t('expenses.category')}</Typography>
                                   <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                                    {selectedExpense.expenseTypeName}
+                                    {getExpenseTypeTranslation(selectedExpense.expenseTypeName, selectedExpense.expenseType)}
                                   </Typography>
                                 </Grid>
                                 <Grid item xs={12}>
-                                  <Typography variant="body2" sx={{ opacity: 0.9 }}>Payment Method</Typography>
+                                  <Typography variant="body2" sx={{ opacity: 0.9 }}>{t('expenses.paymentMethod')}</Typography>
                                   <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                                    {selectedExpense.paymentMethodName}
+                                    {getPaymentMethodTranslation(selectedExpense.paymentMethod)}
                                   </Typography>
                                 </Grid>
                               </Grid>
@@ -786,18 +874,18 @@ const ExpensesPage: React.FC = () => {
                             <CardContent>
                               <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <ReceiptIcon color="primary" />
-                                Financial Information
+                                {t('expenses.financialInformation')}
                               </Typography>
                               <Grid container spacing={2}>
                                 <Grid item xs={12}>
-                                  <Typography variant="body2" color="text.secondary">Amount</Typography>
+                                  <Typography variant="body2" color="text.secondary">{t('expenses.amount')}</Typography>
                                   <Typography variant="h5" sx={{ fontWeight: 600, color: 'primary.main' }}>
                                     {safeFormatCurrency(selectedExpense.amount)}
                                   </Typography>
                                 </Grid>
                                 {selectedExpense.receiptNumber && (
                                   <Grid item xs={12}>
-                                    <Typography variant="body2" color="text.secondary">Receipt Number</Typography>
+                                    <Typography variant="body2" color="text.secondary">{t('expenses.receiptNumber')}</Typography>
                                     <Typography variant="body1" sx={{ fontWeight: 500 }}>
                                       {selectedExpense.receiptNumber}
                                     </Typography>
@@ -813,7 +901,7 @@ const ExpensesPage: React.FC = () => {
                           <Grid item xs={12}>
                             <Card>
                               <CardContent>
-                                <Typography variant="h6" sx={{ mb: 2 }}>Description</Typography>
+                                <Typography variant="h6" sx={{ mb: 2 }}>{t('expenses.description')}</Typography>
                                 <Typography variant="body1">
                                   {selectedExpense.description}
                                 </Typography>
@@ -827,7 +915,7 @@ const ExpensesPage: React.FC = () => {
                           <Grid item xs={12}>
                             <Card>
                               <CardContent>
-                                <Typography variant="h6" sx={{ mb: 2 }}>Remarks</Typography>
+                                <Typography variant="h6" sx={{ mb: 2 }}>{t('expenses.remarks')}</Typography>
                                 <Typography variant="body1">
                                   {selectedExpense.remarks}
                                 </Typography>
@@ -840,23 +928,23 @@ const ExpensesPage: React.FC = () => {
                         <Grid item xs={12}>
                           <Card>
                             <CardContent>
-                              <Typography variant="h6" sx={{ mb: 2 }}>Additional Information</Typography>
+                              <Typography variant="h6" sx={{ mb: 2 }}>{t('expenses.additionalInformation')}</Typography>
                               <Grid container spacing={2}>
                                 <Grid item xs={12} md={6}>
-                                  <Typography variant="body2" color="text.secondary">Created By</Typography>
+                                  <Typography variant="body2" color="text.secondary">{t('expenses.createdBy')}</Typography>
                                   <Typography variant="body1" sx={{ fontWeight: 500 }}>
                                     {selectedExpense.createdByUserName}
                                   </Typography>
                                 </Grid>
                                 <Grid item xs={12} md={6}>
-                                  <Typography variant="body2" color="text.secondary">Created Date</Typography>
+                                  <Typography variant="body2" color="text.secondary">{t('expenses.expenseDate')}</Typography>
                                   <Typography variant="body1" sx={{ fontWeight: 500 }}>
                                     {formatDate(selectedExpense.createdDate)}
                                   </Typography>
                                 </Grid>
                                 {selectedExpense.approvedByUserName && (
                                   <Grid item xs={12} md={6}>
-                                    <Typography variant="body2" color="text.secondary">Approved By</Typography>
+                                    <Typography variant="body2" color="text.secondary">{t('expenses.approvedBy')}</Typography>
                                     <Typography variant="body1" sx={{ fontWeight: 500 }}>
                                       {selectedExpense.approvedByUserName}
                                     </Typography>
@@ -864,7 +952,7 @@ const ExpensesPage: React.FC = () => {
                                 )}
                                 {selectedExpense.approvedDate && (
                                   <Grid item xs={12} md={6}>
-                                    <Typography variant="body2" color="text.secondary">Approved Date</Typography>
+                                    <Typography variant="body2" color="text.secondary">{t('expenses.approveDate')}</Typography>
                                     <Typography variant="body1" sx={{ fontWeight: 500 }}>
                                       {formatDate(selectedExpense.approvedDate)}
                                     </Typography>
@@ -872,7 +960,7 @@ const ExpensesPage: React.FC = () => {
                                 )}
                                 {selectedExpense.paidDate && (
                                   <Grid item xs={12} md={6}>
-                                    <Typography variant="body2" color="text.secondary">Paid Date</Typography>
+                                    <Typography variant="body2" color="text.secondary">{t('expenses.paidDate')}</Typography>
                                     <Typography variant="body1" sx={{ fontWeight: 500 }}>
                                       {formatDate(selectedExpense.paidDate)}
                                     </Typography>
@@ -894,48 +982,45 @@ const ExpensesPage: React.FC = () => {
                       <Grid item xs={12}>
                         <Card>
                           <CardContent>
-                            <Typography variant="h6" sx={{ mb: 3 }}>Complete Expense Information</Typography>
+                            <Typography variant="h6" sx={{ mb: 3 }}>{t('expenses.completeExpenseInformation')}</Typography>
                             <Grid container spacing={3}>
                               <Grid item xs={12} md={6}>
-                                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>Basic Information</Typography>
+                                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>{t('expenses.basicInformation')}</Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <Typography variant="body2" color="text.secondary">Title:</Typography>
+                                    <Typography variant="body2" color="text.secondary">{t('expenses.title')}:</Typography>
                                     <Typography variant="body2">{selectedExpense.title}</Typography>
                                   </Box>
                                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <Typography variant="body2" color="text.secondary">Status:</Typography>
-                                    <Chip
-                                      label={selectedExpense.statusName}
+                                    <Typography variant="body2" color="text.secondary">{t('expenses.statusLabel')}:</Typography>
+                                    <StatusChip
+                                      status={selectedExpense.status}
+                                      statusConfig={commonStatusConfigs.expenseStatus(t)}
                                       size="small"
-                                      sx={{
-                                        backgroundColor: getStatusColor(selectedExpense.status),
-                                        color: 'white'
-                                      }}
                                     />
                                   </Box>
                                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <Typography variant="body2" color="text.secondary">Expense Type:</Typography>
-                                    <Typography variant="body2">{selectedExpense.expenseTypeName}</Typography>
+                                    <Typography variant="body2" color="text.secondary">{t('expenses.expenseType')}:</Typography>
+                                    <Typography variant="body2">{getExpenseTypeTranslation(selectedExpense.expenseTypeName, selectedExpense.expenseType)}</Typography>
                                   </Box>
                                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <Typography variant="body2" color="text.secondary">Payment Method:</Typography>
-                                    <Typography variant="body2">{selectedExpense.paymentMethodName}</Typography>
+                                    <Typography variant="body2" color="text.secondary">{t('expenses.paymentMethod')}:</Typography>
+                                    <Typography variant="body2">{getPaymentMethodTranslation(selectedExpense.paymentMethod)}</Typography>
                                   </Box>
                                 </Box>
                               </Grid>
                               <Grid item xs={12} md={6}>
-                                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>Financial Details</Typography>
+                                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>{t('expenses.financialDetails')}</Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <Typography variant="body2" color="text.secondary">Amount:</Typography>
+                                    <Typography variant="body2" color="text.secondary">{t('expenses.amount')}:</Typography>
                                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
                                       {safeFormatCurrency(selectedExpense.amount)}
                                     </Typography>
                                   </Box>
                                   {selectedExpense.receiptNumber && (
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                      <Typography variant="body2" color="text.secondary">Receipt Number:</Typography>
+                                      <Typography variant="body2" color="text.secondary">{t('expenses.receiptNumber')}:</Typography>
                                       <Typography variant="body2">{selectedExpense.receiptNumber}</Typography>
                                     </Box>
                                   )}
@@ -955,12 +1040,12 @@ const ExpensesPage: React.FC = () => {
 
         {/* Reject Dialog */}
         <Dialog open={rejectDialogOpen} onClose={() => setRejectDialogOpen(false)} maxWidth="sm" fullWidth>
-          <DialogTitle>Reject Expense</DialogTitle>
+          <DialogTitle>{t('expenses.rejectExpense')}</DialogTitle>
           <DialogContent>
             <TextField
               autoFocus
               margin="dense"
-              label="Rejection Reason"
+              label={t('expenses.rejectionReason')}
               type="text"
               fullWidth
               multiline
@@ -971,9 +1056,9 @@ const ExpensesPage: React.FC = () => {
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setRejectDialogOpen(false)}>Cancel</Button>
+            <Button onClick={() => setRejectDialogOpen(false)}>{t('expenses.cancel')}</Button>
             <Button onClick={confirmReject} color="error" variant="contained">
-              Reject Expense
+              {t('expenses.rejectExpense')}
             </Button>
           </DialogActions>
         </Dialog>

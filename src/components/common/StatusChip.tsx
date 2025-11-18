@@ -4,7 +4,8 @@ import {
   CheckCircle as CheckCircleIcon,
   RadioButtonUnchecked as PendingIcon,
   Pause as PausedIcon,
-  Block as BlockedIcon
+  Block as BlockedIcon,
+  Paid as PaidIcon
 } from '@mui/icons-material';
 import { TFunction } from 'i18next';
 
@@ -171,5 +172,50 @@ export const commonStatusConfigs = {
           icon: <PendingIcon sx={{ fontSize: 16 }} />
         };
     }
+  },
+
+  // Expense status
+  expenseStatus: (t: TFunction) => (status: string | number): StatusConfig => {
+    const statusValue = typeof status === 'number' ? status : parseInt(status);
+
+    switch (statusValue) {
+      case 0: // Pending
+        return {
+          label: t('expenses.status.pending'),
+          color: 'warning',
+          icon: <PendingIcon sx={{ fontSize: 16 }} />
+        };
+      case 1: // Approved
+        return {
+          label: t('expenses.status.approved'),
+          color: 'info',
+          icon: <CheckCircleIcon sx={{ fontSize: 16 }} />
+        };
+      case 2: // Rejected
+        return {
+          label: t('expenses.status.rejected'),
+          color: 'error',
+          icon: <BlockedIcon sx={{ fontSize: 16 }} />
+        };
+      case 3: // Paid
+        return {
+          label: t('expenses.status.paid'),
+          color: 'success',
+          icon: <PaidIcon sx={{ fontSize: 16 }} />
+        };
+      case 4: // Overdue
+        return {
+          label: t('expenses.status.overdue'),
+          color: 'error',
+          icon: <BlockedIcon sx={{ fontSize: 16 }} />
+        };
+      default:
+        return {
+          label: t('common.unknown'),
+          color: 'default',
+          icon: <PendingIcon sx={{ fontSize: 16 }} />
+        };
+    }
   }
 };
+

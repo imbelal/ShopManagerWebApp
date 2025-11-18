@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogTitle,
@@ -50,6 +51,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
   onExpenseAdded,
   onExpenseUpdated
 }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -119,19 +121,19 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (!formData.title.trim()) {
-      newErrors.title = 'Title is required';
+      newErrors.title = t('expenseForm.validation.titleRequired');
     }
 
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      newErrors.amount = 'Amount must be greater than 0';
+      newErrors.amount = t('expenseForm.validation.amountGreaterThanZero');
     }
 
     if (!formData.expenseDate) {
-      newErrors.expenseDate = 'Expense date is required';
+      newErrors.expenseDate = t('expenseForm.validation.expenseDateRequired');
     }
 
     if (!formData.paymentMethod) {
-      newErrors.paymentMethod = 'Payment method is required';
+      newErrors.paymentMethod = t('expenseForm.validation.paymentMethodRequired');
     }
 
     setErrors(newErrors);
@@ -166,7 +168,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
         };
 
         response = await expensesService.updateExpense(updateData);
-        setSuccess('Expense updated successfully!');
+        setSuccess(t('expenseForm.validation.expenseUpdatedSuccessfully'));
 
         setTimeout(() => {
           onExpenseUpdated();
@@ -186,7 +188,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
         };
 
         response = await expensesService.createExpense(createData);
-        setSuccess('Expense created successfully!');
+        setSuccess(t('expenseForm.validation.expenseCreatedSuccessfully'));
 
         setTimeout(() => {
           onExpenseAdded();
@@ -220,7 +222,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
         PaperProps={{ sx: { borderRadius: 2 } }}
       >
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          {editExpense ? 'Edit Expense' : 'Create New Expense'}
+          {editExpense ? t('expenseForm.editExpense') : t('expenseForm.createNewExpense')}
         </DialogTitle>
 
         <form onSubmit={handleSubmit}>
@@ -239,13 +241,13 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
             {/* Basic Information */}
             <Typography variant="subtitle1" sx={{ mb: 2, color: '#1a1a1a' }}>
-              Basic Information
+              {t('expenseForm.basicInformation')}
             </Typography>
             <Grid container spacing={2} sx={{ mb: 3 }}>
               <Grid sx={{ xs: 12, minWidth: 200 }}>
                 <TextField
                   fullWidth
-                  label="Title"
+                  label={t('expenseForm.title')}
                   value={formData.title}
                   onChange={(e) => handleInputChange('title', e.target.value)}
                   error={!!errors.title}
@@ -256,7 +258,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
               <Grid sx={{ xs: 12, minWidth: 200 }}>
                 <TextField
                   fullWidth
-                  label="Amount"
+                  label={t('expenseForm.amount')}
                   type="number"
                   value={formData.amount}
                   onChange={(e) => handleInputChange('amount', e.target.value)}
@@ -271,7 +273,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
               </Grid>
               <Grid sx={{ xs: 12, minWidth: 200 }}>
                 <DatePicker
-                  label="Expense Date"
+                  label={t('expenseForm.expenseDate')}
                   value={formData.expenseDate}
                   onChange={(newValue) => {
                     if (newValue) {
@@ -296,16 +298,16 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
             {/* Type and Payment */}
             <Typography variant="subtitle1" sx={{ mb: 2, color: '#1a1a1a' }}>
-              Type & Payment
+              {t('expenseForm.typeAndPayment')}
             </Typography>
             <Grid container spacing={2} sx={{ mb: 3 }}>
               <Grid sx={{ xs: 12, sm: 6, minWidth: 200 }}>
                 <FormControl fullWidth error={!!errors.expenseType}>
-                  <InputLabel>Expense Type</InputLabel>
+                  <InputLabel>{t('expenseForm.expenseType')}</InputLabel>
                   <Select
                     value={formData.expenseType}
                     onChange={(e) => handleInputChange('expenseType', e.target.value)}
-                    label="Expense Type"
+                    label={t('expenseForm.expenseType')}
                     required
                   >
                     {expenseTypeOptions.map((option) => (
@@ -323,11 +325,11 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
               </Grid>
               <Grid sx={{ xs: 12, sm: 6, minWidth: 200 }}>
                 <FormControl fullWidth error={!!errors.paymentMethod}>
-                  <InputLabel>Payment Method</InputLabel>
+                  <InputLabel>{t('expenseForm.paymentMethod')}</InputLabel>
                   <Select
                     value={formData.paymentMethod}
                     onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
-                    label="Payment Method"
+                    label={t('expenseForm.paymentMethod')}
                     required
                   >
                     {paymentMethodOptions.map((option) => (
@@ -347,38 +349,38 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
             {/* Additional Information */}
             <Typography variant="subtitle1" sx={{ mb: 2, color: '#1a1a1a' }}>
-              Additional Information
+              {t('expenseForm.additionalInformation')}
             </Typography>
             <Grid container spacing={2} sx={{ mb: 3 }}>
               <Grid sx={{ xs: 12, minWidth: 200 }}>
                 <TextField
                   fullWidth
-                  label="Receipt Number"
+                  label={t('expenseForm.receiptNumber')}
                   value={formData.receiptNumber}
                   onChange={(e) => handleInputChange('receiptNumber', e.target.value)}
-                  placeholder="Optional receipt or reference number"
+                  placeholder={t('expenseForm.placeholders.receiptNumber')}
                 />
               </Grid>
               <Grid sx={{ xs: 12, minWidth: 200 }}>
                 <TextField
                   fullWidth
-                  label="Description"
+                  label={t('expenseForm.description')}
                   multiline
                   rows={2}
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
-                  placeholder="Brief description of the expense"
+                  placeholder={t('expenseForm.placeholders.description')}
                 />
               </Grid>
               <Grid sx={{ xs: 12, minWidth: 200 }}>
                 <TextField
                   fullWidth
-                  label="Remarks"
+                  label={t('expenseForm.remarks')}
                   multiline
                   rows={3}
                   value={formData.remarks}
                   onChange={(e) => handleInputChange('remarks', e.target.value)}
-                  placeholder="Additional notes or details about this expense"
+                  placeholder={t('expenseForm.placeholders.remarks')}
                 />
               </Grid>
             </Grid>
@@ -387,7 +389,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
             {formData.amount && parseFloat(formData.amount) > 0 && (
               <Box sx={{ mt: 2, p: 2, backgroundColor: 'primary.50', borderRadius: 1 }}>
                 <Typography variant="h6" color="primary.main">
-                  Total Amount: {expensesService.formatCurrency(parseFloat(formData.amount))}
+                  {t('expenseForm.totalAmount')} {expensesService.formatCurrency(parseFloat(formData.amount))}
                 </Typography>
               </Box>
             )}
@@ -395,7 +397,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
           <DialogActions sx={{ px: 3, pb: 3 }}>
             <Button onClick={handleClose} disabled={loading} startIcon={<CancelIcon />}>
-              Cancel
+              {t('expenseForm.cancel')}
             </Button>
             <Button
               type="submit"
@@ -403,7 +405,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
               disabled={loading}
               startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}
             >
-              {loading ? 'Saving...' : (editExpense ? 'Update Expense' : 'Create Expense')}
+              {loading ? t('expenseForm.saving') : (editExpense ? t('expenseForm.updateExpense') : t('expenseForm.createExpense'))}
             </Button>
           </DialogActions>
         </form>
