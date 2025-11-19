@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -55,6 +56,7 @@ import ConfirmDeleteDialog from '../components/common/ConfirmDeleteDialog';
 import usePagination, { usePaginationProps } from '../hooks/usePagination';
 
 const CustomersPage: React.FC = () => {
+  const { t } = useTranslation();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -126,10 +128,10 @@ const CustomersPage: React.FC = () => {
         setTotalCount(response.data.data.totalCount);
         setTotalPages(response.data.data.totalPages);
       } else {
-        setError(response.data.errors?.join(', ') || 'Failed to load customers');
+        setError(response.data.errors?.join(', ') || t('customers.error.failedToLoad'));
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'An error occurred while loading customers');
+      setError(err.response?.data?.message || t('customers.error.errorOccurred'));
     } finally {
       setLoading(false);
     }
@@ -152,7 +154,7 @@ const CustomersPage: React.FC = () => {
   // Create new customer
   const handleCreateCustomer = async () => {
     if (!newCustomer.firstName?.trim() || !newCustomer.lastName?.trim()) {
-      setError('Customer first name and last name are required');
+      setError(t('customers.error.nameRequired'));
       return;
     }
 
@@ -186,10 +188,10 @@ const CustomersPage: React.FC = () => {
         // Reload customers to show the new one
         await loadCustomers();
       } else {
-        setError(response.data.message || 'Failed to create customer');
+        setError(response.data.message || t('customers.error.failedToCreate'));
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create customer');
+      setError(err.response?.data?.message || t('customers.error.failedToCreate'));
     } finally {
       setCreateCustomerLoading(false);
     }
@@ -320,7 +322,7 @@ const CustomersPage: React.FC = () => {
   const columns = [
     {
       id: 'name',
-      label: 'Customer',
+      label: t('customers.tableColumns.customer'),
       minWidth: 200,
       format: (value, row) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -340,7 +342,7 @@ const CustomersPage: React.FC = () => {
     },
     {
       id: 'contact',
-      label: 'Contact',
+      label: t('customers.tableColumns.contact'),
       minWidth: 150,
       format: (value, row) => (
         <Box>
@@ -357,7 +359,7 @@ const CustomersPage: React.FC = () => {
     },
     {
       id: 'totalSales',
-      label: 'Total Sales',
+      label: t('customers.tableColumns.totalSales'),
       minWidth: 100,
       format: (value, row) => (
         <Box>
@@ -372,7 +374,7 @@ const CustomersPage: React.FC = () => {
     },
     {
       id: 'totalDueAmount',
-      label: 'Due Amount',
+      label: t('customers.tableColumns.dueAmount'),
       minWidth: 120,
       format: (value) => (
         <CurrencyDisplay
@@ -384,7 +386,7 @@ const CustomersPage: React.FC = () => {
     },
     {
       id: 'lastSaleDate',
-      label: 'Last Sale',
+      label: t('customers.tableColumns.lastSale'),
       minWidth: 120,
       format: (value) => value ? (
         <Typography variant="body2">
@@ -392,13 +394,13 @@ const CustomersPage: React.FC = () => {
         </Typography>
       ) : (
         <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-          No sales
+          {t('customers.viewCustomerDialog.noSales')}
         </Typography>
       )
     },
     {
       id: 'createdDate',
-      label: 'Created',
+      label: t('customers.tableColumns.created'),
       minWidth: 120,
       format: (value) => (
         <Typography variant="body2" color="text.secondary">
@@ -414,16 +416,23 @@ const CustomersPage: React.FC = () => {
       customer,
       () => handleViewCustomer(customer),
       () => handleEditCustomerClick(customer),
-      () => handleDeleteCustomerClick(customer)
+      () => handleDeleteCustomerClick(customer),
+      {
+        translations: {
+          viewDetails: t('customers.actions.viewDetails'),
+          edit: t('customers.actions.edit'),
+          delete: t('customers.actions.delete')
+        }
+      }
     );
   };
 
   return (
     <Box sx={{ p: 3 }}>
       <PageHeader
-        title="Customers"
+        title={t('customers.title')}
         actionButton={{
-          label: "Add Customer",
+          label: t('customers.addCustomer'),
           onClick: () => setAddCustomerDialogOpen(true),
           startIcon: <AddIcon />
         }}
@@ -433,7 +442,7 @@ const CustomersPage: React.FC = () => {
       />
 
       <FilterBar
-        searchPlaceholder="Search customers by name, email, phone, or address..."
+        searchPlaceholder={t('customers.searchPlaceholder')}
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
         onClearFilters={handleClearFilters}
@@ -442,21 +451,21 @@ const CustomersPage: React.FC = () => {
         filters={[
           {
             id: 'sortBy',
-            label: 'Sort By',
+            label: t('customers.filters.sortBy'),
             value: sortBy,
             options: [
-              { value: 'totalDueAmount', label: 'Due Amount' },
-              { value: 'lastSaleDate', label: 'Last Sale Date' },
-              { value: 'createdDate', label: 'Created Date' }
+              { value: 'totalDueAmount', label: t('customers.filters.dueAmount') },
+              { value: 'lastSaleDate', label: t('customers.filters.lastSaleDate') },
+              { value: 'createdDate', label: t('customers.filters.createdDate') }
             ]
           },
           {
             id: 'sortOrder',
-            label: 'Order',
+            label: t('customers.filters.order'),
             value: sortOrder,
             options: [
-              { value: 'asc', label: 'Ascending' },
-              { value: 'desc', label: 'Descending' }
+              { value: 'asc', label: t('customers.filters.ascending') },
+              { value: 'desc', label: t('customers.filters.descending') }
             ]
           }
         ]}
@@ -485,12 +494,12 @@ const CustomersPage: React.FC = () => {
         error={error}
         emptyState={{
           icon: '👥',
-          title: 'No customers found',
+          title: t('customers.emptyState.title'),
           description: searchTerm
-            ? 'Try adjusting your search terms'
-            : 'Get started by adding your first customer',
+            ? t('customers.emptyState.searchDescription')
+            : t('customers.emptyState.description'),
           action: {
-            label: 'Add Customer',
+            label: t('customers.emptyState.action'),
             onClick: () => setAddCustomerDialogOpen(true)
           }
         }}
@@ -498,7 +507,7 @@ const CustomersPage: React.FC = () => {
         getRowId={(customer) => customer.id}
         pagination={usePaginationProps(pagination, paginationActions, totalCount, totalPages, [5, 10, 20, 25, 50, 100])}
         errorAction={{
-          label: 'Retry',
+          label: t('customers.retry'),
           onClick: loadCustomers
         }}
       />
@@ -510,7 +519,7 @@ const CustomersPage: React.FC = () => {
             <Card>
               <CardContent>
                 <Typography variant="h6" color="primary.main" gutterBottom>
-                  Total Customers
+                  {t('customers.summaryCards.totalCustomers')}
                 </Typography>
                 <Typography variant="h4" fontWeight={600}>
                   {totalCount}
@@ -522,7 +531,7 @@ const CustomersPage: React.FC = () => {
             <Card>
               <CardContent>
                 <Typography variant="h6" color="warning.main" gutterBottom>
-                  Customers with Due
+                  {t('customers.summaryCards.customersWithDue')}
                 </Typography>
                 <Typography variant="h4" fontWeight={600}>
                   {customers.filter(c => c.totalDueAmount > 0).length}
@@ -534,7 +543,7 @@ const CustomersPage: React.FC = () => {
             <Card>
               <CardContent>
                 <Typography variant="h6" color="error.main" gutterBottom>
-                  Total Due Amount
+                  {t('customers.summaryCards.totalDueAmount')}
                 </Typography>
                 <Typography variant="h4" fontWeight={600}>
                   {customersService.formatCurrency(
@@ -548,7 +557,7 @@ const CustomersPage: React.FC = () => {
             <Card>
               <CardContent>
                 <Typography variant="h6" color="success.main" gutterBottom>
-                  Total Sales Value
+                  {t('customers.summaryCards.totalSalesValue')}
                 </Typography>
                 <Typography variant="h4" fontWeight={600}>
                   {customersService.formatCurrency(
@@ -578,7 +587,7 @@ const CustomersPage: React.FC = () => {
             </Avatar>
             <Box>
               <Typography variant="h6">
-                Customer Details
+                {t('customers.viewCustomerDialog.title')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {viewCustomer?.firstName} {viewCustomer?.lastName}
@@ -598,26 +607,26 @@ const CustomersPage: React.FC = () => {
                 <CardContent>
                   <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
                     <PersonIcon sx={{ mr: 1 }} />
-                    Customer Information
+                    {t('customers.viewCustomerDialog.customerInformation')}
                   </Typography>
                   <Grid container spacing={3}>
                     <Grid sx={{ xs: 12, md: 6 }}>
                       <List>
                         <ListItem>
                           <ListItemText
-                            primary="Full Name"
+                            primary={t('customers.viewCustomerDialog.fullName')}
                             secondary={`${viewCustomer.firstName} ${viewCustomer.lastName}`}
                           />
                         </ListItem>
                         <ListItem>
                           <ListItemText
-                            primary="Email"
+                            primary={t('customers.viewCustomerDialog.email')}
                             secondary={viewCustomer.email}
                           />
                         </ListItem>
                         <ListItem>
                           <ListItemText
-                            primary="Phone"
+                            primary={t('customers.viewCustomerDialog.phone')}
                             secondary={viewCustomer.contactNo}
                           />
                         </ListItem>
@@ -627,14 +636,14 @@ const CustomersPage: React.FC = () => {
                       <List>
                         <ListItem>
                           <ListItemText
-                            primary="Address"
-                            secondary={viewCustomer.address || 'No address provided'}
+                            primary={t('customers.viewCustomerDialog.address')}
+                            secondary={viewCustomer.address || t('customers.viewCustomerDialog.noAddressProvided')}
                           />
                         </ListItem>
                         {viewCustomer.remark && (
                           <ListItem>
                             <ListItemText
-                              primary="Remarks"
+                              primary={t('customers.viewCustomerDialog.remarks')}
                               secondary={viewCustomer.remark}
                             />
                           </ListItem>
@@ -650,7 +659,7 @@ const CustomersPage: React.FC = () => {
                 <CardContent>
                   <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
                     <BusinessIcon sx={{ mr: 1 }} />
-                    Sales Statistics
+                    {t('customers.viewCustomerDialog.salesStatistics')}
                   </Typography>
                   <Grid container spacing={3}>
                     <Grid sx={{ xs: 12, md: 4 }}>
@@ -659,7 +668,7 @@ const CustomersPage: React.FC = () => {
                           {viewCustomer.totalSales}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          Total Sales
+                          {t('customers.viewCustomerDialog.totalSales')}
                         </Typography>
                       </Box>
                     </Grid>
@@ -669,7 +678,7 @@ const CustomersPage: React.FC = () => {
                           {customersService.formatCurrency(viewCustomer.totalSalesAmount)}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          Total Sales Value
+                          {t('customers.summaryCards.totalSalesValue')}
                         </Typography>
                       </Box>
                     </Grid>
@@ -679,7 +688,7 @@ const CustomersPage: React.FC = () => {
                           {customersService.formatCurrency(viewCustomer.totalDueAmount)}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          Due Amount
+                          {t('customers.viewCustomerDialog.dueAmount')}
                         </Typography>
                       </Box>
                     </Grid>
@@ -692,14 +701,14 @@ const CustomersPage: React.FC = () => {
                 <CardContent>
                   <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
                     <CalendarIcon sx={{ mr: 1 }} />
-                    Activity Information
+                    {t('customers.viewCustomerDialog.activityInformation')}
                   </Typography>
                   <Grid container spacing={3}>
                     <Grid sx={{ xs: 12, md: 6 }}>
                       <List>
                         <ListItem>
                           <ListItemText
-                            primary="Customer Since"
+                            primary={t('customers.viewCustomerDialog.customerSince')}
                             secondary={customersService.formatDate(viewCustomer.createdDate)}
                           />
                         </ListItem>
@@ -709,7 +718,7 @@ const CustomersPage: React.FC = () => {
                       <List>
                         <ListItem>
                           <ListItemText
-                            primary="Last Sale Date"
+                            primary={t('customers.viewCustomerDialog.lastSaleDate')}
                             secondary={customersService.formatDate(viewCustomer.lastSaleDate)}
                           />
                         </ListItem>
@@ -721,14 +730,14 @@ const CustomersPage: React.FC = () => {
             </Box>
           ) : (
             <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
-              <Typography variant="h6">Customer information not available</Typography>
-              <Typography variant="body2">Unable to load customer details.</Typography>
+              <Typography variant="h6">{t('customers.viewCustomerDialog.customerInfoNotAvailable')}</Typography>
+              <Typography variant="body2">{t('customers.viewCustomerDialog.unableToLoadDetails')}</Typography>
             </Box>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setViewDialogOpen(false)}>
-            Close
+            {t('customers.viewCustomerDialog.close')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -741,13 +750,13 @@ const CustomersPage: React.FC = () => {
         fullWidth
         PaperProps={{ sx: { borderRadius: 1 } }}
       >
-        <DialogTitle>Add New Customer</DialogTitle>
+        <DialogTitle>{t('customers.addCustomerDialog.title')}</DialogTitle>
         <DialogContent sx={{ p: 3 }}>
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label="First Name"
+                label={t('customers.addCustomerDialog.firstName')}
                 value={newCustomer.firstName || ''}
                 onChange={(e) => setNewCustomer(prev => ({ ...prev, firstName: e.target.value }))}
                 required
@@ -756,7 +765,7 @@ const CustomersPage: React.FC = () => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label="Last Name"
+                label={t('customers.addCustomerDialog.lastName')}
                 value={newCustomer.lastName || ''}
                 onChange={(e) => setNewCustomer(prev => ({ ...prev, lastName: e.target.value }))}
                 required
@@ -765,7 +774,7 @@ const CustomersPage: React.FC = () => {
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label="Email"
+                label={t('customers.addCustomerDialog.email')}
                 type="email"
                 value={newCustomer.email || ''}
                 onChange={(e) => setNewCustomer(prev => ({ ...prev, email: e.target.value }))}
@@ -774,7 +783,7 @@ const CustomersPage: React.FC = () => {
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label="Contact Number"
+                label={t('customers.addCustomerDialog.contactNo')}
                 value={newCustomer.contactNo || ''}
                 onChange={(e) => setNewCustomer(prev => ({ ...prev, contactNo: e.target.value }))}
               />
@@ -782,7 +791,7 @@ const CustomersPage: React.FC = () => {
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label="Address"
+                label={t('customers.addCustomerDialog.address')}
                 value={newCustomer.address || ''}
                 onChange={(e) => setNewCustomer(prev => ({ ...prev, address: e.target.value }))}
                 multiline
@@ -792,7 +801,7 @@ const CustomersPage: React.FC = () => {
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label="Remark"
+                label={t('customers.addCustomerDialog.remark')}
                 value={newCustomer.remark || ''}
                 onChange={(e) => setNewCustomer(prev => ({ ...prev, remark: e.target.value }))}
                 multiline
@@ -803,7 +812,7 @@ const CustomersPage: React.FC = () => {
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
           <Button onClick={() => setAddCustomerDialogOpen(false)}>
-            Cancel
+            {t('customers.addCustomerDialog.cancel')}
           </Button>
           <Button
             onClick={handleCreateCustomer}
@@ -811,7 +820,7 @@ const CustomersPage: React.FC = () => {
             disabled={!newCustomer.firstName?.trim() || !newCustomer.lastName?.trim() || createCustomerLoading}
             startIcon={createCustomerLoading ? <CircularProgress size={20} /> : <AddIcon />}
           >
-            {createCustomerLoading ? 'Creating...' : 'Create Customer'}
+            {createCustomerLoading ? t('customers.addCustomerDialog.creating') : t('customers.addCustomerDialog.create')}
           </Button>
         </DialogActions>
       </Dialog>

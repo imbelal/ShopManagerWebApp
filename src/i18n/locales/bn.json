@@ -918,6 +918,113 @@
       "toDate": "শেষ তারিখ"
     }
   },
+  "customers": {
+    "title": "গ্রাহকরা",
+    "subtitle": "আপনার গ্রাহক তথ্য এবং সম্পর্ক পরিচালনা করুন",
+    "addCustomer": "গ্রাহক যোগ করুন",
+    "searchPlaceholder": "নাম, ইমেল, ফোন, বা ঠিকানা দ্বারা গ্রাহক অনুসন্ধান করুন...",
+    "filters": {
+      "sortBy": "সাজান",
+      "order": "ক্রম",
+      "dueAmount": "বকেয়া পরিমাণ",
+      "lastSaleDate": "শেষ বিক্রয়ের তারিখ",
+      "createdDate": "তৈরির তারিখ",
+      "ascending": "আরোহী",
+      "descending": "অবরোহী"
+    },
+    "tableColumns": {
+      "customer": "গ্রাহক",
+      "contact": "যোগাযোগ",
+      "totalSales": "মোট বিক্রয়",
+      "dueAmount": "বকেয়া পরিমাণ",
+      "lastSale": "শেষ বিক্রয়",
+      "created": "তৈরি"
+    },
+    "summaryCards": {
+      "totalCustomers": "মোট গ্রাহক",
+      "customersWithDue": "বকেয়া সহ গ্রাহক",
+      "totalSalesValue": "মোট বিক্রয়ের মূল্য",
+      "totalDueAmount": "মোট বকেয়া পরিমাণ"
+    },
+    "actions": {
+      "viewDetails": "বিবরণ দেখুন",
+      "edit": "সম্পাদনা করুন",
+      "delete": "মুছে ফেলুন"
+    },
+    "emptyState": {
+      "title": "কোন গ্রাহক পাওয়া যায়নি",
+      "description": "আপনার প্রথম গ্রাহক যোগ করে শুরু করুন",
+      "searchDescription": "আপনার অনুসন্ধান শর্তাবলী সামঞ্জস্য করার চেষ্টা করুন",
+      "action": "গ্রাহক যোগ করুন"
+    },
+    "error": {
+      "failedToLoad": "গ্রাহক লোড করতে ব্যর্থ হয়েছে",
+      "errorOccurred": "গ্রাহক লোড করার সময় একটি ত্রুটি ঘটেছে",
+      "nameRequired": "গ্রাহকের প্রথম নাম এবং শেষ নাম প্রয়োজন",
+      "failedToCreate": "গ্রাহক তৈরি করতে ব্যর্থ হয়েছে",
+      "failedToUpdate": "গ্রাহক আপডেট করতে ব্যর্থ হয়েছে",
+      "failedToDelete": "গ্রাহক মুছে ফেলতে ব্যর্থ হয়েছে"
+    },
+    "addCustomerDialog": {
+      "title": "নতুন গ্রাহক যোগ করুন",
+      "firstName": "প্রথম নাম",
+      "lastName": "শেষ নাম",
+      "email": "ইমেল",
+      "contactNo": "যোগাযোগ নম্বর",
+      "address": "ঠিকানা",
+      "remark": "মন্তব্য",
+      "cancel": "বাতিল করুন",
+      "create": "গ্রাহক তৈরি করুন",
+      "creating": "তৈরি হচ্ছে..."
+    },
+    "editCustomerDialog": {
+      "title": "গ্রাহক সম্পাদনা করুন",
+      "firstName": "প্রথম নাম",
+      "lastName": "শেষ নাম",
+      "email": "ইমেল",
+      "contactNo": "যোগাযোগ নম্বর",
+      "address": "ঠিকানা",
+      "remark": "মন্তব্য",
+      "cancel": "বাতিল করুন",
+      "update": "গ্রাহক আপডেট করুন",
+      "updating": "আপডেট হচ্ছে..."
+    },
+    "deleteCustomerDialog": {
+      "title": "গ্রাহক মুছে ফেলুন",
+      "content": "আপনি কি নিশ্চিত যে আপনি এই গ্রাহকটি মুছে ফেলতে চান? এই ক্রিয়াটি পূর্বাবস্থায় ফিরিয়ে আনা যাবে না এবং তাদের বিক্রয় ইতিহাসকে প্রভাবিত করতে পারে।",
+      "cancel": "বাতিল করুন",
+      "delete": "গ্রাহক মুছে ফেলুন",
+      "deleting": "মুছে ফেলা হচ্ছে..."
+    },
+    "viewCustomerDialog": {
+      "title": "গ্রাহকের বিবরণ",
+      "overview": "সংক্ষিপ্ত বিবরণ",
+      "contactInfo": "যোগাযোগ তথ্য",
+      "salesHistory": "বিক্রয়ের ইতিহাস",
+      "recentSales": "সাম্প্রতিক বিক্রয়",
+      "noSales": "কোন বিক্রয় নেই",
+      "totalSales": "মোট বিক্রয়",
+      "totalDue": "মোট বকেয়া",
+      "averageSale": "গড় বিক্রয়",
+      "lastSaleDate": "শেষ বিক্রয়ের তারিখ",
+      "memberSince": "সদস্য হিসেবে",
+      "close": "বন্ধ করুন",
+      "salesStatistics": "বিক্রয়ের পরিসংখ্যান",
+      "dueAmount": "বকেয়া পরিমাণ",
+      "activityInformation": "কার্যকলাপের তথ্য",
+      "customerSince": "গ্রাহক হিসেবে",
+      "customerInfoNotAvailable": "গ্রাহকের তথ্য পাওয়া যায়নি",
+      "unableToLoadDetails": "গ্রাহকের বিবরণ লোড করতে অক্ষম।",
+      "customerInformation": "গ্রাহকের তথ্য",
+      "fullName": "পূর্ণ নাম",
+      "email": "ইমেল",
+      "phone": "ফোন",
+      "address": "ঠিকানা",
+      "noAddressProvided": "কোন ঠিকানা দেওয়া হয়নি",
+      "remarks": "মন্তব্য"
+    },
+    "retry": "পুনরায় চেষ্টা করুন"
+  },
   "entityTypes": {
     "product": "পণ্য",
     "category": "বিভাগ",

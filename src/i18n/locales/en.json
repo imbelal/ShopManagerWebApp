@@ -907,6 +907,113 @@
       "toDate": "To Date"
     }
   },
+  "customers": {
+    "title": "Customers",
+    "subtitle": "Manage your customer information and relationships",
+    "addCustomer": "Add Customer",
+    "searchPlaceholder": "Search customers by name, email, phone, or address...",
+    "filters": {
+      "sortBy": "Sort By",
+      "order": "Order",
+      "dueAmount": "Due Amount",
+      "lastSaleDate": "Last Sale Date",
+      "createdDate": "Created Date",
+      "ascending": "Ascending",
+      "descending": "Descending"
+    },
+    "tableColumns": {
+      "customer": "Customer",
+      "contact": "Contact",
+      "totalSales": "Total Sales",
+      "dueAmount": "Due Amount",
+      "lastSale": "Last Sale",
+      "created": "Created"
+    },
+    "summaryCards": {
+      "totalCustomers": "Total Customers",
+      "customersWithDue": "Customers with Due",
+      "totalSalesValue": "Total Sales Value",
+      "totalDueAmount": "Total Due Amount"
+    },
+    "actions": {
+      "viewDetails": "View Details",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "emptyState": {
+      "title": "No customers found",
+      "description": "Get started by adding your first customer",
+      "searchDescription": "Try adjusting your search terms",
+      "action": "Add Customer"
+    },
+    "error": {
+      "failedToLoad": "Failed to load customers",
+      "errorOccurred": "An error occurred while loading customers",
+      "nameRequired": "Customer first name and last name are required",
+      "failedToCreate": "Failed to create customer",
+      "failedToUpdate": "Failed to update customer",
+      "failedToDelete": "Failed to delete customer"
+    },
+    "addCustomerDialog": {
+      "title": "Add New Customer",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "contactNo": "Contact Number",
+      "address": "Address",
+      "remark": "Remark",
+      "cancel": "Cancel",
+      "create": "Create Customer",
+      "creating": "Creating..."
+    },
+    "editCustomerDialog": {
+      "title": "Edit Customer",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "contactNo": "Contact Number",
+      "address": "Address",
+      "remark": "Remark",
+      "cancel": "Cancel",
+      "update": "Update Customer",
+      "updating": "Updating..."
+    },
+    "deleteCustomerDialog": {
+      "title": "Delete Customer",
+      "content": "Are you sure you want to delete this customer? This action cannot be undone and may affect their sales history.",
+      "cancel": "Cancel",
+      "delete": "Delete Customer",
+      "deleting": "Deleting..."
+    },
+    "viewCustomerDialog": {
+      "title": "Customer Details",
+      "overview": "Overview",
+      "contactInfo": "Contact Information",
+      "salesHistory": "Sales History",
+      "recentSales": "Recent Sales",
+      "noSales": "No sales",
+      "totalSales": "Total Sales",
+      "totalDue": "Total Due",
+      "averageSale": "Average Sale",
+      "lastSaleDate": "Last Sale Date",
+      "memberSince": "Member Since",
+      "close": "Close",
+      "salesStatistics": "Sales Statistics",
+      "dueAmount": "Due Amount",
+      "activityInformation": "Activity Information",
+      "customerSince": "Customer Since",
+      "customerInfoNotAvailable": "Customer information not available",
+      "unableToLoadDetails": "Unable to load customer details.",
+      "customerInformation": "Customer Information",
+      "fullName": "Full Name",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address",
+      "noAddressProvided": "No address provided",
+      "remarks": "Remarks"
+    },
+    "retry": "Retry"
+  },
   "entityTypes": {
     "product": "Product",
     "category": "Category",
