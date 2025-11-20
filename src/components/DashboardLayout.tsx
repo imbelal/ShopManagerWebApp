@@ -178,6 +178,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     navigate(path);
   };
 
+  const handleProfileClick = () => {
+    handleProfileMenuClose();
+    navigate('/settings');
+  };
+
+  const handleSettingsClick = () => {
+    handleProfileMenuClose();
+    navigate('/settings');
+  };
+
   const isProfileMenuOpen = Boolean(anchorEl);
 
   React.useEffect(() => {
@@ -353,14 +363,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               </Typography>
             </Box>
 
-            <MenuItem onClick={handleProfileMenuClose}>
+            <MenuItem onClick={handleProfileClick}>
               <ListItemIcon>
                 <AccountCircle fontSize="small" />
               </ListItemIcon>
               <ListItemText>{t('settings.userProfile')}</ListItemText>
             </MenuItem>
 
-            <MenuItem onClick={handleProfileMenuClose}>
+            <MenuItem onClick={handleSettingsClick}>
               <ListItemIcon>
                 <Settings fontSize="small" />
               </ListItemIcon>
