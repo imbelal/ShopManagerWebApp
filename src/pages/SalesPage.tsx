@@ -392,9 +392,46 @@ const SalesPage: React.FC = () => {
     setEditSale(null);
   };
 
-  // Format date
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+  // Format date safely with UTC to local conversion
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'N/A';
+    try {
+      // Handle UTC dates from backend
+      const date = dateString.endsWith('Z') || dateString.includes('T')
+        ? new Date(dateString)  // UTC date format
+        : new Date(dateString + 'Z');  // Assume UTC if no timezone info
+
+      if (isNaN(date.getTime())) return 'Invalid Date';
+      return date.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch {
+      return 'Invalid Date';
+    }
+  };
+
+  // Format date and time safely with UTC to local conversion
+  const formatDateTime = (dateString: string | null | undefined) => {
+    if (!dateString) return 'N/A';
+    try {
+      // Handle UTC dates from backend
+      const date = dateString.endsWith('Z') || dateString.includes('T')
+        ? new Date(dateString)  // UTC date format
+        : new Date(dateString + 'Z');  // Assume UTC if no timezone info
+
+      if (isNaN(date.getTime())) return 'Invalid Date';
+      return date.toLocaleString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return 'Invalid Date';
+    }
   };
 
   
@@ -834,7 +871,7 @@ const SalesPage: React.FC = () => {
                               <Grid sx={{ xs: 12, md: 3 }}>
                                 <Typography variant="body2" color="text.secondary">{t('sales.date')}</Typography>
                                 <Typography variant="body1">
-                                  {new Date(payment.paymentDate).toLocaleDateString()} at {new Date(payment.paymentDate).toLocaleTimeString()}
+                                  {formatDateTime(payment.createdDate)}
                                 </Typography>
                               </Grid>
                               <Grid sx={{ xs: 12, md: 3 }}>

@@ -74,7 +74,7 @@ export interface Payment {
   id: string;
   salesId: string;
   amount: number;
-  paymentDate: string;
+  createdDate: string; // Backend sends createdDate, we treat it as payment date
   paymentMethod: string;
   remark?: string;
 }

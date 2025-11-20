@@ -68,6 +68,26 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
     { value: 'online', label: t('paymentDialog.paymentMethods.online') }
   ];
 
+  // Format date safely with UTC to local conversion
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'N/A';
+    try {
+      // Handle UTC dates from backend
+      const date = dateString.endsWith('Z') || dateString.includes('T')
+        ? new Date(dateString)  // UTC date format
+        : new Date(dateString + 'Z');  // Assume UTC if no timezone info
+
+      if (isNaN(date.getTime())) return 'Invalid Date';
+      return date.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch {
+      return 'Invalid Date';
+    }
+  };
+
   // Load existing payments
   useEffect(() => {
     if (open && saleId) {
@@ -372,7 +392,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
                           {t('paymentDialog.date')}
                         </Typography>
                         <Typography variant="body2">
-                          {new Date(payment.paymentDate).toLocaleDateString()}
+                          {formatDate(payment.createdDate)}
                         </Typography>
                       </Grid>
                       <Grid item xs={3}>
