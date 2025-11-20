@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '../components/common/CurrencyDisplay';
 import {
   Box,
   Dialog,
@@ -396,14 +397,7 @@ const SalesPage: React.FC = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
-
+  
   // Define table columns with useMemo to react to language changes
   const columns = useMemo(() => [
     {

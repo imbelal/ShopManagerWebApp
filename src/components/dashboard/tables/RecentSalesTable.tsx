@@ -23,9 +23,10 @@ import {
   Visibility as ViewIcon,
   ShoppingCart as SalesIcon,
   Person as CustomerIcon,
-  AttachMoney as MoneyIcon,
+  TrendingUp as MoneyIcon,
 } from '@mui/icons-material';
 import { RecentSale } from '../../../services/dashboardService';
+import { formatCurrency } from '../../common/CurrencyDisplay';
 
 interface RecentSalesTableProps {
   data?: RecentSale[];
@@ -187,7 +188,7 @@ const RecentSalesTable: React.FC<RecentSalesTableProps> = ({
                       <Box display="flex" alignItems="center" gap={1}>
                         <MoneyIcon sx={{ fontSize: 16, color: 'success.main' }} />
                         <Typography variant="body2" fontWeight={500} color="success.main">
-                          ${sale.formattedTotalAmount}
+                          {formatCurrency(sale.totalAmount)}
                         </Typography>
                       </Box>
                     </TableCell>

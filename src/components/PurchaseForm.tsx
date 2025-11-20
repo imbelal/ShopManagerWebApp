@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { formatCurrency } from './common/CurrencyDisplay';
 import {
   Dialog,
   DialogTitle,
@@ -302,13 +303,7 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
-
+  
   const selectedSupplier = suppliers.find(s => s.id === formData.supplierId);
 
   return (

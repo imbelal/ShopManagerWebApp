@@ -1,7 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '../common/CurrencyDisplay';
 import {
-  AttachMoney as MoneyIcon,
+  TrendingUp as MoneyIcon,
 } from '@mui/icons-material';
 import KpiCard from './KpiCard';
 import { DashboardMetrics } from '../../services/dashboardService';
@@ -19,15 +20,7 @@ const RevenueKpiCard: React.FC<RevenueKpiCardProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
+  
   return (
     <KpiCard
       title={t('dashboard.totalRevenue')}

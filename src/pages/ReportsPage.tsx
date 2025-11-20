@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '../components/common/CurrencyDisplay';
 import {
   Box,
   Typography,
@@ -52,6 +54,7 @@ import {
 import { useSnackbar } from '../context/SnackbarContext';
 
 const ReportsPage: React.FC = () => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const { showSnackbar } = useSnackbar();
   const [loading, setLoading] = useState(false);
@@ -121,7 +124,7 @@ const ReportsPage: React.FC = () => {
       }
 
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to load financial reports';
+      const errorMessage = err.response?.data?.message || err.message || t('reports.error.failedToLoad');
       setError(errorMessage);
       console.error('Error loading financial reports:', err);
       showSnackbar(errorMessage, 'error');
@@ -174,13 +177,7 @@ const ReportsPage: React.FC = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
-
+  
   const formatPercentage = (value: number) => {
     return `${value.toFixed(1)}%`;
   };
@@ -202,27 +199,27 @@ const ReportsPage: React.FC = () => {
   // Predefined date range shortcuts
   const dateRanges = [
     {
-      label: 'This Month',
+      label: t('reports.dateRange.thisMonth'),
       value: () => [startOfMonth(new Date()), endOfMonth(new Date())],
     },
     {
-      label: 'Last Month',
+      label: t('reports.dateRange.lastMonth'),
       value: () => [startOfMonth(subMonths(new Date(), 1)), endOfMonth(subMonths(new Date(), 1))],
     },
     {
-      label: 'Last 3 Months',
+      label: t('reports.dateRange.last3Months'),
       value: () => [startOfMonth(subMonths(new Date(), 3)), endOfMonth(new Date())],
     },
     {
-      label: 'Last 6 Months',
+      label: t('reports.dateRange.last6Months'),
       value: () => [startOfMonth(subMonths(new Date(), 6)), endOfMonth(new Date())],
     },
     {
-      label: 'This Year',
+      label: t('reports.dateRange.thisYear'),
       value: () => [new Date(new Date().getFullYear(), 0, 1), new Date(new Date().getFullYear(), 11, 31)],
     },
     {
-      label: 'Last Year',
+      label: t('reports.dateRange.lastYear'),
       value: () => [subYears(new Date(), 1), new Date()],
     },
   ];
@@ -237,8 +234,8 @@ const ReportsPage: React.FC = () => {
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box sx={{ flexGrow: 1, p: 3, bgcolor: theme.palette.background.default }}>
         <PageHeader
-          title="Financial Reports"
-          subtitle="Comprehensive financial analytics and reporting"
+          title={t('reports.title')}
+          subtitle={t('reports.subtitle')}
           icon={<ReportsIcon />}
         />
 
@@ -249,13 +246,13 @@ const ReportsPage: React.FC = () => {
               <Grid item xs={12} md={6}>
                 <Box sx={{ display: 'flex', gap: 2 }}>
                   <DatePicker
-                    label="Start Date"
+                    label={t('reports.dateRange.startDate')}
                     value={startDate}
                     onChange={handleStartDateChange}
                     slotProps={{ textField: { size: 'small' } }}
                   />
                   <DatePicker
-                    label="End Date"
+                    label={t('reports.dateRange.endDate')}
                     value={endDate}
                     onChange={handleEndDateChange}
                     slotProps={{ textField: { size: 'small' } }}
@@ -282,17 +279,17 @@ const ReportsPage: React.FC = () => {
               <Grid item xs={12} md={6}>
                 <Box sx={{ display: 'flex', gap: 2, justifyContent: { xs: 'stretch', md: 'flex-end' } }}>
                   <FormControl size="small" sx={{ minWidth: 120 }}>
-                    <InputLabel>Period</InputLabel>
+                    <InputLabel>{t('reports.dateRange.period')}</InputLabel>
                     <Select
                       value={reportPeriod}
                       onChange={handlePeriodChange}
-                      label="Period"
+                      label={t('reports.dateRange.period')}
                     >
-                      <MenuItem value="daily">Daily</MenuItem>
-                      <MenuItem value="weekly">Weekly</MenuItem>
-                      <MenuItem value="monthly">Monthly</MenuItem>
-                      <MenuItem value="quarterly">Quarterly</MenuItem>
-                      <MenuItem value="yearly">Yearly</MenuItem>
+                      <MenuItem value="daily">{t('reports.dateRange.daily')}</MenuItem>
+                      <MenuItem value="weekly">{t('reports.dateRange.weekly')}</MenuItem>
+                      <MenuItem value="monthly">{t('reports.dateRange.monthly')}</MenuItem>
+                      <MenuItem value="quarterly">{t('reports.dateRange.quarterly')}</MenuItem>
+                      <MenuItem value="yearly">{t('reports.dateRange.yearly')}</MenuItem>
                     </Select>
                   </FormControl>
 
@@ -303,7 +300,7 @@ const ReportsPage: React.FC = () => {
                     disabled={loading}
                     sx={{ borderRadius: 1 }}
                   >
-                    Export
+                    {t('reports.actions.exportPdf')}
                   </Button>
                 </Box>
               </Grid>
@@ -333,10 +330,10 @@ const ReportsPage: React.FC = () => {
               onChange={(event, newValue) => setActiveTab(newValue)}
               sx={{ mb: 3 }}
             >
-              <Tab label="Dashboard" icon={<TableChartIcon />} />
-              <Tab label="P&L Statement" icon={<BarChartIcon />} />
-              <Tab label="Revenue Analysis" icon={<TrendingUpIcon />} />
-              <Tab label="Expense Analysis" icon={<PieChartIcon />} />
+              <Tab label={t('reports.tabs.dashboard')} icon={<TableChartIcon />} />
+              <Tab label={t('reports.tabs.profitLossStatement')} icon={<BarChartIcon />} />
+              <Tab label={t('reports.tabs.revenueAnalysis')} icon={<TrendingUpIcon />} />
+              <Tab label={t('reports.tabs.expenseAnalysis')} icon={<PieChartIcon />} />
             </Tabs>
 
             { activeTab === 0 && (
@@ -346,10 +343,10 @@ const ReportsPage: React.FC = () => {
                 <Card sx={{ height: '100%' }}>
                   <CardContent>
                     <Typography variant="h6" color="text.secondary" gutterBottom>
-                      Total Revenue
+                      {t('reports.metrics.totalRevenue')}
                     </Typography>
                     <Typography variant="h4" component="div" color="primary.main">
-                      {financialMetrics ? financialMetrics.formattedTotalRevenue : '$0'}
+                      {financialMetrics ? formatCurrency(financialMetrics.totalRevenue) : formatCurrency(0)}
                     </Typography>
                   </CardContent>
                 </Card>
@@ -359,10 +356,10 @@ const ReportsPage: React.FC = () => {
                 <Card sx={{ height: '100%' }}>
                   <CardContent>
                     <Typography variant="h6" color="text.secondary" gutterBottom>
-                      Total Expenses
+                      {t('reports.metrics.totalExpenses')}
                     </Typography>
                     <Typography variant="h4" component="div" color="error.main">
-                      {financialMetrics ? financialMetrics.formattedTotalExpenses : '$0'}
+                      {financialMetrics ? formatCurrency(financialMetrics.totalExpenses) : formatCurrency(0)}
                     </Typography>
                   </CardContent>
                 </Card>
@@ -372,10 +369,10 @@ const ReportsPage: React.FC = () => {
                 <Card sx={{ height: '100%' }}>
                   <CardContent>
                     <Typography variant="h6" color="text.secondary" gutterBottom>
-                      Net Profit
+                      {t('reports.metrics.netProfit')}
                     </Typography>
                     <Typography variant="h4" component="div" sx={{ color: getProfitMarginColor(financialMetrics?.netProfitMargin || 0) }}>
-                      {financialMetrics ? financialMetrics.formattedNetProfit : '$0'}
+                      {financialMetrics ? formatCurrency(financialMetrics.netProfit) : formatCurrency(0)}
                     </Typography>
                     <Chip
                       label={financialMetrics ? formatPercentage(financialMetrics.netProfitMargin * 100) : '0%'}
@@ -394,7 +391,7 @@ const ReportsPage: React.FC = () => {
                 <Card sx={{ height: '100%' }}>
                   <CardContent>
                     <Typography variant="h6" color="text.secondary" gutterBottom>
-                      Profit Margin
+                      {t('reports.labels.profitMargin')}
                     </Typography>
                     <Typography variant="h4" component="div">
                       {financialMetrics ? formatPercentage(financialMetrics.netProfitMargin * 100) : '0%'}
@@ -408,26 +405,26 @@ const ReportsPage: React.FC = () => {
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      Performance Overview
+                      {t('reports.labels.performanceOverview')}
                     </Typography>
                     <Grid container spacing={2}>
                       <Grid item xs={12} md={3}>
                         <Box sx={{ textAlign: 'center' }}>
                           <Typography variant="h3" color="success.main">
-                            {profitLoss ? profitLoss.formattedGrossProfit : '$0'}
+                            {profitLoss ? formatCurrency(profitLoss.grossProfit) : formatCurrency(0)}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            Gross Profit
+                            {t('reports.labels.grossProfit')}
                           </Typography>
                         </Box>
                       </Grid>
                       <Grid item xs={12} md={3}>
                         <Box sx={{ textAlign: 'center' }}>
                           <Typography variant="h3" color="info.main">
-                            {profitLoss ? profitLoss.formattedOperatingIncome : '$0'}
+                            {profitLoss ? formatCurrency(profitLoss.operatingIncome) : formatCurrency(0)}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            Operating Income
+                            {t('reports.metrics.operatingIncome')}
                           </Typography>
                         </Box>
                       </Grid>
@@ -446,43 +443,43 @@ const ReportsPage: React.FC = () => {
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      Profit & Loss Summary
+                      {t('reports.labels.profitLossSummary')}
                     </Typography>
                     <Box sx={{ mt: 2 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="body1">Total Revenue:</Typography>
+                        <Typography variant="body1">{t('reports.statements.totalRevenue')}</Typography>
                         <Typography variant="body1" fontWeight="bold">
-                          {profitLoss.formattedTotalRevenue}
+                          {formatCurrency(profitLoss.totalRevenue)}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="body1">Cost of Goods Sold:</Typography>
+                        <Typography variant="body1">{t('reports.labels.costOfGoodsSold')}:</Typography>
                         <Typography variant="body1" color="error.main">
                           ({profitLoss.costOfGoodsSold.toLocaleString()})
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="body1">Gross Profit:</Typography>
+                        <Typography variant="body1">{t('reports.labels.grossProfit')}:</Typography>
                         <Typography variant="body1" fontWeight="bold" color="success.main">
-                          {profitLoss.formattedGrossProfit}
+                          {formatCurrency(profitLoss.grossProfit)}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="body1">Operating Expenses:</Typography>
+                        <Typography variant="body1">{t('reports.labels.operatingExpenses')}:</Typography>
                         <Typography variant="body1" color="error.main">
                           ({profitLoss.totalOperatingExpenses.toLocaleString()})
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="body1">Operating Income:</Typography>
+                        <Typography variant="body1">{t('reports.statements.operatingIncome')}:</Typography>
                         <Typography variant="body1" fontWeight="bold" color="info.main">
-                          {profitLoss.formattedOperatingIncome}
+                          {formatCurrency(profitLoss.operatingIncome)}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="body1">Net Income:</Typography>
+                        <Typography variant="body1">{t('reports.labels.netIncome')}:</Typography>
                         <Typography variant="h6" fontWeight="bold" color="success.main">
-                          {profitLoss.formattedNetIncome}
+                          {formatCurrency(profitLoss.netIncome)}
                         </Typography>
                       </Box>
                     </Box>
@@ -495,41 +492,41 @@ const ReportsPage: React.FC = () => {
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      Key Performance Metrics
+                      {t('reports.labels.keyPerformanceMetrics')}
                     </Typography>
                     <Box sx={{ mt: 2 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="body1">Gross Profit Margin:</Typography>
+                        <Typography variant="body1">{t('reports.labels.grossProfitMargin')}:</Typography>
                         <Typography variant="body1" fontWeight="bold">
                           {formatPercentage(profitLoss.grossProfitMargin * 100)}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="body1">Operating Margin:</Typography>
+                        <Typography variant="body1">{t('reports.labels.operatingMargin')}:</Typography>
                         <Typography variant="body1" fontWeight="bold">
                           {formatPercentage(profitLoss.operatingMargin * 100)}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="body1">Net Profit Margin:</Typography>
+                        <Typography variant="body1">{t('reports.statements.netProfitMargin')}</Typography>
                         <Typography variant="body1" fontWeight="bold">
                           {formatPercentage(profitLoss.netProfitMargin * 100)}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="body1">Average Order Value:</Typography>
+                        <Typography variant="body1">{t('reports.labels.averageOrderValue')}:</Typography>
                         <Typography variant="body1" fontWeight="bold">
-                          {profitLoss.formattedAverageOrderValue}
+                          {formatCurrency(profitLoss.averageOrderValue)}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="body1">Sales Transactions:</Typography>
+                        <Typography variant="body1">{t('reports.labels.salesTransactions')}:</Typography>
                         <Typography variant="body1" fontWeight="bold">
                           {profitLoss.totalSalesTransactions.toLocaleString()}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Typography variant="body1">Purchase Transactions:</Typography>
+                        <Typography variant="body1">{t('reports.labels.purchaseTransactions')}:</Typography>
                         <Typography variant="body1" fontWeight="bold">
                           {profitLoss.totalPurchaseTransactions.toLocaleString()}
                         </Typography>
@@ -549,31 +546,31 @@ const ReportsPage: React.FC = () => {
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      Revenue Summary
+                      {t('reports.labels.revenueSummary')}
                     </Typography>
                     <Box sx={{ mt: 2 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="body1">Total Revenue:</Typography>
+                        <Typography variant="body1">{t('reports.statements.totalRevenue')}</Typography>
                         <Typography variant="h6" fontWeight="bold" color="primary.main">
-                          {revenueBreakdown.formattedTotalRevenue}
+                          {formatCurrency(revenueBreakdown.totalRevenue)}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="body1">Growth Rate:</Typography>
+                        <Typography variant="body1">{t('reports.labels.growthRate')}:</Typography>
                         <Typography variant="body1" fontWeight="bold" color="success.main">
                           {revenueBreakdown.formattedGrowthRate}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="body1">Total Transactions:</Typography>
+                        <Typography variant="body1">{t('reports.labels.totalTransactions')}:</Typography>
                         <Typography variant="body1" fontWeight="bold">
                           {revenueBreakdown.totalTransactions.toLocaleString()}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Typography variant="body1">Avg Transaction:</Typography>
+                        <Typography variant="body1">{t('reports.labels.avgTransaction')}:</Typography>
                         <Typography variant="body1" fontWeight="bold">
-                          {revenueBreakdown.formattedAverageRevenuePerTransaction}
+                          {formatCurrency(revenueBreakdown.averageRevenuePerTransaction || 0)}
                         </Typography>
                       </Box>
                     </Box>
@@ -586,7 +583,7 @@ const ReportsPage: React.FC = () => {
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      Revenue by Category
+                      {t('reports.labels.revenueByCategory')}
                     </Typography>
                     <Box sx={{ mt: 2, maxHeight: 300, overflowY: 'auto' }}>
                       {revenueBreakdown.categoryBreakdown.map((category, index) => (
@@ -601,7 +598,7 @@ const ReportsPage: React.FC = () => {
                           </Box>
                           <Box sx={{ textAlign: 'right' }}>
                             <Typography variant="body1" fontWeight="bold">
-                              {category.formattedRevenue}
+                              {formatCurrency(category.revenue)}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                               {formatPercentage(category.percentageOfTotal * 100)}
@@ -619,7 +616,7 @@ const ReportsPage: React.FC = () => {
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      Top Selling Products
+                      {t('reports.labels.topSellingProducts')}
                     </Typography>
                     <Box sx={{ mt: 2 }}>
                       {revenueBreakdown.topProducts.slice(0, 5).map((product, index) => (
@@ -634,10 +631,10 @@ const ReportsPage: React.FC = () => {
                           </Box>
                           <Box sx={{ textAlign: 'right' }}>
                             <Typography variant="body1" fontWeight="bold">
-                              {product.formattedRevenue}
+                              {formatCurrency(product.revenue)}
                             </Typography>
                             <Typography variant="body2" color="success.main">
-                              Profit: {product.formattedProfit} ({formatPercentage(product.profitMargin * 100)})
+                              {t('reports.labels.profit')}: {formatCurrency(product.profit)} ({formatPercentage(product.profitMargin * 100)})
                             </Typography>
                           </Box>
                         </Box>
@@ -657,31 +654,31 @@ const ReportsPage: React.FC = () => {
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      Expense Summary
+                      {t('reports.labels.expenseSummary')}
                     </Typography>
                     <Box sx={{ mt: 2 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="body1">Total Expenses:</Typography>
+                        <Typography variant="body1">{t('reports.statements.totalExpenses')}</Typography>
                         <Typography variant="h6" fontWeight="bold" color="error.main">
-                          {expenseAnalysis.formattedTotalExpenses}
+                          {formatCurrency(expenseAnalysis.totalExpenses)}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="body1">Growth Rate:</Typography>
+                        <Typography variant="body1">{t('reports.labels.growthRate')}:</Typography>
                         <Typography variant="body1" fontWeight="bold" color={expenseAnalysis.growthRate > 0 ? 'error.main' : 'success.main'}>
                           {expenseAnalysis.formattedGrowthRate}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="body1">Total Transactions:</Typography>
+                        <Typography variant="body1">{t('reports.labels.totalTransactions')}:</Typography>
                         <Typography variant="body1" fontWeight="bold">
                           {expenseAnalysis.totalTransactions.toLocaleString()}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Typography variant="body1">Avg Transaction:</Typography>
+                        <Typography variant="body1">{t('reports.labels.avgTransaction')}:</Typography>
                         <Typography variant="body1" fontWeight="bold">
-                          {expenseAnalysis.formattedAverageExpensePerTransaction}
+                          {formatCurrency(expenseAnalysis.averageExpensePerTransaction || 0)}
                         </Typography>
                       </Box>
                     </Box>
@@ -694,7 +691,7 @@ const ReportsPage: React.FC = () => {
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      Expenses by Category
+                      {t('reports.labels.expensesByCategory')}
                     </Typography>
                     <Box sx={{ mt: 2, maxHeight: 300, overflowY: 'auto' }}>
                       {expenseAnalysis.categoryBreakdown.map((category, index) => (
@@ -709,7 +706,7 @@ const ReportsPage: React.FC = () => {
                           </Box>
                           <Box sx={{ textAlign: 'right' }}>
                             <Typography variant="body1" fontWeight="bold">
-                              {category.formattedTotalAmount}
+                              {formatCurrency(category.totalAmount)}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                               {formatPercentage(category.percentageOfTotal * 100)}
@@ -727,17 +724,17 @@ const ReportsPage: React.FC = () => {
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      Budget Analysis
+                      {t('reports.labels.budgetAnalysis')}
                     </Typography>
                     <Box sx={{ mt: 2 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="body1">Budget vs Actual:</Typography>
+                        <Typography variant="body1">{t('reports.labels.budgetVsActual')}:</Typography>
                         <Typography variant="h6" fontWeight="bold" color={expenseAnalysis.budgetVsActual > 0 ? 'error.main' : 'success.main'}>
-                          {expenseAnalysis.formattedBudgetVsActual}
+                          {formatCurrency(expenseAnalysis.budgetVsActual)}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Typography variant="body1">Budget Utilization:</Typography>
+                        <Typography variant="body1">{t('reports.labels.budgetUtilization')}:</Typography>
                         <Typography variant="body1" fontWeight="bold"
                           sx={{
                             color: expenseAnalysis.budgetUtilizationPercentage > 100 ? 'error.main' :

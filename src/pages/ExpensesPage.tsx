@@ -51,6 +51,7 @@ import {
   getStatusOptions,
   getPaymentMethodOptions
 } from '../utils/expenseUtils';
+import { formatCurrency } from '../components/common/CurrencyDisplay';
 
 const ExpensesPage: React.FC = () => {
   const { t } = useTranslation();
@@ -126,7 +127,7 @@ const ExpensesPage: React.FC = () => {
       align: 'right',
       format: (value) => (
         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-          {safeFormatCurrency(value)}
+          {formatCurrency(value)}
         </Typography>
       )
     },
@@ -379,15 +380,7 @@ const ExpensesPage: React.FC = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
-  // Safety check for expensesService
-  const safeFormatCurrency = (amount: number) => {
-    try {
-      return expensesService?.formatCurrency?.(amount) || `$${amount.toFixed(2)}`;
-    } catch {
-      return `$${amount.toFixed(2)}`;
-    }
-  };
-
+  
   // Handle PDF download
   const handleDownloadPdf = async () => {
     try {
@@ -725,7 +718,7 @@ const ExpensesPage: React.FC = () => {
                   {t('expenses.totalAmount')}
                 </Typography>
                 <Typography variant="h4">
-                  {safeFormatCurrency(totalAmount)}
+                  {formatCurrency(totalAmount)}
                 </Typography>
               </CardContent>
             </Card>
@@ -880,7 +873,7 @@ const ExpensesPage: React.FC = () => {
                                 <Grid item xs={12}>
                                   <Typography variant="body2" color="text.secondary">{t('expenses.amount')}</Typography>
                                   <Typography variant="h5" sx={{ fontWeight: 600, color: 'primary.main' }}>
-                                    {safeFormatCurrency(selectedExpense.amount)}
+                                    {formatCurrency(selectedExpense.amount)}
                                   </Typography>
                                 </Grid>
                                 {selectedExpense.receiptNumber && (
@@ -1015,7 +1008,7 @@ const ExpensesPage: React.FC = () => {
                                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                     <Typography variant="body2" color="text.secondary">{t('expenses.amount')}:</Typography>
                                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                      {safeFormatCurrency(selectedExpense.amount)}
+                                      {formatCurrency(selectedExpense.amount)}
                                     </Typography>
                                   </Box>
                                   {selectedExpense.receiptNumber && (

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import i18n from 'i18next';
 import {
   Box,
   Card,
@@ -19,6 +20,7 @@ import {
   Area,
   AreaChart,
 } from 'recharts';
+import { formatCurrency } from '../../common/CurrencyDisplay';
 
 interface SalesTrendChartProps {
   data?: Array<{
@@ -85,8 +87,7 @@ const SalesTrendChart: React.FC<SalesTrendChartProps> = ({
                   borderRadius: '50%',
                 }}
               />
-              {entry.name === 'Revenue' ? t('dashboard.tableHeaders.revenue') : entry.name}: {entry.name === 'Revenue' ? '$' : ''}{entry.value.toLocaleString()}
-              {entry.name === 'Revenue' ? 'K' : ''}
+              {entry.name === 'Revenue' ? t('dashboard.tableHeaders.revenue') : entry.name}: {entry.name === 'Revenue' ? (i18n.language === 'bn' ? '৳' : '$') + entry.value.toLocaleString() + 'K' : entry.value.toLocaleString()}
             </Typography>
           ))}
         </Box>
@@ -158,7 +159,7 @@ const SalesTrendChart: React.FC<SalesTrendChartProps> = ({
               fontSize={12}
               tickLine={false}
               axisLine={false}
-              tickFormatter={(value) => `$${value}K`}
+              tickFormatter={(value) => `${i18n.language === 'bn' ? '৳' : '$'}${value}K`}
             />
             <Tooltip content={<CustomTooltip />} />
             <Area

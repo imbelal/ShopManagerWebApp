@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '../components/common/CurrencyDisplay';
 import {
   Box,
   Grid,
@@ -321,14 +322,7 @@ const StockTransactionsPage: React.FC = () => {
     }
   };
 
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
-
+  
   // Format date
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();

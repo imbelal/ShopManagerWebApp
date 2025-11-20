@@ -19,6 +19,7 @@ import {
   Cell,
 } from 'recharts';
 import { TopProduct } from '../../../services/dashboardService';
+import i18n from 'i18next';
 
 interface TopProductsChartProps {
   data?: TopProduct[];
@@ -81,7 +82,7 @@ const TopProductsChart: React.FC<TopProductsChartProps> = ({
             {data.fullName}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {t('dashboard.tableHeaders.revenue')}: ${data.revenue.toFixed(1)}K
+            {t('dashboard.tableHeaders.revenue')}: {i18n.language === 'bn' ? '৳' : '$'}{data.revenue.toFixed(1)}K
           </Typography>
           <Typography variant="body2" color="text.secondary">
             {t('dashboard.tableHeaders.quantity')}: {data.quantity.toLocaleString()} {t('dashboard.tableHeaders.units')}
@@ -156,7 +157,7 @@ const TopProductsChart: React.FC<TopProductsChartProps> = ({
               fontSize={12}
               tickLine={false}
               axisLine={false}
-              tickFormatter={(value) => `$${value}K`}
+              tickFormatter={(value) => `${i18n.language === 'bn' ? '৳' : '$'}${value}K`}
             />
             <Tooltip content={<CustomTooltip />} />
             <Bar dataKey="revenue" radius={[8, 8, 0, 0]}>

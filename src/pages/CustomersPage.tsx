@@ -50,6 +50,7 @@ import {
   createStandardActions,
   EmptyState
 } from '../components/common';
+import { formatCurrency } from '../components/common/CurrencyDisplay';
 import PageHeader from '../components/common/PageHeader';
 import FilterBar from '../components/common/FilterBar';
 import ConfirmDeleteDialog from '../components/common/ConfirmDeleteDialog';
@@ -546,7 +547,7 @@ const CustomersPage: React.FC = () => {
                   {t('customers.summaryCards.totalDueAmount')}
                 </Typography>
                 <Typography variant="h4" fontWeight={600}>
-                  {customersService.formatCurrency(
+                  {formatCurrency(
                     customers.reduce((sum, c) => sum + c.totalDueAmount, 0)
                   )}
                 </Typography>
@@ -560,7 +561,7 @@ const CustomersPage: React.FC = () => {
                   {t('customers.summaryCards.totalSalesValue')}
                 </Typography>
                 <Typography variant="h4" fontWeight={600}>
-                  {customersService.formatCurrency(
+                  {formatCurrency(
                     customers.reduce((sum, c) => sum + c.totalSalesAmount, 0)
                   )}
                 </Typography>
@@ -675,7 +676,7 @@ const CustomersPage: React.FC = () => {
                     <Grid sx={{ xs: 12, md: 4 }}>
                       <Box sx={{ textAlign: 'center', p: 2, border: 1, borderColor: 'divider', borderRadius: 1 }}>
                         <Typography variant="h4" color="success.main">
-                          {customersService.formatCurrency(viewCustomer.totalSalesAmount)}
+                          {formatCurrency(viewCustomer.totalSalesAmount)}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                           {t('customers.summaryCards.totalSalesValue')}
@@ -685,7 +686,7 @@ const CustomersPage: React.FC = () => {
                     <Grid sx={{ xs: 12, md: 4 }}>
                       <Box sx={{ textAlign: 'center', p: 2, border: 1, borderColor: 'divider', borderRadius: 1 }}>
                         <Typography variant="h4" color={getDueAmountColor(viewCustomer.totalDueAmount)}>
-                          {customersService.formatCurrency(viewCustomer.totalDueAmount)}
+                          {formatCurrency(viewCustomer.totalDueAmount)}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                           {t('customers.viewCustomerDialog.dueAmount')}

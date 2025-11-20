@@ -20,6 +20,7 @@ import {
   CardContent,
   Chip
 } from '@mui/material';
+import { formatCurrency } from './common/CurrencyDisplay';
 import { useTranslation } from 'react-i18next';
 import { salesService, Payment, AddPaymentRequest } from '../services/salesService';
 import { handleApiError } from '../services/apiClient';
@@ -172,14 +173,7 @@ const PaymentDialog: React.FC<PaymentDialogProps> = ({
     }
   };
 
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
-
+  
   // Get payment method color
   const getPaymentMethodColor = (method: string) => {
     return salesService.getPaymentMethodColor(method);

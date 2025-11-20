@@ -1,5 +1,6 @@
 import React from 'react';
 import { Typography, TypographyProps } from '@mui/material';
+import i18n from 'i18next';
 
 export interface CurrencyDisplayProps extends Omit<TypographyProps, 'children'> {
   amount: number;
@@ -12,23 +13,37 @@ export interface CurrencyDisplayProps extends Omit<TypographyProps, 'children'> 
 
 const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
   amount,
-  currency = 'USD',
-  locale = 'en-US',
+  currency,
+  locale,
   showSign = false,
   color = 'default',
   fontWeight = 500,
   sx,
   ...typographyProps
 }) => {
+  // Auto-detect currency and locale based on current language if not provided
+  const currentLanguage = i18n.language;
+  const finalCurrency = currency || (currentLanguage === 'bn' ? 'BDT' : 'USD');
+  const finalLocale = locale || (currentLanguage === 'bn' ? 'en-US' : 'en-US');
+
   // Format the currency
   const formatCurrency = (value: number, showCurrencySign = true) => {
     if (showCurrencySign) {
-      return new Intl.NumberFormat(locale, {
-        style: 'currency',
-        currency: currency
-      }).format(value);
+      if (currentLanguage === 'bn' && finalCurrency === 'BDT') {
+        // For Bengali, use BDT with custom formatting
+        const formattedNumber = new Intl.NumberFormat('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(value);
+        return `৳${formattedNumber}`;
+      } else {
+        return new Intl.NumberFormat(finalLocale, {
+          style: 'currency',
+          currency: finalCurrency
+        }).format(value);
+      }
     } else {
-      return new Intl.NumberFormat(locale, {
+      return new Intl.NumberFormat(finalLocale, {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
       }).format(Math.abs(value));
@@ -75,11 +90,24 @@ export default CurrencyDisplay;
 // Helper function for direct formatting
 export const formatCurrency = (
   amount: number,
-  currency: string = 'USD',
-  locale: string = 'en-US'
+  currency?: string,
+  locale?: string
 ): string => {
-  return new Intl.NumberFormat(locale, {
-    style: 'currency',
-    currency: currency
-  }).format(amount);
+  const currentLanguage = i18n.language;
+  const finalCurrency = currency || (currentLanguage === 'bn' ? 'BDT' : 'USD');
+  const finalLocale = locale || 'en-US';
+
+  if (currentLanguage === 'bn' && finalCurrency === 'BDT') {
+    // For Bengali, use BDT with custom formatting
+    const formattedNumber = new Intl.NumberFormat(finalLocale, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+    return `৳${formattedNumber}`;
+  } else {
+    return new Intl.NumberFormat(finalLocale, {
+      style: 'currency',
+      currency: finalCurrency
+    }).format(amount);
+  }
 };

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '../components/common/CurrencyDisplay';
 import {
   Box,
   Typography,
@@ -264,16 +265,7 @@ const PurchasesPage: React.FC = () => {
     return purchase.status !== PurchaseStatus.Completed && purchase.status !== PurchaseStatus.Cancelled;
   };
 
-  // Format currency function for view dialog
-  const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
-  };
-
+  
   
 
   // Define table columns with translation support
