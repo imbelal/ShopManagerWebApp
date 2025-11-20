@@ -721,14 +721,95 @@
   },
   "settings": {
     "title": "Settings",
-    "tenantSettings": "Tenant Settings",
-    "userProfile": "User Profile",
-    "language": "Language",
-    "theme": "Theme",
-    "notifications": "Notifications",
-    "save": "Save Changes",
-    "cancel": "Cancel",
-    "settingsSaved": "Settings saved successfully"
+    "subtitle": "Manage your account and organization settings",
+    "tabs": {
+      "organization": "Organization",
+      "userProfile": "User Profile",
+      "security": "Security"
+    },
+    "organization": {
+      "title": "Organization Information",
+      "organizationName": "Organization Name",
+      "address": "Address",
+      "phoneNumber": "Phone Number",
+      "saveChanges": "Save Changes",
+      "details": {
+        "title": "Organization Details",
+        "organizationId": "Organization ID",
+        "status": "Status",
+        "created": "Created",
+        "lastUpdated": "Last Updated",
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "info": {
+        "changesNotice": "Changes to your organization's information will be reflected across all system reports and documents."
+      },
+      "errors": {
+        "nameRequired": "Organization name is required",
+        "addressRequired": "Address is required",
+        "phoneRequired": "Phone number is required",
+        "phoneInvalid": "Please enter a valid phone number"
+      }
+    },
+    "userProfile": {
+      "title": "Personal Information",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "emailAddress": "Email Address",
+      "updateProfile": "Update Profile",
+      "accountInfo": {
+        "title": "Account Information",
+        "username": "Username",
+        "role": "Role",
+        "tenantId": "Tenant ID"
+      },
+      "info": {
+        "profileNotice": "Your profile information is used for identification and communication purposes."
+      },
+      "errors": {
+        "emailRequired": "Email is required",
+        "emailInvalid": "Please enter a valid email address",
+        "firstNameRequired": "First name is required",
+        "lastNameRequired": "Last name is required"
+      }
+    },
+    "security": {
+      "title": "Change Password",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmNewPassword": "Confirm New Password",
+      "changePassword": "Change Password",
+      "guidelines": {
+        "title": "Security Guidelines",
+        "requirements": "Password Requirements:",
+        "requirement1": "At least 6 characters long",
+        "requirement2": "Include both letters and numbers",
+        "requirement3": "Avoid common words or patterns",
+        "reloginNotice": "After changing your password, you'll need to login again with your new password."
+      },
+      "errors": {
+        "currentPasswordRequired": "Current password is required",
+        "newPasswordRequired": "New password is required",
+        "newPasswordTooShort": "Password must be at least 6 characters",
+        "confirmPasswordRequired": "Please confirm your new password",
+        "passwordsNotMatch": "Passwords do not match"
+      },
+      "success": {
+        "passwordChanged": "Password changed successfully"
+      }
+    },
+    "messages": {
+      "organization": {
+        "updated": "Tenant settings updated successfully",
+        "loadFailed": "Failed to load tenant settings"
+      },
+      "userProfile": {
+        "updated": "User profile updated successfully",
+        "updateFailed": "Failed to update user profile",
+        "refreshFailed": "Profile updated but failed to refresh display"
+      }
+    }
   },
   "common": {
     "search": "Search",

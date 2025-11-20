@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Card,
@@ -51,6 +52,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => {
 };
 
 const TenantSettingsPage: React.FC = () => {
+  const { t } = useTranslation();
   const { showSnackbar } = useSnackbar();
   const { user, updateUserProfile } = useAuth();
   const [activeTab, setActiveTab] = useState(0);
@@ -134,17 +136,17 @@ const TenantSettingsPage: React.FC = () => {
     const newErrors: Partial<TenantFormData> = {};
 
     if (!tenantFormData.name.trim()) {
-      newErrors.name = 'Tenant name is required';
+      newErrors.name = t('settings.organization.errors.nameRequired');
     }
 
     if (!tenantFormData.address.trim()) {
-      newErrors.address = 'Address is required';
+      newErrors.address = t('settings.organization.errors.addressRequired');
     }
 
     if (!tenantFormData.phoneNumber.trim()) {
-      newErrors.phoneNumber = 'Phone number is required';
+      newErrors.phoneNumber = t('settings.organization.errors.phoneRequired');
     } else if (!/^\+?[\d\s\-\(\)]+$/.test(tenantFormData.phoneNumber)) {
-      newErrors.phoneNumber = 'Please enter a valid phone number';
+      newErrors.phoneNumber = t('settings.organization.errors.phoneInvalid');
     }
 
     setTenantErrors(newErrors);
@@ -156,17 +158,17 @@ const TenantSettingsPage: React.FC = () => {
     const newErrors: Partial<UserFormData> = {};
 
     if (!userFormData.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t('settings.userProfile.errors.emailRequired');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userFormData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = t('settings.userProfile.errors.emailInvalid');
     }
 
     if (!userFormData.firstname.trim()) {
-      newErrors.firstname = 'First name is required';
+      newErrors.firstname = t('settings.userProfile.errors.firstNameRequired');
     }
 
     if (!userFormData.lastname.trim()) {
-      newErrors.lastname = 'Last name is required';
+      newErrors.lastname = t('settings.userProfile.errors.lastNameRequired');
     }
 
     setUserErrors(newErrors);
@@ -178,19 +180,19 @@ const TenantSettingsPage: React.FC = () => {
     const newErrors: Partial<PasswordFormData> = {};
 
     if (!passwordFormData.oldPassword.trim()) {
-      newErrors.oldPassword = 'Current password is required';
+      newErrors.oldPassword = t('settings.security.errors.currentPasswordRequired');
     }
 
     if (!passwordFormData.newPassword.trim()) {
-      newErrors.newPassword = 'New password is required';
+      newErrors.newPassword = t('settings.security.errors.newPasswordRequired');
     } else if (passwordFormData.newPassword.length < 6) {
-      newErrors.newPassword = 'Password must be at least 6 characters';
+      newErrors.newPassword = t('settings.security.errors.newPasswordTooShort');
     }
 
     if (!passwordFormData.confirmPassword.trim()) {
-      newErrors.confirmPassword = 'Please confirm your new password';
+      newErrors.confirmPassword = t('settings.security.errors.confirmPasswordRequired');
     } else if (passwordFormData.newPassword !== passwordFormData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = t('settings.security.errors.passwordsNotMatch');
     }
 
     setPasswordErrors(newErrors);
@@ -210,7 +212,7 @@ const TenantSettingsPage: React.FC = () => {
       const response = await tenantService.updateTenant(tenantFormData);
 
       if (response.data.succeeded) {
-        showSnackbar('Tenant settings updated successfully', 'success');
+        showSnackbar(t('settings.messages.organization.updated'), 'success');
         await loadTenantData();
       } else {
         showSnackbar(response.data.message || 'Failed to update tenant settings', 'error');
@@ -241,14 +243,14 @@ const TenantSettingsPage: React.FC = () => {
       });
 
       if (response.data.succeeded) {
-        showSnackbar('User profile updated successfully', 'success');
+        showSnackbar(t('settings.messages.userProfile.updated'), 'success');
 
         // Reload user profile from backend to get updated data
         try {
           await updateUserProfile({});
         } catch (refreshError) {
           console.error('Failed to refresh user data:', refreshError);
-          showSnackbar('Profile updated but failed to refresh display', 'warning');
+          showSnackbar(t('settings.messages.userProfile.refreshFailed'), 'warning');
         }
       } else {
         showSnackbar(response.data.message || 'Failed to update user profile', 'error');
@@ -279,7 +281,7 @@ const TenantSettingsPage: React.FC = () => {
       });
 
       if (response.data.succeeded) {
-        showSnackbar('Password changed successfully', 'success');
+        showSnackbar(t('settings.security.success.passwordChanged'), 'success');
         setPasswordFormData({
           oldPassword: '',
           newPassword: '',
@@ -371,8 +373,8 @@ const TenantSettingsPage: React.FC = () => {
   return (
     <Box>
       <PageHeader
-        title="Settings"
-        subtitle="Manage your account and organization settings"
+        title={t('settings.title')}
+        subtitle={t('settings.subtitle')}
         showRefresh
         onRefresh={loadTenantData}
         loading={tenantLoading}
@@ -380,9 +382,9 @@ const TenantSettingsPage: React.FC = () => {
 
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
         <Tabs value={activeTab} onChange={handleTabChange}>
-          <Tab label="Organization" />
-          <Tab label="User Profile" />
-          <Tab label="Security" />
+          <Tab label={t('settings.tabs.organization')} />
+          <Tab label={t('settings.tabs.userProfile')} />
+          <Tab label={t('settings.tabs.security')} />
         </Tabs>
       </Box>
 
@@ -394,14 +396,14 @@ const TenantSettingsPage: React.FC = () => {
               <CardContent>
                 <Box component="form" onSubmit={handleTenantSubmit} noValidate>
                   <Typography variant="h6" gutterBottom>
-                    Organization Information
+                    {t('settings.organization.title')}
                   </Typography>
 
                   <Grid container spacing={3}>
                     <Grid item xs={12}>
                       <TextField
                         fullWidth
-                        label="Organization Name"
+                        label={t('settings.organization.organizationName')}
                         value={tenantFormData.name}
                         onChange={handleTenantInputChange('name')}
                         error={!!tenantErrors.name}
@@ -420,7 +422,7 @@ const TenantSettingsPage: React.FC = () => {
                         fullWidth
                         multiline
                         rows={3}
-                        label="Address"
+                        label={t('settings.organization.address')}
                         value={tenantFormData.address}
                         onChange={handleTenantInputChange('address')}
                         error={!!tenantErrors.address}
@@ -437,7 +439,7 @@ const TenantSettingsPage: React.FC = () => {
                     <Grid item xs={12} md={6}>
                       <TextField
                         fullWidth
-                        label="Phone Number"
+                        label={t('settings.organization.phoneNumber')}
                         value={tenantFormData.phoneNumber}
                         onChange={handleTenantInputChange('phoneNumber')}
                         error={!!tenantErrors.phoneNumber}
@@ -460,7 +462,7 @@ const TenantSettingsPage: React.FC = () => {
                       onClick={loadTenantData}
                       disabled={tenantSaving}
                     >
-                      Reset
+                      {t('common.reset')}
                     </Button>
                     <Button
                       type="submit"
@@ -479,7 +481,7 @@ const TenantSettingsPage: React.FC = () => {
                         }
                       }}
                     >
-                      {tenantSaving ? 'Saving...' : 'Save Changes'}
+                      {tenantSaving ? t('common.saving') : t('settings.organization.saveChanges')}
                     </Button>
                   </Box>
                 </Box>
@@ -490,14 +492,14 @@ const TenantSettingsPage: React.FC = () => {
           <Grid item xs={12} md={4}>
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>
-                Organization Details
+                {t('settings.organization.details.title')}
               </Typography>
 
               {tenant && (
                 <Box>
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">
-                      Organization ID
+                      {t('settings.organization.details.organizationId')}
                     </Typography>
                     <Typography variant="body1" sx={{ fontFamily: 'monospace' }}>
                       {tenant.id}
@@ -506,10 +508,10 @@ const TenantSettingsPage: React.FC = () => {
 
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">
-                      Status
+                      {t('settings.organization.details.status')}
                     </Typography>
                     <Chip
-                      label={tenant.isDeleted ? 'Inactive' : 'Active'}
+                      label={tenant.isDeleted ? t('settings.organization.details.inactive') : t('settings.organization.details.active')}
                       color={tenant.isDeleted ? 'error' : 'success'}
                       size="small"
                       sx={{ mt: 0.5 }}
@@ -518,7 +520,7 @@ const TenantSettingsPage: React.FC = () => {
 
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">
-                      Created
+                      {t('settings.organization.details.created')}
                     </Typography>
                     <Typography variant="body1">
                       {new Date(tenant.createdUtcDate).toLocaleDateString()}
@@ -528,7 +530,7 @@ const TenantSettingsPage: React.FC = () => {
                   {tenant.updatedUtcDate && (
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="body2" color="text.secondary">
-                        Last Updated
+                        {t('settings.organization.details.lastUpdated')}
                       </Typography>
                       <Typography variant="body1">
                         {new Date(tenant.updatedUtcDate).toLocaleDateString()}
@@ -540,7 +542,7 @@ const TenantSettingsPage: React.FC = () => {
 
               <Alert severity="info" sx={{ mt: 2 }}>
                 <Typography variant="body2">
-                  Changes to your organization's information will be reflected across all system reports and documents.
+                  {t('settings.organization.info.changesNotice')}
                 </Typography>
               </Alert>
             </Paper>
@@ -556,14 +558,14 @@ const TenantSettingsPage: React.FC = () => {
               <CardContent>
                 <Box component="form" onSubmit={handleUserSubmit} noValidate>
                   <Typography variant="h6" gutterBottom>
-                    Personal Information
+                    {t('settings.userProfile.title')}
                   </Typography>
 
                   <Grid container spacing={3}>
                     <Grid item xs={12} md={6}>
                       <TextField
                         fullWidth
-                        label="First Name"
+                        label={t('settings.userProfile.firstName')}
                         value={userFormData.firstname}
                         onChange={handleUserInputChange('firstname')}
                         error={!!userErrors.firstname}
@@ -580,7 +582,7 @@ const TenantSettingsPage: React.FC = () => {
                     <Grid item xs={12} md={6}>
                       <TextField
                         fullWidth
-                        label="Last Name"
+                        label={t('settings.userProfile.lastName')}
                         value={userFormData.lastname}
                         onChange={handleUserInputChange('lastname')}
                         error={!!userErrors.lastname}
@@ -592,7 +594,7 @@ const TenantSettingsPage: React.FC = () => {
                     <Grid item xs={12}>
                       <TextField
                         fullWidth
-                        label="Email Address"
+                        label={t('settings.userProfile.emailAddress')}
                         type="email"
                         value={userFormData.email}
                         onChange={handleUserInputChange('email')}
@@ -628,7 +630,7 @@ const TenantSettingsPage: React.FC = () => {
                         }
                       }}
                     >
-                      {userSaving ? 'Saving...' : 'Update Profile'}
+                      {userSaving ? t('common.saving') : t('settings.userProfile.updateProfile')}
                     </Button>
                   </Box>
                 </Box>
@@ -639,21 +641,21 @@ const TenantSettingsPage: React.FC = () => {
           <Grid item xs={12} md={4}>
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>
-                Account Information
+                {t('settings.userProfile.accountInfo.title')}
               </Typography>
 
               {user && (
                 <Box>
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">
-                      Username
+                      {t('settings.userProfile.accountInfo.username')}
                     </Typography>
                     <Typography variant="body1">{user.username}</Typography>
                   </Box>
 
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">
-                      Role
+                      {t('settings.userProfile.accountInfo.role')}
                     </Typography>
                     <Chip
                       label={user.role}
@@ -665,7 +667,7 @@ const TenantSettingsPage: React.FC = () => {
 
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">
-                      Tenant ID
+                      {t('settings.userProfile.accountInfo.tenantId')}
                     </Typography>
                     <Typography variant="body1" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
                       {user.tenantId}
@@ -676,7 +678,7 @@ const TenantSettingsPage: React.FC = () => {
 
               <Alert severity="info" sx={{ mt: 2 }}>
                 <Typography variant="body2">
-                  Your profile information is used for identification and communication purposes.
+                  {t('settings.userProfile.info.profileNotice')}
                 </Typography>
               </Alert>
             </Paper>
@@ -692,14 +694,14 @@ const TenantSettingsPage: React.FC = () => {
               <CardContent>
                 <Box component="form" onSubmit={handlePasswordSubmit} noValidate>
                   <Typography variant="h6" gutterBottom>
-                    Change Password
+                    {t('settings.security.title')}
                   </Typography>
 
                   <Grid container spacing={3}>
                     <Grid item xs={12}>
                       <TextField
                         fullWidth
-                        label="Current Password"
+                        label={t('settings.security.currentPassword')}
                         type={showPasswords.oldPassword ? 'text' : 'password'}
                         value={passwordFormData.oldPassword}
                         onChange={handlePasswordInputChange('oldPassword')}
@@ -725,7 +727,7 @@ const TenantSettingsPage: React.FC = () => {
                     <Grid item xs={12}>
                       <TextField
                         fullWidth
-                        label="New Password"
+                        label={t('settings.security.newPassword')}
                         type={showPasswords.newPassword ? 'text' : 'password'}
                         value={passwordFormData.newPassword}
                         onChange={handlePasswordInputChange('newPassword')}
@@ -751,7 +753,7 @@ const TenantSettingsPage: React.FC = () => {
                     <Grid item xs={12}>
                       <TextField
                         fullWidth
-                        label="Confirm New Password"
+                        label={t('settings.security.confirmNewPassword')}
                         type={showPasswords.confirmPassword ? 'text' : 'password'}
                         value={passwordFormData.confirmPassword}
                         onChange={handlePasswordInputChange('confirmPassword')}
@@ -791,7 +793,7 @@ const TenantSettingsPage: React.FC = () => {
                         py: 1,
                       }}
                     >
-                      {passwordSaving ? 'Changing...' : 'Change Password'}
+                      {passwordSaving ? t('common.saving') : t('settings.security.changePassword')}
                     </Button>
                   </Box>
                 </Box>
@@ -802,23 +804,23 @@ const TenantSettingsPage: React.FC = () => {
           <Grid item xs={12} md={4}>
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>
-                Security Guidelines
+                {t('settings.security.guidelines.title')}
               </Typography>
 
               <Alert severity="warning" sx={{ mb: 2 }}>
                 <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                  Password Requirements:
+                  {t('settings.security.guidelines.requirements')}
                 </Typography>
                 <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
-                  <li>At least 6 characters long</li>
-                  <li>Include both letters and numbers</li>
-                  <li>Avoid common words or patterns</li>
+                  <li>{t('settings.security.guidelines.requirement1')}</li>
+                  <li>{t('settings.security.guidelines.requirement2')}</li>
+                  <li>{t('settings.security.guidelines.requirement3')}</li>
                 </ul>
               </Alert>
 
               <Alert severity="info">
                 <Typography variant="body2">
-                  After changing your password, you'll need to login again with your new password.
+                  {t('settings.security.guidelines.reloginNotice')}
                 </Typography>
               </Alert>
             </Paper>

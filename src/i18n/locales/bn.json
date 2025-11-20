@@ -732,14 +732,95 @@
   },
   "settings": {
     "title": "সেটিংস",
-    "tenantSettings": "টেন্যান্ট সেটিংস",
-    "userProfile": "ব্যবহারকারী প্রোফাইল",
-    "language": "ভাষা",
-    "theme": "থিম",
-    "notifications": "বিজ্ঞপ্তি",
-    "save": "পরিবর্তনগুলি সংরক্ষণ করুন",
-    "cancel": "বাতিল করুন",
-    "settingsSaved": "সেটিংস সফলভাবে সংরক্ষিত হয়েছে"
+    "subtitle": "আপনার অ্যাকাউন্ট এবং প্রতিষ্ঠানের সেটিংস পরিচালনা করুন",
+    "tabs": {
+      "organization": "প্রতিষ্ঠান",
+      "userProfile": "ব্যবহারকারী প্রোফাইল",
+      "security": "নিরাপত্তা"
+    },
+    "organization": {
+      "title": "প্রতিষ্ঠানের তথ্য",
+      "organizationName": "প্রতিষ্ঠানের নাম",
+      "address": "ঠিকানা",
+      "phoneNumber": "ফোন নম্বর",
+      "saveChanges": "পরিবর্তনগুলি সংরক্ষণ করুন",
+      "details": {
+        "title": "প্রতিষ্ঠানের বিবরণ",
+        "organizationId": "প্রতিষ্ঠান আইডি",
+        "status": "অবস্থা",
+        "created": "তৈরি হয়েছে",
+        "lastUpdated": "সর্বশেষ আপডেট",
+        "active": "সক্রিয়",
+        "inactive": "নিষ্ক্রিয়"
+      },
+      "info": {
+        "changesNotice": "আপনার প্রতিষ্ঠানের তথ্যের পরিবর্তনগুলি সমস্ত সিস্টেম রিপোর্ট এবং নথিতে প্রতিফলিত হবে।"
+      },
+      "errors": {
+        "nameRequired": "প্রতিষ্ঠানের নাম আবশ্যক",
+        "addressRequired": "ঠিকানা আবশ্যক",
+        "phoneRequired": "ফোন নম্বর আবশ্যক",
+        "phoneInvalid": "অনুগ্রহ করে একটি বৈধ ফোন নম্বর লিখুন"
+      }
+    },
+    "userProfile": {
+      "title": "ব্যক্তিগত তথ্য",
+      "firstName": "প্রথম নাম",
+      "lastName": "শেষ নাম",
+      "emailAddress": "ইমেল ঠিকানা",
+      "updateProfile": "প্রোফাইল আপডেট করুন",
+      "accountInfo": {
+        "title": "অ্যাকাউন্ট তথ্য",
+        "username": "ব্যবহারকারী নাম",
+        "role": "ভূমিকা",
+        "tenantId": "টেন্যান্ট আইডি"
+      },
+      "info": {
+        "profileNotice": "আপনার প্রোফাইল তথ্য সনাক্তকরণ এবং যোগাযোগের উদ্দেশ্যে ব্যবহৃত হয়।"
+      },
+      "errors": {
+        "emailRequired": "ইমেল আবশ্যক",
+        "emailInvalid": "অনুগ্রহ করে একটি বৈধ ইমেল ঠিকানা লিখুন",
+        "firstNameRequired": "প্রথম নাম আবশ্যক",
+        "lastNameRequired": "শেষ নাম আবশ্যক"
+      }
+    },
+    "security": {
+      "title": "পাসওয়ার্ড পরিবর্তন",
+      "currentPassword": "বর্তমান পাসওয়ার্ড",
+      "newPassword": "নতুন পাসওয়ার্ড",
+      "confirmNewPassword": "নতুন পাসওয়ার্ড নিশ্চিত করুন",
+      "changePassword": "পাসওয়ার্ড পরিবর্তন",
+      "guidelines": {
+        "title": "নিরাপত্তা নির্দেশিকা",
+        "requirements": "পাসওয়ার্ড প্রয়োজনীয়তা:",
+        "requirement1": "কমপক্ষে ৬ টি অক্ষর",
+        "requirement2": "অক্ষর এবং সংখ্যা উভয়ই অন্তর্ভুক্ত করুন",
+        "requirement3": "সাধারণ শব্দ বা প্যাটার্ন এড়িয়ে চলুন",
+        "reloginNotice": "আপনার পাসওয়ার্ড পরিবর্তনের পরে, আপনাকে আপনার নতুন পাসওয়ার্ড দিয়ে আবার লগইন করতে হবে।"
+      },
+      "errors": {
+        "currentPasswordRequired": "বর্তমান পাসওয়ার্ড আবশ্যক",
+        "newPasswordRequired": "নতুন পাসওয়ার্ড আবশ্যক",
+        "newPasswordTooShort": "পাসওয়ার্ড অবশ্যই ৬ টি অক্ষরের হতে হবে",
+        "confirmPasswordRequired": "অনুগ্রহ করে আপনার নতুন পাসওয়ার্ড নিশ্চিত করুন",
+        "passwordsNotMatch": "পাসওয়ার্ডগুলি মেলে না"
+      },
+      "success": {
+        "passwordChanged": "পাসওয়ার্ড সফলভাবে পরিবর্তিত হয়েছে"
+      }
+    },
+    "messages": {
+      "organization": {
+        "updated": "টেন্যান্ট সেটিংস সফলভাবে আপডেট হয়েছে",
+        "loadFailed": "টেন্যান্ট সেটিংস লোড করতে ব্যর্থ হয়েছে"
+      },
+      "userProfile": {
+        "updated": "ব্যবহারকারী প্রোফাইল সফলভাবে আপডেট হয়েছে",
+        "updateFailed": "ব্যবহারকারী প্রোফাইল আপডেট করতে ব্যর্থ হয়েছে",
+        "refreshFailed": "প্রোফাইল আপডেট হয়েছে কিন্তু ডিসপ্লে রিফ্রেশ করতে ব্যর্থ হয়েছে"
+      }
+    }
   },
   "common": {
     "search": "অনুসন্ধান",
