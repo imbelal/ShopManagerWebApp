@@ -99,7 +99,7 @@ export const commonStatusConfigs = {
 
   // Sales status
   salesStatus: (t: TFunction) => (status: string | number): StatusConfig => {
-    const statusValue = typeof status === 'number' ? status : parseInt(status);
+    const statusValue = typeof status === 'number' ? status : status.toLowerCase();
 
     switch (statusValue) {
       case 0: // Pending
@@ -120,7 +120,20 @@ export const commonStatusConfigs = {
           color: 'success',
           icon: <CheckCircleIcon sx={{ fontSize: 16 }} />
         };
+      case 'paid':
+      case 'completed':
+        return {
+          label: t('sales.paid'),
+          color: 'success',
+          icon: <CheckCircleIcon sx={{ fontSize: 16 }} />
+        };
       case 3: // Cancelled
+        return {
+          label: t('sales.cancelled'),
+          color: 'error',
+          icon: <BlockedIcon sx={{ fontSize: 16 }} />
+        };
+      case 'cancelled':
         return {
           label: t('sales.cancelled'),
           color: 'error',

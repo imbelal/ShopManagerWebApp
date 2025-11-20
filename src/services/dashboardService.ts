@@ -61,9 +61,8 @@ export interface RecentSale {
   customerPhone: string;
   totalItems: number;
   totalAmount: number;
-  paymentStatus: string;
   paymentMethod: string;
-  status: string;
+  status: number;
   createdBy: string;
   formattedSaleDate: string;
   formattedTotalAmount: string;

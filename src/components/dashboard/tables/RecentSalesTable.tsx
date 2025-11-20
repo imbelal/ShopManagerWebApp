@@ -27,6 +27,7 @@ import {
 } from '@mui/icons-material';
 import { RecentSale } from '../../../services/dashboardService';
 import { formatCurrency } from '../../common/CurrencyDisplay';
+import { commonStatusConfigs } from '../../common/StatusChip';
 
 interface RecentSalesTableProps {
   data?: RecentSale[];
@@ -46,6 +47,7 @@ const RecentSalesTable: React.FC<RecentSalesTableProps> = ({
   const { t } = useTranslation();
   const theme = useTheme();
 
+  
   const tableTitle = title || t('dashboard.recentSales');
 
   const getStatusColor = (status: string): 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' => {
@@ -138,7 +140,7 @@ const RecentSalesTable: React.FC<RecentSalesTableProps> = ({
                     {t('dashboard.tableHeaders.amount')}
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600, color: 'text.primary', borderBottom: `2px solid ${theme.palette.divider}` }}>
-                    {t('dashboard.tableHeaders.paymentStatus')}
+                    {t('dashboard.tableHeaders.status')}
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600, color: 'text.primary', borderBottom: `2px solid ${theme.palette.divider}` }}>
                     {t('dashboard.tableHeaders.date')}
@@ -194,9 +196,9 @@ const RecentSalesTable: React.FC<RecentSalesTableProps> = ({
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={sale.paymentStatus}
+                        label={commonStatusConfigs.salesStatus(t)(sale.status).label}
                         size="small"
-                        color={getPaymentStatusColor(sale.paymentStatus)}
+                        color={commonStatusConfigs.salesStatus(t)(sale.status).color}
                         variant="filled"
                         sx={{ fontSize: '0.7rem', height: 22 }}
                       />
