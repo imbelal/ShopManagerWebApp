@@ -52,7 +52,14 @@
       "product": "Product",
       "category": "Category",
       "stockLevel": "Stock Level",
-      "urgency": "Urgency",
+      "status": "Status",
+      "urgencyColumn": "Urgency",
+      "urgency": {
+        "critical": "Critical",
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
       "lastMonthSales": "Last Month Sales",
       "revenue": "Revenue",
       "quantity": "Quantity",

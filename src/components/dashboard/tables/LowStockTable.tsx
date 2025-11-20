@@ -56,6 +56,14 @@ const LowStockTable: React.FC<LowStockTableProps> = ({
     return 'success';
   };
 
+  const getUrgencyTranslation = (urgency: string): string => {
+    if (urgency?.includes('Critical')) return t('dashboard.tableHeaders.urgency.critical');
+    if (urgency?.includes('High')) return t('dashboard.tableHeaders.urgency.high');
+    if (urgency?.includes('Medium')) return t('dashboard.tableHeaders.urgency.medium');
+    if (urgency?.includes('Low')) return t('dashboard.tableHeaders.urgency.low');
+    return urgency;
+  };
+
   const getStockStatusColor = (currentStock: number, minimumStock: number) => {
     if (currentStock === 0) return 'error';
     if (currentStock <= minimumStock * 0.5) return 'warning';
@@ -118,7 +126,7 @@ const LowStockTable: React.FC<LowStockTableProps> = ({
                     {t('dashboard.tableHeaders.stockLevel')}
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600, color: 'text.primary', borderBottom: `2px solid ${theme.palette.divider}` }}>
-                    {t('dashboard.tableHeaders.urgency')}
+                    {t('dashboard.tableHeaders.urgencyColumn')}
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600, color: 'text.primary', borderBottom: `2px solid ${theme.palette.divider}` }}>
                     {t('dashboard.tableHeaders.lastMonthSales')}
@@ -178,7 +186,7 @@ const LowStockTable: React.FC<LowStockTableProps> = ({
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={product.urgency}
+                        label={getUrgencyTranslation(product.urgency)}
                         size="small"
                         color={getUrgencyColor(product.urgency)}
                         variant="filled"

@@ -52,7 +52,14 @@
       "product": "পণ্য",
       "category": "বিভাগ",
       "stockLevel": "স্টক স্তর",
-      "urgency": "জরুরিতা",
+      "status": "অবস্থা",
+      "urgencyColumn": "জরুরিতা",
+      "urgency": {
+        "critical": "সমালোচনামূলক",
+        "high": "উচ্চ",
+        "medium": "মাঝারি",
+        "low": "নিম্ন"
+      },
       "lastMonthSales": "গত মাসের বিক্রয়",
       "revenue": "আয়",
       "quantity": "পরিমাণ",
