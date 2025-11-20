@@ -34,7 +34,6 @@ import {
 } from '@mui/icons-material';
 import { productService, Product, ProductListRequest } from '../services/productService';
 import ProductForm from '../components/ProductForm';
-import { localizeNumber } from '../utils/numberLocalization';
 import {
   DataTable,
   StatusChip,
@@ -323,7 +322,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
       format: (value, product) => (
         <Box>
           <Typography variant="body2">
-            {localizeNumber(value, currentLanguage)} {getUnitName(product.unit)}
+            {value.toLocaleString()} {getUnitName(product.unit)}
           </Typography>
           <StatusChip
             status={value}
@@ -708,7 +707,7 @@ const ProductsPage: React.FC<ProductsPageProps> = () => {
                           {t('products.stock')}
                         </Typography>
                         <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                          {localizeNumber(selectedProduct.stockQuantity, currentLanguage)} {getUnitName(selectedProduct.unit)}
+                          {selectedProduct.stockQuantity.toLocaleString()} {getUnitName(selectedProduct.unit)}
                         </Typography>
                       </Box>
                     </Grid>
