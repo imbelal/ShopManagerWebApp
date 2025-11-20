@@ -243,7 +243,7 @@ const ReportsPage: React.FC = () => {
         <Card sx={{ mb: 3, borderRadius: 2 }}>
           <CardContent sx={{ p: 2 }}>
             <Grid container spacing={3} alignItems="center">
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <Box sx={{ display: 'flex', gap: 2 }}>
                   <DatePicker
                     label={t('reports.dateRange.startDate')}
@@ -260,7 +260,7 @@ const ReportsPage: React.FC = () => {
                 </Box>
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
                   {dateRanges.map((range) => (
                     <Button
@@ -276,7 +276,7 @@ const ReportsPage: React.FC = () => {
                 </Box>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <Box sx={{ display: 'flex', gap: 2, justifyContent: { xs: 'stretch', md: 'flex-end' } }}>
                   <FormControl size="small" sx={{ minWidth: 120 }}>
                     <InputLabel>{t('reports.dateRange.period')}</InputLabel>
@@ -339,7 +339,7 @@ const ReportsPage: React.FC = () => {
             { activeTab === 0 && (
             <Grid container spacing={3}>
               {/* Key Metrics Cards */}
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <Card sx={{ height: '100%' }}>
                   <CardContent>
                     <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -352,7 +352,7 @@ const ReportsPage: React.FC = () => {
                 </Card>
               </Grid>
 
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <Card sx={{ height: '100%' }}>
                   <CardContent>
                     <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -365,7 +365,7 @@ const ReportsPage: React.FC = () => {
                 </Card>
               </Grid>
 
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <Card sx={{ height: '100%' }}>
                   <CardContent>
                     <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -387,7 +387,7 @@ const ReportsPage: React.FC = () => {
                 </Card>
               </Grid>
 
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <Card sx={{ height: '100%' }}>
                   <CardContent>
                     <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -401,14 +401,14 @@ const ReportsPage: React.FC = () => {
               </Grid>
 
               {/* Quick Stats */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
                       {t('reports.labels.performanceOverview')}
                     </Typography>
                     <Grid container spacing={2}>
-                      <Grid item xs={12} md={3}>
+                      <Grid size={{ xs: 12, md: 3 }}>
                         <Box sx={{ textAlign: 'center' }}>
                           <Typography variant="h3" color="success.main">
                             {profitLoss ? formatCurrency(profitLoss.grossProfit) : formatCurrency(0)}
@@ -418,7 +418,7 @@ const ReportsPage: React.FC = () => {
                           </Typography>
                         </Box>
                       </Grid>
-                      <Grid item xs={12} md={3}>
+                      <Grid size={{ xs: 12, md: 3 }}>
                         <Box sx={{ textAlign: 'center' }}>
                           <Typography variant="h3" color="info.main">
                             {profitLoss ? formatCurrency(profitLoss.operatingIncome) : formatCurrency(0)}
@@ -439,7 +439,7 @@ const ReportsPage: React.FC = () => {
           {activeTab === 1 && profitLoss && (
             <Grid container spacing={3}>
               {/* P&L Summary */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
@@ -488,7 +488,7 @@ const ReportsPage: React.FC = () => {
               </Grid>
 
               {/* Key Metrics */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
@@ -542,7 +542,7 @@ const ReportsPage: React.FC = () => {
           {activeTab === 2 && revenueBreakdown && (
             <Grid container spacing={3}>
               {/* Revenue Summary */}
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 12 }}>
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
@@ -579,7 +579,7 @@ const ReportsPage: React.FC = () => {
               </Grid>
 
               {/* Revenue Categories */}
-              <Grid item xs={12} md={8}>
+              <Grid size={{ xs: 12, md: 12 }}>
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
@@ -612,7 +612,7 @@ const ReportsPage: React.FC = () => {
               </Grid>
 
               {/* Top Products */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
@@ -650,7 +650,7 @@ const ReportsPage: React.FC = () => {
           {activeTab === 3 && expenseAnalysis && (
             <Grid container spacing={3}>
               {/* Expense Summary */}
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
@@ -687,7 +687,7 @@ const ReportsPage: React.FC = () => {
               </Grid>
 
               {/* Expense Categories */}
-              <Grid item xs={12} md={8}>
+              <Grid size={{ xs: 12, md: 8 }}>
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
@@ -720,7 +720,7 @@ const ReportsPage: React.FC = () => {
               </Grid>
 
               {/* Budget Analysis */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
